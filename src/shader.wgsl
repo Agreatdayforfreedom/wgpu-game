@@ -12,15 +12,20 @@ struct VertexInput {
 struct Camera {
     proj: mat4x4<f32>,
 };
-@group(1) @binding(0) // 1.
+@group(1) @binding(0) 
 var<uniform> camera: Camera;
 
+struct PlayerModel {
+    position: vec2<f32>,
+}
+@group(2) @binding(0)
+var<uniform> player_model: PlayerModel;
 
 @vertex
 fn vs_main(model: VertexInput) -> VertexOutput {
     var out: VertexOutput;
     
-    out.clip_position = camera.proj * vec4<f32>(model.position, 0.0, 1.0) ;
+    out.clip_position = camera.proj * vec4<f32>(model.position * vec2<f32>(10.0, 10.0) + player_model.position, 0.0, 1.0);
     out.tex_coords = model.tex_coords;
     return out;
 }

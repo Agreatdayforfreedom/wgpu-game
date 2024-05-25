@@ -1,6 +1,8 @@
 mod camera;
+mod player;
 mod texture;
 use camera::Camera;
+use cgmath::SquareMatrix;
 use texture::Texture;
 
 use pollster::block_on;
@@ -78,9 +80,13 @@ struct State {
 
     vertex_buffer: wgpu::Buffer,
     camera_buffer: wgpu::Buffer,
+    player_buffer: wgpu::Buffer,
 
     diffuse_bind_group: wgpu::BindGroup,
     camera_bind_group: wgpu::BindGroup,
+    player_bind_group: wgpu::BindGroup,
+
+    player: player::Player,
 }
 
 impl State {
@@ -218,9 +224,47 @@ impl State {
             label: Some("camera_bind_group"),
         });
 
+        let mut player = player::Player::new();
+
+        let player_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Camera Buffer"),
+            contents: bytemuck::cast_slice(&[player]),
+            usage: wgpu::BufferUsages::UNIFORM
+                | wgpu::BufferUsages::VERTEX
+                | wgpu::BufferUsages::COPY_DST,
+        });
+
+        let player_bind_group_layout =
+            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                entries: &[wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::VERTEX,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                }],
+                label: Some("player_bind_group_layout"),
+            });
+
+        let player_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &player_bind_group_layout,
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: player_buffer.as_entire_binding(),
+            }],
+            label: Some("camera_bind_group"),
+        });
+
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: None,
-            bind_group_layouts: &[&texture_bind_group_layout, &camera_bind_group_layout],
+            bind_group_layouts: &[
+                &texture_bind_group_layout,
+                &camera_bind_group_layout,
+                &player_bind_group_layout,
+            ],
             push_constant_ranges: &[],
         });
 
@@ -259,7 +303,16 @@ impl State {
             diffuse_bind_group,
             camera_bind_group,
             camera_buffer,
+            player_buffer,
+            player_bind_group,
+            player,
         }
+    }
+
+    fn update(&mut self) {
+        self.player.update();
+        self.queue
+            .write_buffer(&self.player_buffer, 0, bytemuck::cast_slice(&[self.player]))
     }
 
     fn render(&mut self) {
@@ -295,10 +348,12 @@ impl State {
             //buffers
             rpass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
             rpass.set_vertex_buffer(1, self.camera_buffer.slice(..));
+            rpass.set_vertex_buffer(2, self.player_buffer.slice(..));
 
             //bind_groups
             rpass.set_bind_group(0, &self.diffuse_bind_group, &[]);
             rpass.set_bind_group(1, &self.camera_bind_group, &[]);
+            rpass.set_bind_group(2, &self.player_bind_group, &[]);
 
             rpass.draw(0..6, 0..1);
         }
@@ -335,7 +390,7 @@ impl ApplicationHandler for App {
             }
             WindowEvent::RedrawRequested => {
                 self.window.as_ref().unwrap().request_redraw();
-
+                state.update();
                 state.render();
             }
             _ => (),
