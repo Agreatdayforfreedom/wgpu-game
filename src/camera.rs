@@ -14,23 +14,24 @@ pub struct Camera {
 
 impl Camera {
     pub fn new() -> Self {
-        let ortho = cgmath::ortho(
-            -(800.0 / 2.0),
-            800.0 / 2.0,
-            600.0 / 2.0,
-            -(600.0 / 2.0),
-            -50.0,
-            50.0,
-        );
+        // let ortho = cgmath::ortho(
+        //     -(800.0 / 2.0),
+        //     800.0 / 2.0,
+        //     600.0 / 2.0,
+        //     -(600.0 / 2.0),
+        //     -50.0,
+        //     50.0,
+        // );
 
-        let view = cgmath::Matrix4::look_at_rh(
-            (0.0, 0.0, 2.0).into(),
-            (0.0, 0.0, 0.0).into(),
-            cgmath::Vector3::unit_y(),
-        );
+        let ortho = cgmath::ortho(0.0, 800.0, 600.0, 0.0, -50.0, 50.0);
+        // let view = cgmath::Matrix4::look_at_rh(
+        //     (0.0, 0.0, 2.0).into(),
+        //     (0.0, 0.0, 0.0).into(),
+        //     cgmath::Vector3::unit_y(),
+        // );
 
         Self {
-            proj: (OPENGL_TO_WGPU_MATRIX * ortho * view).into(),
+            proj: (ortho).into(),
         }
     }
 }

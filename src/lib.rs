@@ -1,8 +1,9 @@
 mod camera;
+mod input;
 mod player;
 mod texture;
 use camera::Camera;
-use cgmath::SquareMatrix;
+use input::Input;
 use texture::Texture;
 
 use pollster::block_on;
@@ -12,6 +13,7 @@ use winit::{
     application::ApplicationHandler,
     event::*,
     event_loop::{ActiveEventLoop, ControlFlow, EventLoop},
+    keyboard::Key,
     window::{Window, WindowId},
 };
 
@@ -64,10 +66,20 @@ impl Vertex {
     }
 }
 
-#[derive(Default)]
 struct App {
     window: Option<Arc<Window>>,
     state: Option<State>,
+    time: instant::Instant,
+}
+
+impl Default for App {
+    fn default() -> Self {
+        Self {
+            time: instant::Instant::now(),
+            state: None,
+            window: None,
+        }
+    }
 }
 
 struct State {
@@ -87,6 +99,8 @@ struct State {
     player_bind_group: wgpu::BindGroup,
 
     player: player::Player,
+    input_controller: Input,
+    dt: instant::Duration,
 }
 
 impl State {
@@ -225,7 +239,7 @@ impl State {
         });
 
         let mut player = player::Player::new();
-
+        let input_controller = Input::new();
         let player_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Camera Buffer"),
             contents: bytemuck::cast_slice(&[player]),
@@ -306,13 +320,35 @@ impl State {
             player_buffer,
             player_bind_group,
             player,
+            input_controller,
+            dt: instant::Instant::now().elapsed(),
         }
     }
 
-    fn update(&mut self) {
-        self.player.update();
+    fn update(&mut self, dt: instant::Duration) {
+        self.dt = dt;
+        self.player.update(&dt, &self.input_controller);
         self.queue
             .write_buffer(&self.player_buffer, 0, bytemuck::cast_slice(&[self.player]))
+    }
+
+    fn input(&mut self, event: &WindowEvent) -> bool {
+        match event {
+            WindowEvent::KeyboardInput { event, .. } => {
+                let action = if let Key::Character(ch) = event.logical_key.as_ref() {
+                    Some(ch)
+                } else {
+                    None
+                };
+
+                if let Some(key) = action {
+                    self.input_controller.update(key, event.state);
+                }
+
+                true
+            }
+            _ => false,
+        }
     }
 
     fn render(&mut self) {
@@ -370,7 +406,7 @@ impl ApplicationHandler for App {
                 .create_window(Window::default_attributes())
                 .unwrap(),
         );
-
+        self.time = instant::Instant::now();
         let state = State::new(Arc::clone(&window));
 
         self.window = Some(window);
@@ -383,17 +419,24 @@ impl ApplicationHandler for App {
         } else {
             panic!("NO state")
         };
-        match event {
-            WindowEvent::CloseRequested => {
-                println!("The close button was pressed; stopping");
-                event_loop.exit();
+
+        if !state.input(&event) {
+            match event {
+                WindowEvent::CloseRequested => {
+                    println!("The close button was pressed; stopping");
+                    event_loop.exit();
+                }
+                WindowEvent::RedrawRequested => {
+                    let now = instant::Instant::now();
+                    let dt = now - self.time;
+                    self.time = now;
+                    self.window.as_ref().unwrap().request_redraw();
+                    state.update(dt);
+                    state.render();
+                }
+
+                _ => (),
             }
-            WindowEvent::RedrawRequested => {
-                self.window.as_ref().unwrap().request_redraw();
-                state.update();
-                state.render();
-            }
-            _ => (),
         }
     }
 }
