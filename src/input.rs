@@ -1,6 +1,4 @@
-use std::rc::Rc;
-
-use winit::{event::ElementState, keyboard::KeyCode};
+use winit::event::ElementState;
 
 #[derive(Default)]
 pub struct Input {
