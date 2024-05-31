@@ -1,4 +1,5 @@
 mod camera;
+mod enemie;
 mod input;
 mod player;
 mod sprite_renderer;

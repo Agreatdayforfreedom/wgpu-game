@@ -1,3 +1,4 @@
+use crate::enemie::{Enemy, EnemyUniform};
 use crate::input::Input;
 use crate::player::Player;
 use crate::sprite_renderer::create_render_pipeline;
@@ -22,9 +23,9 @@ pub struct State {
     // vertex_buffer: wgpu::Buffer,
     // diffuse_bind_group: wgpu::BindGroup,
     sprite: sprite_renderer::SpriteRenderer,
-    enemie: Player,
+    // enemie: Enemy,
     enemie_sprites: Vec<sprite_renderer::SpriteRenderer>,
-    enemies_uniform: Uniform<PlayerUniform>,
+    enemies_uniform: Vec<Uniform<EnemyUniform>>,
     //uniforms
     camera_uniform: Uniform<Camera>,
     player_uniform: Uniform<PlayerUniform>,
@@ -93,15 +94,21 @@ impl State {
 
         //ENEMIES
         let mut enemie_sprites = Vec::<sprite_renderer::SpriteRenderer>::new();
-        let mut enemies_uniform = Vec::<&Uniform<PlayerUniform>>::new();
+        let mut enemies_uniform = Vec::<Uniform<EnemyUniform>>::new();
 
         let enemie_bytes = include_bytes!("./assets/alien1.png");
         let enemie_sprite = sprite_renderer::SpriteRenderer::new(&device, &queue, enemie_bytes);
-        let enemie = player::Player::new(cgmath::Vector2::new(100.0, 300.0));
-        let enemie_uniform = Uniform::<PlayerUniform>::new(&device);
-
         enemie_sprites.push(enemie_sprite);
-        // enemies_uniform.push(enemie_uniform);
+
+        for i in 0..(config.width / 40) {
+            //     // let enemie = Enemy::new(pos);
+            let mut enemie_uniform = Uniform::<EnemyUniform>::new(&device);
+            enemie_uniform
+                .data
+                .set_position(((i as f32 + 1.0) * 40.0, 25.0).into());
+
+            enemies_uniform.push(enemie_uniform);
+        }
 
         let input_controller = Input::new();
 
@@ -125,9 +132,8 @@ impl State {
             render_pipeline,
 
             enemie_sprites,
-            enemies_uniform: enemie_uniform,
-            enemie,
-
+            enemies_uniform,
+            // enemie,
             sprite,
             camera_uniform,
             player_uniform,
@@ -139,17 +145,15 @@ impl State {
 
     pub fn update(&mut self, dt: instant::Duration) {
         self.dt = dt;
-        // self.player.update(&dt, &self.input_controller);
+
         self.player_uniform
             .data
             .update(&mut self.player, &dt, &self.input_controller);
         self.player_uniform.write(&mut self.queue);
-        self.enemies_uniform
-            .data
-            .update(&mut self.enemie, &dt, &self.input_controller);
-        self.enemies_uniform.write(&mut self.queue);
-        // self.queue
-        //     .write_buffer(&self.player_buffer, 0, bytemuck::cast_slice(&[self.player]))
+
+        for e in &self.enemies_uniform {
+            e.write(&mut self.queue);
+        }
     }
 
     pub fn input(&mut self, event: &WindowEvent) -> bool {
@@ -212,13 +216,13 @@ impl State {
             rpass.draw(0..6, 0..1);
 
             rpass.set_vertex_buffer(0, self.enemie_sprites[0].buffer.slice(..));
-            // rpass.set_vertex_buffer(1, self.camera_uniform.buffer.slice(..));
-            rpass.set_vertex_buffer(2, self.enemies_uniform.buffer.slice(..));
-            //bind_groups
             rpass.set_bind_group(0, &self.enemie_sprites[0].bind_group, &[]);
-            // rpass.set_bind_group(1, &self.camera_uniform.bind_group, &[]);
-            rpass.set_bind_group(2, &self.enemies_uniform.bind_group, &[]);
-            rpass.draw(0..6, 0..1);
+            //bind_groups
+            for e in &self.enemies_uniform {
+                rpass.set_vertex_buffer(2, e.buffer.slice(..));
+                rpass.set_bind_group(2, &e.bind_group, &[]);
+                rpass.draw(0..6, 0..1);
+            }
         }
 
         self.queue.submit(Some(encoder.finish()));
