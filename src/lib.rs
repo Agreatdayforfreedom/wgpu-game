@@ -1,6 +1,7 @@
 mod camera;
 mod input;
 mod player;
+mod sprite_renderer;
 mod state;
 mod texture;
 mod uniform;

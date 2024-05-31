@@ -1,62 +1,15 @@
 use crate::input::Input;
-use crate::player;
+use crate::player::Player;
+use crate::sprite_renderer::create_render_pipeline;
 use crate::texture::Texture;
 use crate::uniform::Uniform;
 use crate::{camera::Camera, player::PlayerUniform};
+use crate::{player, sprite_renderer};
 
 use pollster::block_on;
 use std::sync::Arc;
 use wgpu::util::DeviceExt;
 use winit::{event::*, keyboard::Key, window::Window};
-
-#[repr(C)]
-#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-struct Vertex {
-    position: [f32; 2],
-    tex_coords: [f32; 2],
-}
-
-const VERTICES: &[Vertex] = &[
-    Vertex {
-        position: [0.0, 1.0],
-        tex_coords: [0.0, 1.0],
-    },
-    Vertex {
-        position: [1.0, 0.0],
-        tex_coords: [1.0, 0.0],
-    },
-    Vertex {
-        position: [0.0, 0.0],
-        tex_coords: [0.0, 0.0],
-    },
-    Vertex {
-        position: [0.0, 1.0],
-        tex_coords: [0.0, 1.0],
-    },
-    Vertex {
-        position: [1.0, 1.0],
-        tex_coords: [1.0, 1.0],
-    },
-    Vertex {
-        position: [1.0, 0.0],
-        tex_coords: [1.0, 0.0],
-    },
-];
-
-impl Vertex {
-    const ATTRIBS: [wgpu::VertexAttribute; 2] =
-        wgpu::vertex_attr_array![0 => Float32x2, 1 => Float32x2];
-
-    fn desc() -> wgpu::VertexBufferLayout<'static> {
-        use std::mem;
-
-        wgpu::VertexBufferLayout {
-            array_stride: mem::size_of::<Self>() as wgpu::BufferAddress,
-            step_mode: wgpu::VertexStepMode::Vertex,
-            attributes: &Self::ATTRIBS,
-        }
-    }
-}
 
 pub struct State {
     surface: wgpu::Surface<'static>,
@@ -66,9 +19,12 @@ pub struct State {
 
     render_pipeline: wgpu::RenderPipeline,
 
-    vertex_buffer: wgpu::Buffer,
-    diffuse_bind_group: wgpu::BindGroup,
-
+    // vertex_buffer: wgpu::Buffer,
+    // diffuse_bind_group: wgpu::BindGroup,
+    sprite: sprite_renderer::SpriteRenderer,
+    enemie: Player,
+    enemie_sprites: Vec<sprite_renderer::SpriteRenderer>,
+    enemies_uniform: Uniform<PlayerUniform>,
     //uniforms
     camera_uniform: Uniform<Camera>,
     player_uniform: Uniform<PlayerUniform>,
@@ -107,12 +63,6 @@ impl State {
         ))
         .unwrap();
 
-        let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Vertex buffer"),
-            contents: bytemuck::cast_slice(VERTICES),
-            usage: wgpu::BufferUsages::VERTEX,
-        });
-
         let surface_caps = surface.get_capabilities(&adapter);
         let surface_format = surface_caps
             .formats
@@ -135,88 +85,37 @@ impl State {
         let shader = device.create_shader_module(wgpu::include_wgsl!("shader.wgsl"));
 
         let diffuse_bytes = include_bytes!("./assets/spaceship.png");
-        let diffuse_texture =
-            Texture::from_bytes(&device, &queue, diffuse_bytes, "spaceship").unwrap();
-
-        let texture_bind_group_layout =
-            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                entries: &[
-                    wgpu::BindGroupLayoutEntry {
-                        binding: 0,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Texture {
-                            multisampled: false,
-                            view_dimension: wgpu::TextureViewDimension::D2,
-                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
-                        },
-                        count: None,
-                    },
-                    wgpu::BindGroupLayoutEntry {
-                        binding: 1,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
-                        count: None,
-                    },
-                ],
-                label: Some("texture_bind_group_layout"),
-            });
-
-        let diffuse_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: &texture_bind_group_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: wgpu::BindingResource::TextureView(&diffuse_texture.view),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: wgpu::BindingResource::Sampler(&diffuse_texture.sampler),
-                },
-            ],
-            label: Some("diffuse_bind_group"),
-        });
-
+        let sprite = sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes);
         let camera_uniform = Uniform::<Camera>::new(&device);
 
-        let player = player::Player::new();
+        let player = player::Player::new(cgmath::Vector2::new(400.0, 550.0));
         let player_uniform = Uniform::<PlayerUniform>::new(&device);
+
+        //ENEMIES
+        let mut enemie_sprites = Vec::<sprite_renderer::SpriteRenderer>::new();
+        let mut enemies_uniform = Vec::<&Uniform<PlayerUniform>>::new();
+
+        let enemie_bytes = include_bytes!("./assets/alien1.png");
+        let enemie_sprite = sprite_renderer::SpriteRenderer::new(&device, &queue, enemie_bytes);
+        let enemie = player::Player::new(cgmath::Vector2::new(100.0, 300.0));
+        let enemie_uniform = Uniform::<PlayerUniform>::new(&device);
+
+        enemie_sprites.push(enemie_sprite);
+        // enemies_uniform.push(enemie_uniform);
 
         let input_controller = Input::new();
 
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: None,
             bind_group_layouts: &[
-                &texture_bind_group_layout,
+                &sprite.bind_group_layout,
                 &camera_uniform.bind_group_layout,
                 &player_uniform.bind_group_layout,
             ],
             push_constant_ranges: &[],
         });
 
-        let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: None,
-            layout: Some(&pipeline_layout),
-            vertex: wgpu::VertexState {
-                module: &shader,
-                entry_point: "vs_main",
-                compilation_options: Default::default(),
-                buffers: &[Vertex::desc()],
-            },
-            fragment: Some(wgpu::FragmentState {
-                module: &shader,
-                entry_point: "fs_main",
-                compilation_options: Default::default(),
-                targets: &[Some(wgpu::ColorTargetState {
-                    format: config.format,
-                    blend: Some(wgpu::BlendState::REPLACE),
-                    write_mask: wgpu::ColorWrites::all(),
-                })],
-            }),
-            primitive: wgpu::PrimitiveState::default(),
-            depth_stencil: None,
-            multisample: wgpu::MultisampleState::default(),
-            multiview: None,
-        });
+        let render_pipeline = create_render_pipeline(&device, &shader, &config, &pipeline_layout);
 
         Self {
             surface,
@@ -224,8 +123,12 @@ impl State {
             queue,
             config,
             render_pipeline,
-            vertex_buffer,
-            diffuse_bind_group,
+
+            enemie_sprites,
+            enemies_uniform: enemie_uniform,
+            enemie,
+
+            sprite,
             camera_uniform,
             player_uniform,
             player,
@@ -241,6 +144,10 @@ impl State {
             .data
             .update(&mut self.player, &dt, &self.input_controller);
         self.player_uniform.write(&mut self.queue);
+        self.enemies_uniform
+            .data
+            .update(&mut self.enemie, &dt, &self.input_controller);
+        self.enemies_uniform.write(&mut self.queue);
         // self.queue
         //     .write_buffer(&self.player_buffer, 0, bytemuck::cast_slice(&[self.player]))
     }
@@ -291,17 +198,26 @@ impl State {
 
             //pipeline
             rpass.set_pipeline(&self.render_pipeline);
-
+            rpass.set_bind_group(0, &self.sprite.bind_group, &[]);
+            rpass.set_bind_group(1, &self.camera_uniform.bind_group, &[]);
+            rpass.set_bind_group(2, &self.player_uniform.bind_group, &[]);
             //buffers
-            rpass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+
+            // rpass.draw(0..6, 0..1);
+
+            rpass.set_vertex_buffer(0, self.sprite.buffer.slice(..));
             rpass.set_vertex_buffer(1, self.camera_uniform.buffer.slice(..));
             rpass.set_vertex_buffer(2, self.player_uniform.buffer.slice(..));
 
-            //bind_groups
-            rpass.set_bind_group(0, &self.diffuse_bind_group, &[]);
-            rpass.set_bind_group(1, &self.camera_uniform.bind_group, &[]);
-            rpass.set_bind_group(2, &self.player_uniform.bind_group, &[]);
+            rpass.draw(0..6, 0..1);
 
+            rpass.set_vertex_buffer(0, self.enemie_sprites[0].buffer.slice(..));
+            // rpass.set_vertex_buffer(1, self.camera_uniform.buffer.slice(..));
+            rpass.set_vertex_buffer(2, self.enemies_uniform.buffer.slice(..));
+            //bind_groups
+            rpass.set_bind_group(0, &self.enemie_sprites[0].bind_group, &[]);
+            // rpass.set_bind_group(1, &self.camera_uniform.bind_group, &[]);
+            rpass.set_bind_group(2, &self.enemies_uniform.bind_group, &[]);
             rpass.draw(0..6, 0..1);
         }
 

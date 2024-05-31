@@ -9,9 +9,9 @@ pub struct Player {
 
 const SPEED: f32 = 500.0;
 impl Player {
-    pub fn new() -> Self {
+    pub fn new(position: cgmath::Vector2<f32>) -> Self {
         Self {
-            position: cgmath::Vector2::new(400.0, 550.0),
+            position,
             scale: 40.0,
         }
     }
