@@ -1,15 +1,21 @@
 use cgmath::SquareMatrix;
 
+use crate::uniform::Uniform;
+
 pub struct Enemy {
     pub position: cgmath::Vector2<f32>,
     pub size: f32,
+    pub alive: bool,
+    pub uniform: Uniform<EnemyUniform>,
 }
 
 impl Enemy {
-    pub fn new(position: cgmath::Vector2<f32>) -> Self {
+    pub fn new(position: cgmath::Vector2<f32>, uniform: Uniform<EnemyUniform>) -> Self {
         Self {
             position,
             size: 24.0,
+            alive: true,
+            uniform,
         }
     }
 }
