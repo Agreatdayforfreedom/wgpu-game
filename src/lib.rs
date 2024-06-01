@@ -2,6 +2,7 @@ mod camera;
 mod enemie;
 mod input;
 mod player;
+mod projectile;
 mod sprite_renderer;
 mod state;
 mod texture;

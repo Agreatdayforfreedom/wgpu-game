@@ -1,11 +1,12 @@
 use crate::enemie::{Enemy, EnemyUniform};
 use crate::input::Input;
 use crate::player::Player;
+use crate::projectile::ProjectileUniform;
 use crate::sprite_renderer::create_render_pipeline;
 use crate::texture::Texture;
 use crate::uniform::Uniform;
 use crate::{camera::Camera, player::PlayerUniform};
-use crate::{player, sprite_renderer};
+use crate::{player, projectile, sprite_renderer};
 
 use pollster::block_on;
 use std::sync::Arc;
@@ -23,14 +24,17 @@ pub struct State {
     // vertex_buffer: wgpu::Buffer,
     // diffuse_bind_group: wgpu::BindGroup,
     sprite: sprite_renderer::SpriteRenderer,
-    // enemie: Enemy,
     enemie_sprites: Vec<sprite_renderer::SpriteRenderer>,
-    enemies_uniform: Vec<Uniform<EnemyUniform>>,
+    projectile_sprite: sprite_renderer::SpriteRenderer,
     //uniforms
+    enemies_uniform: Vec<Uniform<EnemyUniform>>,
     camera_uniform: Uniform<Camera>,
     player_uniform: Uniform<PlayerUniform>,
+    projectile_uniform: Uniform<ProjectileUniform>,
 
     player: player::Player,
+    projectile: projectile::Projectile,
+
     input_controller: Input,
     dt: instant::Duration,
 }
@@ -92,6 +96,12 @@ impl State {
         let player = player::Player::new(cgmath::Vector2::new(400.0, 550.0));
         let player_uniform = Uniform::<PlayerUniform>::new(&device);
 
+        let diffuse_bytes = include_bytes!("./assets/bullet.png");
+        let projectile_sprite =
+            sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes);
+        let projectile = projectile::Projectile::new(player.position, 10.0);
+        let projectile_uniform = Uniform::<ProjectileUniform>::new(&device);
+
         //ENEMIES
         let mut enemie_sprites = Vec::<sprite_renderer::SpriteRenderer>::new();
         let mut enemies_uniform = Vec::<Uniform<EnemyUniform>>::new();
@@ -100,14 +110,15 @@ impl State {
         let enemie_sprite = sprite_renderer::SpriteRenderer::new(&device, &queue, enemie_bytes);
         enemie_sprites.push(enemie_sprite);
 
-        for i in 0..(config.width / 40) {
-            //     // let enemie = Enemy::new(pos);
-            let mut enemie_uniform = Uniform::<EnemyUniform>::new(&device);
-            enemie_uniform
-                .data
-                .set_position(((i as f32 + 1.0) * 40.0, 25.0).into());
+        for i in 0..(config.width / 36) {
+            for j in 0..(config.height / 80) {
+                let mut enemie_uniform = Uniform::<EnemyUniform>::new(&device);
+                enemie_uniform
+                    .data
+                    .set_position(((i as f32 + 1.0) * 40.0, (j as f32 + 1.0) * 25.0).into());
 
-            enemies_uniform.push(enemie_uniform);
+                enemies_uniform.push(enemie_uniform);
+            }
         }
 
         let input_controller = Input::new();
@@ -138,6 +149,11 @@ impl State {
             camera_uniform,
             player_uniform,
             player,
+
+            projectile,
+            projectile_uniform,
+            projectile_sprite,
+
             input_controller,
             dt: instant::Instant::now().elapsed(),
         }
@@ -154,6 +170,11 @@ impl State {
         for e in &self.enemies_uniform {
             e.write(&mut self.queue);
         }
+
+        self.projectile_uniform
+            .data
+            .update(&mut self.projectile, &dt);
+        self.projectile_uniform.write(&mut self.queue);
     }
 
     pub fn input(&mut self, event: &WindowEvent) -> bool {
@@ -223,6 +244,12 @@ impl State {
                 rpass.set_bind_group(2, &e.bind_group, &[]);
                 rpass.draw(0..6, 0..1);
             }
+
+            rpass.set_vertex_buffer(0, self.projectile_sprite.buffer.slice(..));
+            rpass.set_bind_group(0, &self.projectile_sprite.bind_group, &[]);
+            rpass.set_vertex_buffer(2, self.projectile_uniform.buffer.slice(..));
+            rpass.set_bind_group(2, &self.projectile_uniform.bind_group, &[]);
+            rpass.draw(0..6, 0..1);
         }
 
         self.queue.submit(Some(encoder.finish()));
