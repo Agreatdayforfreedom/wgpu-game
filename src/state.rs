@@ -30,10 +30,9 @@ pub struct State {
     enemies_uniform: Vec<Uniform<EnemyUniform>>,
     camera_uniform: Uniform<Camera>,
     player_uniform: Uniform<PlayerUniform>,
-    projectile_uniform: Uniform<ProjectileUniform>,
-
+    // projectile_uniform: Vec<Uniform<ProjectileUniform>>,
     player: player::Player,
-    projectile: projectile::Projectile,
+    projectile: Vec<projectile::Projectile>,
 
     input_controller: Input,
     dt: instant::Duration,
@@ -99,9 +98,8 @@ impl State {
         let diffuse_bytes = include_bytes!("./assets/bullet.png");
         let projectile_sprite =
             sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes);
-        let projectile = projectile::Projectile::new(player.position, 10.0);
         let projectile_uniform = Uniform::<ProjectileUniform>::new(&device);
-
+        let projectile = projectile::Projectile::new(player.position, 10.0, projectile_uniform);
         //ENEMIES
         let mut enemie_sprites = Vec::<sprite_renderer::SpriteRenderer>::new();
         let mut enemies_uniform = Vec::<Uniform<EnemyUniform>>::new();
@@ -150,8 +148,8 @@ impl State {
             player_uniform,
             player,
 
-            projectile,
-            projectile_uniform,
+            projectile: vec![],
+
             projectile_sprite,
 
             input_controller,
@@ -170,11 +168,23 @@ impl State {
         for e in &self.enemies_uniform {
             e.write(&mut self.queue);
         }
+        let new_projectile = self.player.spawn_fire(&self.device, &self.input_controller);
+        if let Some(projectile) = new_projectile {
+            self.projectile.push(projectile);
+        }
+        for p in &mut self.projectile {
+            if p.alive {
+                p.update(&dt, &self.input_controller);
+                p.uniform.write(&mut self.queue);
+            }
+        }
 
-        self.projectile_uniform
-            .data
-            .update(&mut self.projectile, &dt);
-        self.projectile_uniform.write(&mut self.queue);
+        self.projectile = self
+            .projectile
+            .drain(..)
+            .into_iter()
+            .filter(|p| p.alive != false)
+            .collect();
     }
 
     pub fn input(&mut self, event: &WindowEvent) -> bool {
@@ -245,11 +255,15 @@ impl State {
                 rpass.draw(0..6, 0..1);
             }
 
-            rpass.set_vertex_buffer(0, self.projectile_sprite.buffer.slice(..));
-            rpass.set_bind_group(0, &self.projectile_sprite.bind_group, &[]);
-            rpass.set_vertex_buffer(2, self.projectile_uniform.buffer.slice(..));
-            rpass.set_bind_group(2, &self.projectile_uniform.bind_group, &[]);
-            rpass.draw(0..6, 0..1);
+            for p in &self.projectile {
+                if p.alive {
+                    rpass.set_vertex_buffer(0, self.projectile_sprite.buffer.slice(..));
+                    rpass.set_bind_group(0, &self.projectile_sprite.bind_group, &[]);
+                    rpass.set_vertex_buffer(2, p.uniform.buffer.slice(..));
+                    rpass.set_bind_group(2, &p.uniform.bind_group, &[]);
+                    rpass.draw(0..6, 0..1);
+                }
+            }
         }
 
         self.queue.submit(Some(encoder.finish()));

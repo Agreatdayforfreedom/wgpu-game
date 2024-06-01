@@ -6,6 +6,7 @@ pub struct Input {
     a_pressed: bool,
     s_pressed: bool,
     w_pressed: bool,
+    f_pressed: bool,
 }
 
 impl Input {
@@ -28,6 +29,9 @@ impl Input {
             "w" => {
                 self.w_pressed = pressed;
             }
+            "f" => {
+                self.f_pressed = pressed;
+            }
             _ => (),
         }
     }
@@ -41,6 +45,8 @@ impl Input {
             self.s_pressed
         } else if key == "w" {
             self.w_pressed
+        } else if key == "f" {
+            self.f_pressed
         } else {
             false
         }

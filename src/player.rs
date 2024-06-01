@@ -1,10 +1,11 @@
-use cgmath::{SquareMatrix, Vector2};
-
 use crate::input::Input;
+use crate::projectile;
+use cgmath::{SquareMatrix, Vector2};
 
 pub struct Player {
     pub position: cgmath::Vector2<f32>,
     scale: f32,
+    interval: instant::Instant,
 }
 
 const SPEED: f32 = 500.0;
@@ -13,6 +14,7 @@ impl Player {
         Self {
             position,
             scale: 40.0,
+            interval: instant::Instant::now(),
         }
     }
 
@@ -49,6 +51,24 @@ impl Player {
             position.y += SPEED * dt;
         }
         self.position += position;
+    }
+
+    pub fn spawn_fire(
+        &mut self,
+        device: &wgpu::Device,
+        input: &Input,
+    ) -> Option<projectile::Projectile> {
+        if input.is_pressed("f") && self.interval.elapsed().as_millis() >= 500 {
+            self.interval = instant::Instant::now();
+            let projectile_uniform =
+                crate::uniform::Uniform::<projectile::ProjectileUniform>::new(&device);
+            return Some(projectile::Projectile::new(
+                (self.position.x + (self.scale / 2.0) - 5.0, self.position.y).into(),
+                10.0,
+                projectile_uniform,
+            ));
+        }
+        None
     }
 }
 
