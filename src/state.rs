@@ -179,6 +179,11 @@ impl State {
             }
         }
 
+        //check collsions
+        for p in &mut self.projectile {
+            for e in &mut self.enemies_uniform {}
+        }
+
         self.projectile = self
             .projectile
             .drain(..)

@@ -4,7 +4,7 @@ use cgmath::{SquareMatrix, Vector2};
 
 pub struct Player {
     pub position: cgmath::Vector2<f32>,
-    scale: f32,
+    size: f32,
     interval: instant::Instant,
 }
 
@@ -13,7 +13,7 @@ impl Player {
     pub fn new(position: cgmath::Vector2<f32>) -> Self {
         Self {
             position,
-            scale: 40.0,
+            size: 40.0,
             interval: instant::Instant::now(),
         }
     }
@@ -21,7 +21,7 @@ impl Player {
     pub fn update(&mut self, dt: &instant::Duration, input: &Input) -> cgmath::Matrix4<f32> {
         let model = cgmath::Matrix4::identity()
             * cgmath::Matrix4::from_translation((self.position.x, self.position.y, 0.0).into())
-            * cgmath::Matrix4::from_scale(self.scale);
+            * cgmath::Matrix4::from_scale(self.size);
         if input.is_pressed("d") {
             self.movement("d", dt);
         } else if input.is_pressed("a") {
@@ -63,7 +63,7 @@ impl Player {
             let projectile_uniform =
                 crate::uniform::Uniform::<projectile::ProjectileUniform>::new(&device);
             return Some(projectile::Projectile::new(
-                (self.position.x + (self.scale / 2.0) - 5.0, self.position.y).into(),
+                (self.position.x + (self.size / 2.0) - 5.0, self.position.y).into(),
                 10.0,
                 projectile_uniform,
             ));

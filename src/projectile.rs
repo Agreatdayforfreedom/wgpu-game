@@ -4,7 +4,7 @@ use crate::input::{self, Input};
 use crate::uniform;
 pub struct Projectile {
     pub position: cgmath::Vector2<f32>,
-    pub scale: f32,
+    pub size: f32,
     pub alive: bool,
 
     pub uniform: uniform::Uniform<ProjectileUniform>,
@@ -13,12 +13,12 @@ const FIRE_SPEED: f32 = 600.0;
 impl Projectile {
     pub fn new(
         position: cgmath::Vector2<f32>,
-        scale: f32,
+        size: f32,
         uniform: uniform::Uniform<ProjectileUniform>,
     ) -> Self {
         Self {
             position,
-            scale,
+            size,
             alive: true,
             uniform,
         }
@@ -27,7 +27,7 @@ impl Projectile {
     pub fn update(&mut self, dt: &instant::Duration, input: &Input) -> cgmath::Matrix4<f32> {
         let model = cgmath::Matrix4::identity()
             * cgmath::Matrix4::from_translation((self.position.x, self.position.y, 0.0).into())
-            * cgmath::Matrix4::from_scale(self.scale);
+            * cgmath::Matrix4::from_scale(self.size);
 
         if input.is_pressed("f") {
             self.alive = true;

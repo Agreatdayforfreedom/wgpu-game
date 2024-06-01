@@ -2,14 +2,14 @@ use cgmath::SquareMatrix;
 
 pub struct Enemy {
     pub position: cgmath::Vector2<f32>,
-    scale: f32,
+    pub size: f32,
 }
 
 impl Enemy {
     pub fn new(position: cgmath::Vector2<f32>) -> Self {
         Self {
             position,
-            scale: 40.0,
+            size: 24.0,
         }
     }
 }
