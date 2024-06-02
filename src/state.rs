@@ -1,13 +1,11 @@
-use crate::collider::check_collision;
+use crate::collider::{check_collision, check_collision_ep};
 use crate::enemie::{self, Enemy, EnemyUniform};
 use crate::input::Input;
-use crate::player::Player;
-use crate::projectile::ProjectileUniform;
 use crate::sprite_renderer::create_render_pipeline;
-use crate::texture::Texture;
 use crate::uniform::Uniform;
 use crate::{camera::Camera, player::PlayerUniform};
 use crate::{player, projectile, sprite_renderer};
+use rand::{self, Rng};
 
 use pollster::block_on;
 use std::sync::Arc;
@@ -26,11 +24,12 @@ pub struct State {
     sprite: sprite_renderer::SpriteRenderer,
     enemie_sprites: Vec<sprite_renderer::SpriteRenderer>,
     projectile_sprite: sprite_renderer::SpriteRenderer,
+    enemy_projectile_sprite: sprite_renderer::SpriteRenderer, // the same for all
     //uniforms
     enemies: Vec<Enemy>,
     camera_uniform: Uniform<Camera>,
     player_uniform: Uniform<PlayerUniform>,
-    // projectile_uniform: Vec<Uniform<ProjectileUniform>>,
+
     player: player::Player,
     projectile: Vec<projectile::Projectile>,
 
@@ -101,7 +100,9 @@ impl State {
         //ENEMIES
         let mut enemie_sprites = Vec::<sprite_renderer::SpriteRenderer>::new();
         let mut enemies = Vec::<Enemy>::new();
-
+        let diffuse_bytes = include_bytes!("./assets/alien_bullet.png");
+        let enemy_projectile_sprite =
+            sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes);
         let enemie_bytes = include_bytes!("./assets/alien1.png");
         let enemie_sprite = sprite_renderer::SpriteRenderer::new(&device, &queue, enemie_bytes);
         enemie_sprites.push(enemie_sprite);
@@ -138,9 +139,9 @@ impl State {
             config,
             render_pipeline,
 
-            // enemie,
             enemie_sprites,
             enemies,
+            enemy_projectile_sprite,
 
             sprite,
             camera_uniform,
@@ -158,7 +159,12 @@ impl State {
 
     pub fn update(&mut self, dt: instant::Duration) {
         self.dt = dt;
-
+        //todo
+        if !self.player.alive {
+            println!("YOU LOST!!!");
+            return;
+        }
+        println!("FPS: {}", 1.0 / dt.as_secs_f64());
         self.player_uniform
             .data
             .update(&mut self.player, &dt, &self.input_controller);
@@ -178,9 +184,27 @@ impl State {
 
         for p in &mut self.projectile {
             if p.alive {
-                p.update(&dt, &self.input_controller);
+                p.update(&dt, 1.0);
                 p.uniform.write(&mut self.queue);
             }
+        }
+
+        for e in &mut self.enemies {
+            if rand::thread_rng().gen_range(0..10000) < 1 {
+                e.spawn_fire(&self.device);
+            }
+            for p in &mut e.projectiles {
+                if p.alive {
+                    p.update(&dt, -1.0);
+                    p.uniform.write(&mut self.queue);
+                }
+            }
+
+            e.projectiles = e
+                .projectiles
+                .drain(..)
+                .filter(|p| p.alive != false)
+                .collect();
         }
 
         //check collsions
@@ -189,6 +213,15 @@ impl State {
                 if check_collision(p, e) {
                     p.alive = false;
                     e.alive = false;
+                }
+            }
+        }
+
+        for e in &mut self.enemies {
+            for p in &mut e.projectiles {
+                if check_collision_ep(p, &self.player) {
+                    p.alive = false;
+                    self.player.alive = false;
                 }
             }
         }
@@ -274,10 +307,22 @@ impl State {
                 }
             }
 
+            //draw enemy projectiles
+            rpass.set_vertex_buffer(0, self.enemy_projectile_sprite.buffer.slice(..));
+            rpass.set_bind_group(0, &self.enemy_projectile_sprite.bind_group, &[]);
+            for e in &self.enemies {
+                for p in &e.projectiles {
+                    rpass.set_vertex_buffer(2, p.uniform.buffer.slice(..));
+                    rpass.set_bind_group(2, &p.uniform.bind_group, &[]);
+                    rpass.draw(0..6, 0..1);
+                }
+            }
+
+            // draw player projectiles
+            rpass.set_vertex_buffer(0, self.projectile_sprite.buffer.slice(..));
+            rpass.set_bind_group(0, &self.projectile_sprite.bind_group, &[]);
             for p in &self.projectile {
                 if p.alive {
-                    rpass.set_vertex_buffer(0, self.projectile_sprite.buffer.slice(..));
-                    rpass.set_bind_group(0, &self.projectile_sprite.bind_group, &[]);
                     rpass.set_vertex_buffer(2, p.uniform.buffer.slice(..));
                     rpass.set_bind_group(2, &p.uniform.bind_group, &[]);
                     rpass.draw(0..6, 0..1);

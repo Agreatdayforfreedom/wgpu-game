@@ -1,6 +1,5 @@
 use cgmath::SquareMatrix;
 
-use crate::input::{self, Input};
 use crate::uniform;
 pub struct Projectile {
     pub position: cgmath::Vector2<f32>,
@@ -9,6 +8,7 @@ pub struct Projectile {
 
     pub uniform: uniform::Uniform<ProjectileUniform>,
 }
+
 const FIRE_SPEED: f32 = 600.0;
 impl Projectile {
     pub fn new(
@@ -24,26 +24,22 @@ impl Projectile {
         }
     }
 
-    pub fn update(&mut self, dt: &instant::Duration, input: &Input) -> cgmath::Matrix4<f32> {
+    pub fn update(&mut self, dt: &instant::Duration, dir: f32) -> cgmath::Matrix4<f32> {
         let model = cgmath::Matrix4::identity()
             * cgmath::Matrix4::from_translation((self.position.x, self.position.y, 0.0).into())
             * cgmath::Matrix4::from_scale(self.size);
 
-        if input.is_pressed("f") {
-            self.alive = true;
-        }
-
-        if self.position.y < 0.0 {
+        if self.position.y < 0.0 || self.position.y > 600.0 {
             self.alive = false;
         }
         self.uniform.data.model = model;
-        self.fire(dt);
+        self.fire(dt, dir);
         model
     }
 
-    pub fn fire(&mut self, dt: &instant::Duration) {
+    pub fn fire(&mut self, dt: &instant::Duration, dir: f32) {
         if self.alive {
-            self.position.y -= FIRE_SPEED * dt.as_secs_f32();
+            self.position.y -= FIRE_SPEED * dir * dt.as_secs_f32();
         }
     }
 }

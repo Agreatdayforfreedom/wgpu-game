@@ -4,7 +4,8 @@ use cgmath::{SquareMatrix, Vector2};
 
 pub struct Player {
     pub position: cgmath::Vector2<f32>,
-    size: f32,
+    pub size: f32,
+    pub alive: bool,
     interval: instant::Instant,
 }
 
@@ -14,6 +15,7 @@ impl Player {
         Self {
             position,
             size: 40.0,
+            alive: true,
             interval: instant::Instant::now(),
         }
     }

@@ -1986,6 +1986,7 @@ dependencies = [
  "instant",
  "log",
  "pollster",
+ "rand",
  "wgpu",
  "winit",
 ]
