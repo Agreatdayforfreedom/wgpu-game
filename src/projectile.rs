@@ -9,7 +9,6 @@ pub struct Projectile {
     pub uniform: uniform::Uniform<ProjectileUniform>,
 }
 
-const FIRE_SPEED: f32 = 600.0;
 impl Projectile {
     pub fn new(
         position: cgmath::Vector2<f32>,
@@ -24,7 +23,12 @@ impl Projectile {
         }
     }
 
-    pub fn update(&mut self, dt: &instant::Duration, dir: f32) -> cgmath::Matrix4<f32> {
+    pub fn update(
+        &mut self,
+        dt: &instant::Duration,
+        dir: f32,
+        fire_speed: f32,
+    ) -> cgmath::Matrix4<f32> {
         let model = cgmath::Matrix4::identity()
             * cgmath::Matrix4::from_translation((self.position.x, self.position.y, 0.0).into())
             * cgmath::Matrix4::from_scale(self.size);
@@ -33,13 +37,13 @@ impl Projectile {
             self.alive = false;
         }
         self.uniform.data.model = model;
-        self.fire(dt, dir);
+        self.fire(dt, dir, fire_speed);
         model
     }
 
-    pub fn fire(&mut self, dt: &instant::Duration, dir: f32) {
+    pub fn fire(&mut self, dt: &instant::Duration, dir: f32, fire_speed: f32) {
         if self.alive {
-            self.position.y -= FIRE_SPEED * dir * dt.as_secs_f32();
+            self.position.y -= fire_speed * dir * dt.as_secs_f32();
         }
     }
 }
