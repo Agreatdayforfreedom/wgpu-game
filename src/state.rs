@@ -20,20 +20,20 @@ pub struct State {
 
     render_pipeline: wgpu::RenderPipeline,
 
-    // vertex_buffer: wgpu::Buffer,
-    // diffuse_bind_group: wgpu::BindGroup,
     sprite: sprite_renderer::SpriteRenderer,
     enemie_sprites: Vec<sprite_renderer::SpriteRenderer>,
     projectile_sprite: sprite_renderer::SpriteRenderer,
     enemy_projectile_sprite: sprite_renderer::SpriteRenderer, // the same for all
-    //uniforms
-    enemies: Vec<Enemy>,
-    camera_uniform: Uniform<Camera>,
+    bg_sprite: sprite_renderer::SpriteRenderer,
 
+    bg_uniform: Uniform<EntityUniform>,
+    enemies: Vec<Enemy>,
     player: player::Player,
     projectile: Vec<projectile::Projectile>,
 
     input_controller: Input,
+    camera_uniform: Uniform<Camera>,
+
     dt: instant::Duration,
 }
 
@@ -87,6 +87,10 @@ impl State {
 
         let shader = device.create_shader_module(wgpu::include_wgsl!("shader.wgsl"));
 
+        let diffuse_bytes = include_bytes!("./assets/bg.webp");
+        let bg_sprite = sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes);
+        let mut bg_uniform = Uniform::<EntityUniform>::new(&device);
+        bg_uniform.data.set_position((400.0, 550.0).into());
         let diffuse_bytes = include_bytes!("./assets/spaceship.png");
         let sprite = sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes);
         let camera_uniform = Uniform::<Camera>::new(&device);
@@ -147,6 +151,9 @@ impl State {
             camera_uniform,
             player,
 
+            bg_sprite,
+            bg_uniform,
+
             projectile: vec![],
 
             projectile_sprite,
@@ -164,6 +171,8 @@ impl State {
             return;
         }
         println!("FPS: {}", 1.0 / dt.as_secs_f64());
+        self.bg_uniform.data.set_scale(800.0, 600.0);
+        self.bg_uniform.write(&mut self.queue);
         self.player.update(&dt, &self.input_controller);
         self.player.uniform.write(&mut self.queue);
 
@@ -283,13 +292,22 @@ impl State {
             //pipeline
             rpass.set_pipeline(&self.render_pipeline);
 
-            rpass.set_bind_group(0, &self.sprite.bind_group, &[]);
             rpass.set_bind_group(1, &self.camera_uniform.bind_group, &[]);
+            rpass.set_vertex_buffer(1, self.camera_uniform.buffer.slice(..));
+
+            rpass.set_bind_group(0, &self.bg_sprite.bind_group, &[]);
+            rpass.set_bind_group(2, &self.bg_uniform.bind_group, &[]);
+
+            rpass.set_vertex_buffer(0, self.bg_sprite.buffer.slice(..));
+            rpass.set_vertex_buffer(2, self.bg_uniform.buffer.slice(..));
+
+            rpass.draw(0..6, 0..1);
+
+            rpass.set_bind_group(0, &self.sprite.bind_group, &[]);
             rpass.set_bind_group(2, &self.player.uniform.bind_group, &[]);
             //buffers
 
             rpass.set_vertex_buffer(0, self.sprite.buffer.slice(..));
-            rpass.set_vertex_buffer(1, self.camera_uniform.buffer.slice(..));
             rpass.set_vertex_buffer(2, self.player.uniform.buffer.slice(..));
 
             rpass.draw(0..6, 0..1);
