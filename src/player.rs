@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use crate::projectile;
 use crate::uniform;
 use crate::{entity::EntityUniform, input::Input};
@@ -76,25 +74,3 @@ impl Player {
         None
     }
 }
-
-// #[repr(C)]
-// #[derive(Copy, Clone, Debug)]
-// pub struct PlayerUniform {
-//     pub model: cgmath::Matrix4<f32>,
-// }
-// unsafe impl bytemuck::Pod for PlayerUniform {}
-// unsafe impl bytemuck::Zeroable for PlayerUniform {}
-
-// impl Default for PlayerUniform {
-//     fn default() -> Self {
-//         Self {
-//             model: cgmath::Matrix4::identity(),
-//         }
-//     }
-// }
-
-// impl PlayerUniform {
-//     pub fn update(&mut self, player: &mut Player, dt: &instant::Duration, input: &Input) {
-//         self.model = player.update(dt, input); // ??????
-//     }
-// }

@@ -1,5 +1,3 @@
-use cgmath::SquareMatrix;
-
 use crate::entity::EntityUniform;
 use crate::projectile;
 use crate::uniform::Uniform;

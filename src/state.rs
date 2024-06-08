@@ -9,7 +9,6 @@ use crate::{player, projectile, sprite_renderer};
 use rand::{self, Rng};
 
 use pollster::block_on;
-use std::rc::Rc;
 use std::sync::Arc;
 use winit::{event::*, keyboard::Key, window::Window};
 
