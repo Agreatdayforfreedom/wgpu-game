@@ -1,6 +1,7 @@
 mod camera;
 mod collider;
 mod enemie;
+mod entity;
 mod input;
 mod player;
 mod projectile;

@@ -1,13 +1,15 @@
+use crate::camera::Camera;
 use crate::collider::{check_collision, check_collision_ep};
-use crate::enemie::{self, Enemy, EnemyUniform};
+use crate::enemie::Enemy;
+use crate::entity::EntityUniform;
 use crate::input::Input;
 use crate::sprite_renderer::create_render_pipeline;
 use crate::uniform::Uniform;
-use crate::{camera::Camera, player::PlayerUniform};
 use crate::{player, projectile, sprite_renderer};
 use rand::{self, Rng};
 
 use pollster::block_on;
+use std::rc::Rc;
 use std::sync::Arc;
 use winit::{event::*, keyboard::Key, window::Window};
 
@@ -28,7 +30,6 @@ pub struct State {
     //uniforms
     enemies: Vec<Enemy>,
     camera_uniform: Uniform<Camera>,
-    player_uniform: Uniform<PlayerUniform>,
 
     player: player::Player,
     projectile: Vec<projectile::Projectile>,
@@ -91,8 +92,8 @@ impl State {
         let sprite = sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes);
         let camera_uniform = Uniform::<Camera>::new(&device);
 
-        let player = player::Player::new(cgmath::Vector2::new(400.0, 550.0));
-        let player_uniform = Uniform::<PlayerUniform>::new(&device);
+        let player_uniform = Uniform::<EntityUniform>::new(&device);
+        let player = player::Player::new(cgmath::Vector2::new(400.0, 550.0), player_uniform);
 
         let diffuse_bytes = include_bytes!("./assets/bullet.png");
         let projectile_sprite =
@@ -110,7 +111,7 @@ impl State {
         for i in 0..(config.width / 36) {
             for j in 0..(config.height / 80) {
                 let position = ((i as f32 + 1.0) * 40.0, (j as f32 + 1.0) * 25.0);
-                let mut uniform = Uniform::<EnemyUniform>::new(&device);
+                let mut uniform = Uniform::<EntityUniform>::new(&device);
                 uniform.data.set_position(position.into());
 
                 let enemie = Enemy::new(position.into(), uniform);
@@ -125,7 +126,7 @@ impl State {
             bind_group_layouts: &[
                 &sprite.bind_group_layout,
                 &camera_uniform.bind_group_layout,
-                &player_uniform.bind_group_layout,
+                &player.uniform.bind_group_layout,
             ],
             push_constant_ranges: &[],
         });
@@ -145,7 +146,6 @@ impl State {
 
             sprite,
             camera_uniform,
-            player_uniform,
             player,
 
             projectile: vec![],
@@ -165,10 +165,8 @@ impl State {
             return;
         }
         println!("FPS: {}", 1.0 / dt.as_secs_f64());
-        self.player_uniform
-            .data
-            .update(&mut self.player, &dt, &self.input_controller);
-        self.player_uniform.write(&mut self.queue);
+        self.player.update(&dt, &self.input_controller);
+        self.player.uniform.write(&mut self.queue);
 
         for e in &self.enemies {
             if e.alive {
@@ -285,14 +283,15 @@ impl State {
 
             //pipeline
             rpass.set_pipeline(&self.render_pipeline);
+
             rpass.set_bind_group(0, &self.sprite.bind_group, &[]);
             rpass.set_bind_group(1, &self.camera_uniform.bind_group, &[]);
-            rpass.set_bind_group(2, &self.player_uniform.bind_group, &[]);
+            rpass.set_bind_group(2, &self.player.uniform.bind_group, &[]);
             //buffers
 
             rpass.set_vertex_buffer(0, self.sprite.buffer.slice(..));
             rpass.set_vertex_buffer(1, self.camera_uniform.buffer.slice(..));
-            rpass.set_vertex_buffer(2, self.player_uniform.buffer.slice(..));
+            rpass.set_vertex_buffer(2, self.player.uniform.buffer.slice(..));
 
             rpass.draw(0..6, 0..1);
 

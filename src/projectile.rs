@@ -1,19 +1,19 @@
 use cgmath::SquareMatrix;
 
-use crate::uniform;
+use crate::{entity::EntityUniform, uniform};
 pub struct Projectile {
     pub position: cgmath::Vector2<f32>,
     pub size: f32,
     pub alive: bool,
 
-    pub uniform: uniform::Uniform<ProjectileUniform>,
+    pub uniform: uniform::Uniform<EntityUniform>,
 }
 
 impl Projectile {
     pub fn new(
         position: cgmath::Vector2<f32>,
         size: f32,
-        uniform: uniform::Uniform<ProjectileUniform>,
+        uniform: uniform::Uniform<EntityUniform>,
     ) -> Self {
         Self {
             position,
@@ -45,21 +45,5 @@ impl Projectile {
         if self.alive {
             self.position.y -= fire_speed * dir * dt.as_secs_f32();
         }
-    }
-}
-
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct ProjectileUniform {
-    pub model: cgmath::Matrix4<f32>,
-}
-
-unsafe impl bytemuck::Pod for ProjectileUniform {}
-unsafe impl bytemuck::Zeroable for ProjectileUniform {}
-
-impl Default for ProjectileUniform {
-    fn default() -> Self {
-        let model = cgmath::Matrix4::identity();
-        Self { model }
     }
 }
