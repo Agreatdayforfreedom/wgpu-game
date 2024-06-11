@@ -87,26 +87,25 @@ impl State {
 
         let shader = device.create_shader_module(wgpu::include_wgsl!("shader.wgsl"));
 
+        let camera_uniform = Uniform::<Camera>::new(&device);
+
+        //BG
         let diffuse_bytes = include_bytes!("./assets/bg.webp");
         let bg_sprite = sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes);
         let mut bg_uniform = Uniform::<EntityUniform>::new(&device);
         bg_uniform.data.set_position((400.0, 550.0).into());
+        bg_uniform.data.set_scale(800.0, 600.0);
+
+        //PLAYER
         let diffuse_bytes = include_bytes!("./assets/spaceship.png");
         let sprite = sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes);
-        let camera_uniform = Uniform::<Camera>::new(&device);
-
         let player_uniform = Uniform::<EntityUniform>::new(&device);
         let player = player::Player::new(cgmath::Vector2::new(400.0, 550.0), player_uniform);
 
-        let diffuse_bytes = include_bytes!("./assets/bullet.png");
-        let projectile_sprite =
-            sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes);
         //ENEMIES
         let mut enemie_sprites = Vec::<sprite_renderer::SpriteRenderer>::new();
         let mut enemies = Vec::<Enemy>::new();
-        let diffuse_bytes = include_bytes!("./assets/alien_bullet.png");
-        let enemy_projectile_sprite =
-            sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes);
+
         let enemie_bytes = include_bytes!("./assets/alien1.png");
         let enemie_sprite = sprite_renderer::SpriteRenderer::new(&device, &queue, enemie_bytes);
         enemie_sprites.push(enemie_sprite);
@@ -122,6 +121,17 @@ impl State {
             }
         }
 
+        //PROJECTILES
+
+        let diffuse_bytes = include_bytes!("./assets/bullet.png");
+        let projectile_sprite =
+            sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes);
+
+        let diffuse_bytes = include_bytes!("./assets/alien_bullet.png");
+        let enemy_projectile_sprite =
+            sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes);
+
+        //INPUT
         let input_controller = Input::new();
 
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
@@ -171,7 +181,6 @@ impl State {
             return;
         }
         println!("FPS: {}", 1.0 / dt.as_secs_f64());
-        self.bg_uniform.data.set_scale(800.0, 600.0);
         self.bg_uniform.write(&mut self.queue);
         self.player.update(&dt, &self.input_controller);
         self.player.uniform.write(&mut self.queue);
