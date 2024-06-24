@@ -1,4 +1,5 @@
 use crate::entity::EntityUniform;
+use crate::explosion::{self, Explosion};
 use crate::projectile;
 use crate::uniform::Uniform;
 pub struct Enemy {
@@ -8,15 +9,21 @@ pub struct Enemy {
     pub uniform: Uniform<EntityUniform>,
     pub projectiles: Vec<projectile::Projectile>,
     pub interval: instant::Instant,
+    pub explosion: Explosion,
 }
 
 impl Enemy {
-    pub fn new(position: cgmath::Vector2<f32>, uniform: Uniform<EntityUniform>) -> Self {
+    pub fn new(
+        position: cgmath::Vector2<f32>,
+        uniform: Uniform<EntityUniform>,
+        explosion: Explosion,
+    ) -> Self {
         Self {
             position,
             size: 24.0,
             alive: true,
             uniform,
+            explosion,
             projectiles: vec![],
             interval: instant::Instant::now(),
         }

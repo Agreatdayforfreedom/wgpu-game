@@ -2,7 +2,7 @@ use crate::camera::Camera;
 use crate::collider::{check_collision, check_collision_ep};
 use crate::enemie::Enemy;
 use crate::entity::EntityUniform;
-use crate::explosion::Explosion;
+use crate::explosion::{self, Explosion};
 use crate::input::Input;
 use crate::sprite_renderer::create_render_pipeline;
 use crate::uniform::Uniform;
@@ -28,14 +28,12 @@ pub struct State {
     projectile_sprite: sprite_renderer::SpriteRenderer,
     enemy_projectile_sprite: sprite_renderer::SpriteRenderer, // the same for all
     bg_sprite: sprite_renderer::SpriteRenderer,
-    explosion_sprites: Vec<sprite_renderer::SpriteRenderer>,
 
-    explosion: Explosion,
     bg_uniform: Uniform<EntityUniform>,
     enemies: Vec<Enemy>,
     player: player::Player,
     projectile: Vec<projectile::Projectile>,
-
+    explosions: Vec<explosion::Explosion>,
     input_controller: Input,
     camera_uniform: Uniform<Camera>,
 
@@ -120,12 +118,12 @@ impl State {
                 let position = ((i as f32 + 1.0) * 40.0, (j as f32 + 1.0) * 25.0);
                 let mut uniform = Uniform::<EntityUniform>::new(&device);
                 uniform.data.set_position(position.into());
+                let explosion = Explosion::new(position.into(), 40.0, &device, &queue);
 
-                let enemie = Enemy::new(position.into(), uniform);
+                let enemie = Enemy::new(position.into(), uniform, explosion);
                 enemies.push(enemie);
             }
         }
-
         //PROJECTILES
 
         let diffuse_bytes = include_bytes!("./assets/bullet.png");
@@ -136,26 +134,6 @@ impl State {
         let enemy_projectile_sprite =
             sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes);
 
-        //ANIM
-        let diffuse_bytes1 = include_bytes!("./assets/exp1.png");
-        let diffuse_bytes2 = include_bytes!("./assets/exp2.png");
-        let diffuse_bytes3 = include_bytes!("./assets/exp3.png");
-        let diffuse_bytes4 = include_bytes!("./assets/exp4.png");
-        let diffuse_bytes5 = include_bytes!("./assets/exp5.png");
-
-        let explosion_sprites = vec![
-            sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes1),
-            sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes2),
-            sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes3),
-            sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes4),
-            sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes5),
-        ];
-        let mut uniform = Uniform::<EntityUniform>::new(&device);
-        //todo!();
-        uniform.data.set_size(40.0);
-        uniform.data.set_position((300.0, 400.0).into());
-        let explosion = Explosion::new((300.0, 400.0).into(), 40.0, uniform);
-        //INPUT
         let input_controller = Input::new();
 
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
@@ -188,10 +166,8 @@ impl State {
             bg_sprite,
             bg_uniform,
 
-            explosion,
-            explosion_sprites,
-
             projectile: vec![],
+            explosions: vec![],
 
             projectile_sprite,
 
@@ -211,12 +187,16 @@ impl State {
         self.bg_uniform.write(&mut self.queue);
         self.player.update(&dt, &self.input_controller);
         self.player.uniform.write(&mut self.queue);
-        self.explosion.update(&dt);
-        self.explosion.uniform.write(&mut self.queue);
-        for e in &self.enemies {
+
+        for e in &mut self.enemies {
             if e.alive {
                 e.uniform.write(&mut self.queue);
             }
+
+            // if e.explosion.play {
+            //     e.explosion.update(&dt);
+            //     e.explosion.uniform.write(&mut self.queue);
+            // }
         }
 
         let new_projectile = self.player.spawn_fire(&self.device, &self.input_controller);
@@ -255,9 +235,17 @@ impl State {
             for e in &mut self.enemies {
                 if check_collision(p, e) {
                     p.alive = false;
+                    let explosion =
+                        Explosion::new(e.position.into(), 40.0, &self.device, &self.queue);
+                    self.explosions.push(explosion);
                     e.alive = false;
                 }
             }
+        }
+
+        for e in &mut self.explosions {
+            e.update(&dt);
+            e.uniform.write(&mut self.queue);
         }
 
         for e in &mut self.enemies {
@@ -278,7 +266,13 @@ impl State {
         self.enemies = self
             .enemies
             .drain(..)
-            .filter(|e| e.alive != false)
+            .filter(|e| e.alive != false && e.explosion.end != true)
+            .collect();
+
+        self.explosions = self
+            .explosions
+            .drain(..)
+            .filter(|e| e.end != true)
             .collect();
     }
 
@@ -371,6 +365,19 @@ impl State {
                 }
             }
 
+            for e in &self.explosions {
+                //explosions
+                if e.end {
+                    continue;
+                }
+                rpass.set_vertex_buffer(2, e.uniform.buffer.slice(..));
+                rpass.set_bind_group(2, &e.uniform.bind_group, &[]);
+
+                rpass.set_vertex_buffer(0, e.sprites.get(e.i as usize).unwrap().buffer.slice(..));
+                rpass.set_bind_group(0, &e.sprites.get(e.i as usize).unwrap().bind_group, &[]);
+                rpass.draw(0..6, 0..1);
+            }
+
             // draw player projectiles
             rpass.set_vertex_buffer(0, self.projectile_sprite.buffer.slice(..));
             rpass.set_bind_group(0, &self.projectile_sprite.bind_group, &[]);
@@ -383,27 +390,6 @@ impl State {
             }
             // println!("{}, {}", self.time_to_next_frame, TIME_TO_NEXT_FRAME);
             //draw explosion
-            rpass.set_vertex_buffer(2, self.explosion.uniform.buffer.slice(..));
-            rpass.set_bind_group(2, &self.explosion.uniform.bind_group, &[]);
-
-            rpass.set_vertex_buffer(
-                0,
-                self.explosion_sprites
-                    .get(self.explosion.i as usize)
-                    .unwrap()
-                    .buffer
-                    .slice(..),
-            );
-            rpass.set_bind_group(
-                0,
-                &self
-                    .explosion_sprites
-                    .get(self.explosion.i as usize)
-                    .unwrap()
-                    .bind_group,
-                &[],
-            );
-            rpass.draw(0..6, 0..1);
         }
 
         self.queue.submit(Some(encoder.finish()));
