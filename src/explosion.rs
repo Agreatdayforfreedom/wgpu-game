@@ -8,7 +8,6 @@ const TIME_TO_NEXT_FRAME: f32 = 2.0 / 30.0;
 pub struct Explosion {
     pub position: cgmath::Vector2<f32>,
     pub size: f32,
-    pub play: bool,
     pub end: bool,
     pub uniform: uniform::Uniform<EntityUniform>,
     pub i: u32,
@@ -23,7 +22,7 @@ impl Explosion {
         device: &wgpu::Device,
         queue: &wgpu::Queue,
     ) -> Self {
-        let mut uniform = Uniform::<EntityUniform>::new(&device);
+        let uniform = Uniform::<EntityUniform>::new(&device);
 
         let diffuse_bytes1 = include_bytes!("./assets/exp1.png");
         let diffuse_bytes2 = include_bytes!("./assets/exp2.png");
@@ -40,8 +39,7 @@ impl Explosion {
         ];
         Self {
             position,
-            size: 40.0,
-            play: false,
+            size,
             uniform,
             i: 0,
             time_to_next_frame: 0.0,

@@ -10,11 +10,10 @@ use crate::{player, projectile, sprite_renderer};
 use rand::{self, Rng};
 
 use pollster::block_on;
-use std::any::Any;
-use std::fmt::Debug;
 use std::sync::Arc;
 use winit::{event::*, keyboard::Key, window::Window};
 
+#[allow(dead_code)]
 pub struct State {
     surface: wgpu::Surface<'static>,
     device: wgpu::Device,
@@ -229,7 +228,7 @@ impl State {
                 if check_collision(p, e) {
                     p.alive = false;
                     let explosion =
-                        Explosion::new(e.position.into(), 80.0, &self.device, &self.queue);
+                        Explosion::new(e.position.into(), 40.0, &self.device, &self.queue);
                     self.explosions.push(explosion);
                     e.alive = false;
                 }
@@ -381,8 +380,6 @@ impl State {
                     rpass.draw(0..6, 0..1);
                 }
             }
-            // println!("{}, {}", self.time_to_next_frame, TIME_TO_NEXT_FRAME);
-            //draw explosion
         }
 
         self.queue.submit(Some(encoder.finish()));

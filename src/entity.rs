@@ -1,4 +1,4 @@
-use cgmath::{SquareMatrix, Vector2};
+use cgmath::SquareMatrix;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]

@@ -39,7 +39,7 @@ impl ApplicationHandler for App {
         self.state = Some(state);
     }
 
-    fn window_event(&mut self, event_loop: &ActiveEventLoop, id: WindowId, event: WindowEvent) {
+    fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
         let state = if let Some(state) = &mut self.state {
             state
         } else {
