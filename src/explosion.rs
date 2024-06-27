@@ -24,8 +24,6 @@ impl Explosion {
         queue: &wgpu::Queue,
     ) -> Self {
         let mut uniform = Uniform::<EntityUniform>::new(&device);
-        uniform.data.set_size(80.0);
-        uniform.data.set_position(position);
 
         let diffuse_bytes1 = include_bytes!("./assets/exp1.png");
         let diffuse_bytes2 = include_bytes!("./assets/exp2.png");
@@ -40,10 +38,9 @@ impl Explosion {
             sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes4),
             sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes5),
         ];
-
         Self {
             position,
-            size,
+            size: 40.0,
             play: false,
             uniform,
             i: 0,
@@ -54,7 +51,12 @@ impl Explosion {
     }
 
     pub fn update(&mut self, dt: &instant::Duration) {
+        self.uniform
+            .data
+            .set_position(self.position - cgmath::Vector2::new(8.0, 8.0));
+        self.uniform.data.set_size(self.size);
         self.time_to_next_frame += dt.as_secs_f32();
+
         if self.time_to_next_frame > TIME_TO_NEXT_FRAME {
             if self.i == 4 {
                 self.end = true;

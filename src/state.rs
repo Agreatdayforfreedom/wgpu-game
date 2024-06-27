@@ -96,7 +96,6 @@ impl State {
         let diffuse_bytes = include_bytes!("./assets/bg.webp");
         let bg_sprite = sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes);
         let mut bg_uniform = Uniform::<EntityUniform>::new(&device);
-        bg_uniform.data.set_position((400.0, 550.0).into());
         bg_uniform.data.set_scale(800.0, 600.0);
 
         //PLAYER
@@ -118,9 +117,8 @@ impl State {
                 let position = ((i as f32 + 1.0) * 40.0, (j as f32 + 1.0) * 25.0);
                 let mut uniform = Uniform::<EntityUniform>::new(&device);
                 uniform.data.set_position(position.into());
-                let explosion = Explosion::new(position.into(), 40.0, &device, &queue);
 
-                let enemie = Enemy::new(position.into(), uniform, explosion);
+                let enemie = Enemy::new(position.into(), uniform);
                 enemies.push(enemie);
             }
         }
@@ -192,11 +190,6 @@ impl State {
             if e.alive {
                 e.uniform.write(&mut self.queue);
             }
-
-            // if e.explosion.play {
-            //     e.explosion.update(&dt);
-            //     e.explosion.uniform.write(&mut self.queue);
-            // }
         }
 
         let new_projectile = self.player.spawn_fire(&self.device, &self.input_controller);
@@ -236,7 +229,7 @@ impl State {
                 if check_collision(p, e) {
                     p.alive = false;
                     let explosion =
-                        Explosion::new(e.position.into(), 40.0, &self.device, &self.queue);
+                        Explosion::new(e.position.into(), 80.0, &self.device, &self.queue);
                     self.explosions.push(explosion);
                     e.alive = false;
                 }
@@ -266,7 +259,7 @@ impl State {
         self.enemies = self
             .enemies
             .drain(..)
-            .filter(|e| e.alive != false && e.explosion.end != true)
+            .filter(|e| e.alive != false)
             .collect();
 
         self.explosions = self
