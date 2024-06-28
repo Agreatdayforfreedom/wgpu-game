@@ -4,6 +4,7 @@ use cgmath::SquareMatrix;
 #[derive(Copy, Clone, Debug)]
 pub struct EntityUniform {
     pub model: cgmath::Matrix4<f32>,
+    color: cgmath::Vector4<f32>,
     position: cgmath::Vector2<f32>,
     size: f32,
     w: f32,
@@ -16,6 +17,7 @@ impl Default for EntityUniform {
     fn default() -> Self {
         Self {
             model: cgmath::Matrix4::identity(),
+            color: (1.0, 1.0, 1.0, 1.0).into(),
             position: (0.0, 0.0).into(),
             size: 24.0,
             w: 24.0,
@@ -45,5 +47,9 @@ impl EntityUniform {
         self.model = cgmath::Matrix4::identity()
             * cgmath::Matrix4::from_translation((self.position.x, self.position.y, 0.0).into())
             * cgmath::Matrix4::from_nonuniform_scale(w, h, 0.0);
+    }
+
+    pub fn set_color(&mut self, color: cgmath::Vector4<f32>) {
+        self.color = color;
     }
 }

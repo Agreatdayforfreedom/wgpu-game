@@ -102,7 +102,6 @@ impl State {
         let sprite = sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes);
         let player_uniform = Uniform::<EntityUniform>::new(&device);
         let player = player::Player::new(cgmath::Vector2::new(400.0, 550.0), player_uniform);
-
         //ENEMIES
         let mut enemie_sprites = Vec::<sprite_renderer::SpriteRenderer>::new();
         let mut enemies = Vec::<Enemy>::new();
@@ -116,9 +115,9 @@ impl State {
                 let position = ((i as f32 + 1.0) * 40.0, (j as f32 + 1.0) * 25.0);
                 let mut uniform = Uniform::<EntityUniform>::new(&device);
                 uniform.data.set_position(position.into());
-
-                let enemie = Enemy::new(position.into(), uniform);
-                enemies.push(enemie);
+                let mut enemy = Enemy::new(position.into(), uniform);
+                enemy.uniform.data.set_color((0.0, 1.0, 0.0, 1.0).into());
+                enemies.push(enemy);
             }
         }
         //PROJECTILES
