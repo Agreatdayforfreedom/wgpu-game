@@ -1,3 +1,4 @@
+use crate::audio::Audio;
 use crate::camera::Camera;
 use crate::collider::{check_collision, check_collision_ep};
 use crate::enemie::Enemy;
@@ -10,8 +11,10 @@ use crate::{player, projectile, sprite_renderer};
 use rand::{self, Rng};
 
 use pollster::block_on;
+use rodio::Source;
 use std::sync::Arc;
 use winit::{event::*, keyboard::Key, window::Window};
+const explosion_bytes: &[u8] = include_bytes!("./assets/explosion.wav");
 
 #[allow(dead_code)]
 pub struct State {
@@ -35,10 +38,9 @@ pub struct State {
     explosions: Vec<explosion::Explosion>,
     input_controller: Input,
     camera_uniform: Uniform<Camera>,
-
+    audio: Audio,
     dt: instant::Duration,
 }
-
 impl State {
     pub fn new(window: Arc<Window>) -> Self {
         let size = window.inner_size();
@@ -143,6 +145,12 @@ impl State {
         });
 
         let render_pipeline = create_render_pipeline(&device, &shader, &config, &pipeline_layout);
+        let audio = Audio::new();
+
+        let music = include_bytes!("./assets/peaceful.mp3");
+        let d = rodio::Decoder::new(std::io::Cursor::new(music).clone()).unwrap();
+        audio.start_track(d);
+        //audio
 
         Self {
             surface,
@@ -168,12 +176,14 @@ impl State {
             projectile_sprite,
 
             input_controller,
+            audio,
             dt: instant::Instant::now().elapsed(),
         }
     }
 
     pub fn update(&mut self, dt: instant::Duration) {
         self.dt = dt;
+
         //todo
         if !self.player.alive {
             println!("YOU LOST!!!");
@@ -220,7 +230,7 @@ impl State {
                 .filter(|p| p.alive != false)
                 .collect();
         }
-
+        self.audio.len();
         //check collsions
         for p in &mut self.projectile {
             for e in &mut self.enemies {
@@ -229,6 +239,7 @@ impl State {
                     let explosion =
                         Explosion::new(e.position.into(), 40.0, &self.device, &self.queue);
                     self.explosions.push(explosion);
+                    self.audio.push();
                     e.alive = false;
                 }
             }

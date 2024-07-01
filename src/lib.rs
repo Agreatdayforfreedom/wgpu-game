@@ -1,3 +1,4 @@
+mod audio;
 mod camera;
 mod collider;
 mod enemie;
