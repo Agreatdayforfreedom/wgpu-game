@@ -1,4 +1,4 @@
-use crate::audio::Audio;
+use crate::audio::{Audio, Sounds};
 use crate::camera::Camera;
 use crate::collider::{check_collision, check_collision_ep};
 use crate::enemie::Enemy;
@@ -147,9 +147,7 @@ impl State {
         let render_pipeline = create_render_pipeline(&device, &shader, &config, &pipeline_layout);
         let audio = Audio::new();
 
-        let music = include_bytes!("./assets/peaceful.mp3");
-        let d = rodio::Decoder::new(std::io::Cursor::new(music).clone()).unwrap();
-        audio.start_track(d);
+        audio.start_track(Sounds::MainTheme);
         //audio
 
         Self {
@@ -184,6 +182,7 @@ impl State {
     pub fn update(&mut self, dt: instant::Duration) {
         self.dt = dt;
 
+        self.audio.update();
         //todo
         if !self.player.alive {
             println!("YOU LOST!!!");
@@ -230,7 +229,6 @@ impl State {
                 .filter(|p| p.alive != false)
                 .collect();
         }
-        self.audio.len();
         //check collsions
         for p in &mut self.projectile {
             for e in &mut self.enemies {
@@ -239,7 +237,7 @@ impl State {
                     let explosion =
                         Explosion::new(e.position.into(), 40.0, &self.device, &self.queue);
                     self.explosions.push(explosion);
-                    self.audio.push();
+                    self.audio.push(Sounds::Explosion);
                     e.alive = false;
                 }
             }

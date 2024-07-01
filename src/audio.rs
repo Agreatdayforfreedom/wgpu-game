@@ -1,16 +1,37 @@
 use rodio::{cpal::FromSample, Decoder, Source};
+use std::fs::File;
 
 pub struct Audio {
     #[allow(dead_code)]
     stream: rodio::OutputStream,
-    #[allow(dead_code)]
     stream_handle: rodio::OutputStreamHandle,
+    #[allow(dead_code)]
     sink: rodio::Sink,
     tracks: rodio::Sink,
     sinks: Vec<rodio::Sink>,
+    #[allow(dead_code)]
     spatial_sink: rodio::SpatialSink,
 }
-const explosion_bytes: &[u8] = include_bytes!("./assets/explosion.wav");
+
+pub enum Sounds {
+    MainTheme,
+    Explosion,
+    Shoot,
+}
+
+impl Sounds {
+    fn bytes(&self) -> std::io::Cursor<&'static [u8]> {
+        match self {
+            Self::Explosion => {
+                std::io::Cursor::new(include_bytes!("./assets/explosion.wav") as &[u8])
+            }
+            Self::Shoot => std::io::Cursor::new(include_bytes!("./assets/shoot.wav") as &[u8]),
+            Self::MainTheme => {
+                std::io::Cursor::new(include_bytes!("./assets/main_theme.mp3") as &[u8])
+            }
+        }
+    }
+}
 
 impl Audio {
     pub fn new() -> Self {
@@ -27,8 +48,6 @@ impl Audio {
             [1.0, 0.0, 0.0],
         )
         .unwrap();
-        let music = include_bytes!("./assets/peaceful.mp3");
-        let d = rodio::Decoder::new(std::io::Cursor::new(music).clone()).unwrap();
 
         Self {
             stream,
@@ -40,29 +59,21 @@ impl Audio {
         }
     }
 
-    pub fn start_track<S>(&self, bytes: S)
-    where
-        S: rodio::Source + Send + 'static,
-        S::Item: rodio::Sample + Send,
-        f32: FromSample<S::Item>,
-    {
-        self.tracks.append(bytes);
+    pub fn start_track(&self, sound: Sounds) {
+        let source = rodio::Decoder::new(sound.bytes().clone()).unwrap();
+        self.tracks.set_volume(1.0);
+        self.tracks.append(source);
     }
 
-    pub fn push(&mut self) {
+    pub fn push(&mut self, sound: Sounds) {
         let sink = rodio::Sink::try_new(&self.stream_handle).unwrap();
-        let d = rodio::Decoder::new(std::io::Cursor::new(explosion_bytes).clone()).unwrap();
+        let source = rodio::Decoder::new(sound.bytes().clone()).unwrap();
         sink.set_volume(0.2);
-        sink.append(d);
+        sink.append(source);
         self.sinks.push(sink);
     }
 
-    //todo
-    pub fn len(&self) {
-        println!("len: {}", self.sinks.len());
-    }
-
-    pub fn queue<S>(&self, bytes: S)
+    pub fn _queue<S>(&self, bytes: S)
     where
         S: rodio::Source + Send + 'static,
         S::Item: rodio::Sample + Send,
@@ -73,5 +84,9 @@ impl Audio {
         if self.sink.is_paused() && !self.sink.empty() {
             self.sink.play();
         }
+    }
+
+    pub fn update(&mut self) {
+        self.sinks.retain(|s| !s.empty());
     }
 }
