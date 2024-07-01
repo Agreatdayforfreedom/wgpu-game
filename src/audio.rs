@@ -1,5 +1,6 @@
-use rodio::{cpal::FromSample, Decoder, Source};
-use std::fs::File;
+use std::io::Cursor;
+
+use rodio::cpal::FromSample;
 
 pub struct Audio {
     #[allow(dead_code)]
@@ -20,15 +21,19 @@ pub enum Sounds {
 }
 
 impl Sounds {
-    fn bytes(&self) -> std::io::Cursor<&'static [u8]> {
+    fn bytes(&self) -> Cursor<&'static [u8]> {
         match self {
-            Self::Explosion => {
-                std::io::Cursor::new(include_bytes!("./assets/explosion.wav") as &[u8])
-            }
-            Self::Shoot => std::io::Cursor::new(include_bytes!("./assets/shoot.wav") as &[u8]),
-            Self::MainTheme => {
-                std::io::Cursor::new(include_bytes!("./assets/main_theme.mp3") as &[u8])
-            }
+            Self::Explosion => Cursor::new(include_bytes!("./assets/explosion.wav") as &[u8]),
+            Self::Shoot => Cursor::new(include_bytes!("./assets/shoot.wav") as &[u8]),
+            Self::MainTheme => Cursor::new(include_bytes!("./assets/main_theme.mp3") as &[u8]),
+        }
+    }
+
+    fn volume(&self) -> f32 {
+        match self {
+            Self::Explosion => 0.2,
+            Self::Shoot => 0.2,
+            Self::MainTheme => 1.0,
         }
     }
 }
@@ -61,14 +66,14 @@ impl Audio {
 
     pub fn start_track(&self, sound: Sounds) {
         let source = rodio::Decoder::new(sound.bytes().clone()).unwrap();
-        self.tracks.set_volume(1.0);
+        self.tracks.set_volume(sound.volume());
         self.tracks.append(source);
     }
 
     pub fn push(&mut self, sound: Sounds) {
         let sink = rodio::Sink::try_new(&self.stream_handle).unwrap();
         let source = rodio::Decoder::new(sound.bytes().clone()).unwrap();
-        sink.set_volume(0.2);
+        sink.set_volume(sound.volume());
         sink.append(source);
         self.sinks.push(sink);
     }

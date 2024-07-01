@@ -11,10 +11,8 @@ use crate::{player, projectile, sprite_renderer};
 use rand::{self, Rng};
 
 use pollster::block_on;
-use rodio::Source;
 use std::sync::Arc;
 use winit::{event::*, keyboard::Key, window::Window};
-const explosion_bytes: &[u8] = include_bytes!("./assets/explosion.wav");
 
 #[allow(dead_code)]
 pub struct State {
@@ -145,10 +143,9 @@ impl State {
         });
 
         let render_pipeline = create_render_pipeline(&device, &shader, &config, &pipeline_layout);
-        let audio = Audio::new();
-
-        audio.start_track(Sounds::MainTheme);
         //audio
+        let audio = Audio::new();
+        audio.start_track(Sounds::MainTheme);
 
         Self {
             surface,
@@ -199,7 +196,9 @@ impl State {
             }
         }
 
-        let new_projectile = self.player.spawn_fire(&self.device, &self.input_controller);
+        let new_projectile =
+            self.player
+                .spawn_fire(&self.device, &self.input_controller, &mut self.audio);
 
         if let Some(projectile) = new_projectile {
             self.projectile.push(projectile);
@@ -214,7 +213,7 @@ impl State {
 
         for e in &mut self.enemies {
             if rand::thread_rng().gen_range(0..10000) < 1 {
-                e.spawn_fire(&self.device);
+                e.spawn_fire(&mut self.audio, &self.device);
             }
             for p in &mut e.projectiles {
                 if p.alive {

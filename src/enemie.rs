@@ -1,3 +1,4 @@
+use crate::audio::{Audio, Sounds};
 use crate::entity::EntityUniform;
 use crate::projectile;
 use crate::uniform::Uniform;
@@ -22,10 +23,15 @@ impl Enemy {
         }
     }
 
-    pub fn spawn_fire(&mut self, device: &wgpu::Device) -> Option<projectile::Projectile> {
+    pub fn spawn_fire(
+        &mut self,
+        audio: &mut Audio,
+        device: &wgpu::Device,
+    ) -> Option<projectile::Projectile> {
         if self.interval.elapsed().as_millis() >= 500 {
             self.interval = instant::Instant::now();
             let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
+            audio.push(Sounds::Shoot);
             self.projectiles.push(projectile::Projectile::new(
                 (self.position.x + (self.size / 2.0) - 5.0, self.position.y).into(),
                 10.0,

@@ -1,3 +1,5 @@
+use crate::audio;
+use crate::audio::Audio;
 use crate::projectile;
 use crate::uniform;
 use crate::{entity::EntityUniform, input::Input};
@@ -61,10 +63,12 @@ impl Player {
         &mut self,
         device: &wgpu::Device,
         input: &Input,
+        audio: &mut Audio,
     ) -> Option<projectile::Projectile> {
         if input.is_pressed("f") && self.interval.elapsed().as_millis() >= 500 {
             self.interval = instant::Instant::now();
             let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
+            audio.push(audio::Sounds::Shoot);
             return Some(projectile::Projectile::new(
                 (self.position.x + (self.size / 2.0) - 5.0, self.position.y).into(),
                 10.0,
