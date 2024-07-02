@@ -3,7 +3,7 @@ use crate::audio::Audio;
 use crate::projectile;
 use crate::uniform;
 use crate::{entity::EntityUniform, input::Input};
-use cgmath::{SquareMatrix, Vector2};
+use cgmath::Vector2;
 
 pub struct Player {
     pub position: cgmath::Vector2<f32>,

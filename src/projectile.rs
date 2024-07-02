@@ -1,5 +1,3 @@
-use cgmath::SquareMatrix;
-
 use crate::{entity::EntityUniform, uniform};
 pub struct Projectile {
     pub position: cgmath::Vector2<f32>,
