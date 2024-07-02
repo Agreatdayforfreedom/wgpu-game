@@ -26,9 +26,6 @@ impl Player {
     }
 
     pub fn update(&mut self, dt: &instant::Duration, input: &Input) {
-        let model = cgmath::Matrix4::identity()
-            * cgmath::Matrix4::from_translation((self.position.x, self.position.y, 0.0).into())
-            * cgmath::Matrix4::from_scale(self.size);
         if input.is_pressed("d") {
             self.movement("d", dt);
         } else if input.is_pressed("a") {
@@ -38,7 +35,8 @@ impl Player {
         } else if input.is_pressed("w") {
             self.movement("w", dt);
         }
-        self.uniform.data.model = model;
+        self.uniform.data.set_position(self.position);
+        self.uniform.data.set_size(self.size);
     }
 
     pub fn movement(&mut self, key: &str, dt: &instant::Duration) {

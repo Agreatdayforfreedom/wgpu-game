@@ -1,4 +1,4 @@
-use cgmath::SquareMatrix;
+use cgmath::{Deg, SquareMatrix};
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
@@ -7,6 +7,8 @@ pub struct EntityUniform {
     color: cgmath::Vector4<f32>,
     position: cgmath::Vector2<f32>,
     size: f32,
+    angle: Deg<f32>,
+
     w: f32,
     h: f32,
 }
@@ -19,6 +21,7 @@ impl Default for EntityUniform {
             model: cgmath::Matrix4::identity(),
             color: (1.0, 1.0, 1.0, 1.0).into(),
             position: (0.0, 0.0).into(),
+            angle: Deg(0.0),
             size: 24.0,
             w: 24.0,
             h: 24.0,
@@ -31,6 +34,15 @@ impl EntityUniform {
         self.position = position;
         self.model = cgmath::Matrix4::identity()
             * cgmath::Matrix4::from_translation((position.x, position.y, 0.0).into())
+            * cgmath::Matrix4::from_angle_z(self.angle)
+            * cgmath::Matrix4::from_scale(self.size);
+    }
+
+    pub fn set_rotation(&mut self, angle: Deg<f32>) {
+        self.angle = angle;
+        self.model = cgmath::Matrix4::identity()
+            * cgmath::Matrix4::from_translation((self.position.x, self.position.y, 0.0).into())
+            * cgmath::Matrix4::from_angle_z(angle)
             * cgmath::Matrix4::from_scale(self.size);
     }
 
@@ -38,6 +50,7 @@ impl EntityUniform {
         self.size = size;
         self.model = cgmath::Matrix4::identity()
             * cgmath::Matrix4::from_translation((self.position.x, self.position.y, 0.0).into())
+            * cgmath::Matrix4::from_angle_z(self.angle)
             * cgmath::Matrix4::from_scale(size);
     }
 
@@ -46,6 +59,7 @@ impl EntityUniform {
         self.h = h;
         self.model = cgmath::Matrix4::identity()
             * cgmath::Matrix4::from_translation((self.position.x, self.position.y, 0.0).into())
+            * cgmath::Matrix4::from_angle_z(self.angle)
             * cgmath::Matrix4::from_nonuniform_scale(w, h, 0.0);
     }
 
