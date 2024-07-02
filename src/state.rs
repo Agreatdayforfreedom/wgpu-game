@@ -198,7 +198,7 @@ impl State {
 
         let new_projectile =
             self.player
-                .spawn_fire(&self.device, &self.input_controller, &mut self.audio);
+                .spawn_fire(&self.device, 40.0, &self.input_controller, &mut self.audio);
 
         if let Some(projectile) = new_projectile {
             self.projectile.push(projectile);
@@ -206,18 +206,18 @@ impl State {
 
         for p in &mut self.projectile {
             if p.alive {
-                p.update(&dt, 1.0, 500.0);
+                p.update(&dt, 1.0, -90.0, 500.0);
                 p.uniform.write(&mut self.queue);
             }
         }
 
         for e in &mut self.enemies {
             if rand::thread_rng().gen_range(0..10000) < 1 {
-                e.spawn_fire(&mut self.audio, &self.device);
+                e.spawn_fire(40.0, &mut self.audio, &self.device);
             }
             for p in &mut e.projectiles {
                 if p.alive {
-                    p.update(&dt, -1.0, 275.0);
+                    p.update(&dt, -1.0, 90.0, 275.0);
                     p.uniform.write(&mut self.queue);
                 }
             }

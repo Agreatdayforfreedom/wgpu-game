@@ -62,6 +62,7 @@ impl Player {
     pub fn spawn_fire(
         &mut self,
         device: &wgpu::Device,
+        size: f32,
         input: &Input,
         audio: &mut Audio,
     ) -> Option<projectile::Projectile> {
@@ -70,8 +71,12 @@ impl Player {
             let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
             audio.push(audio::Sounds::Shoot);
             return Some(projectile::Projectile::new(
-                (self.position.x + (self.size / 2.0) - 5.0, self.position.y).into(),
-                10.0,
+                (
+                    self.position.x + (self.size / 2.0) - (size / 2.0),
+                    self.position.y,
+                )
+                    .into(),
+                size,
                 projectile_uniform,
             ));
         }

@@ -25,6 +25,7 @@ impl Enemy {
 
     pub fn spawn_fire(
         &mut self,
+        size: f32,
         audio: &mut Audio,
         device: &wgpu::Device,
     ) -> Option<projectile::Projectile> {
@@ -33,8 +34,12 @@ impl Enemy {
             let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
             audio.push(Sounds::Shoot);
             self.projectiles.push(projectile::Projectile::new(
-                (self.position.x + (self.size / 2.0) - 5.0, self.position.y).into(),
-                10.0,
+                (
+                    self.position.x + (self.size / 2.0) - (size / 2.0),
+                    self.position.y,
+                )
+                    .into(),
+                size,
                 projectile_uniform,
             ));
         }
