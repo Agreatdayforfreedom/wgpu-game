@@ -34,7 +34,9 @@ impl EntityUniform {
         self.position = position;
         self.model = cgmath::Matrix4::identity()
             * cgmath::Matrix4::from_translation((position.x, position.y, 0.0).into())
+            * cgmath::Matrix4::from_translation((0.5 * self.size, 0.5*self.size, 0.0).into()) //move origin
             * cgmath::Matrix4::from_angle_z(self.angle)
+            * cgmath::Matrix4::from_translation((-0.5 * self.size, -0.5*self.size, 0.0).into()) //move origin back
             * cgmath::Matrix4::from_scale(self.size);
     }
 
@@ -42,7 +44,9 @@ impl EntityUniform {
         self.angle = angle;
         self.model = cgmath::Matrix4::identity()
             * cgmath::Matrix4::from_translation((self.position.x, self.position.y, 0.0).into())
+            * cgmath::Matrix4::from_translation((0.5 * self.size, 0.5 * self.size, 0.0).into())
             * cgmath::Matrix4::from_angle_z(angle)
+            * cgmath::Matrix4::from_translation((-0.5 * self.size, -0.5 * self.size, 0.0).into())
             * cgmath::Matrix4::from_scale(self.size);
     }
 
@@ -50,7 +54,9 @@ impl EntityUniform {
         self.size = size;
         self.model = cgmath::Matrix4::identity()
             * cgmath::Matrix4::from_translation((self.position.x, self.position.y, 0.0).into())
+            * cgmath::Matrix4::from_translation((0.5 * self.size, 0.5 * self.size, 0.0).into())
             * cgmath::Matrix4::from_angle_z(self.angle)
+            * cgmath::Matrix4::from_translation((-0.5 * self.size, -0.5 * self.size, 0.0).into())
             * cgmath::Matrix4::from_scale(size);
     }
 
@@ -59,7 +65,9 @@ impl EntityUniform {
         self.h = h;
         self.model = cgmath::Matrix4::identity()
             * cgmath::Matrix4::from_translation((self.position.x, self.position.y, 0.0).into())
+            * cgmath::Matrix4::from_translation((0.5 * self.size, 0.5 * self.size, 0.0).into())
             * cgmath::Matrix4::from_angle_z(self.angle)
+            * cgmath::Matrix4::from_translation((-0.5 * self.size, -0.5 * self.size, 0.0).into())
             * cgmath::Matrix4::from_nonuniform_scale(w, h, 0.0);
     }
 

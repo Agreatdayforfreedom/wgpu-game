@@ -12,10 +12,10 @@ pub struct Enemy {
 }
 
 impl Enemy {
-    pub fn new(position: cgmath::Vector2<f32>, uniform: Uniform<EntityUniform>) -> Self {
+    pub fn new(position: cgmath::Vector2<f32>, size: f32, uniform: Uniform<EntityUniform>) -> Self {
         Self {
             position,
-            size: 24.0,
+            size,
             alive: true,
             uniform,
             projectiles: vec![],

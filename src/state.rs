@@ -1,6 +1,6 @@
 use crate::audio::{Audio, Sounds};
 use crate::camera::Camera;
-use crate::collider::{check_collision, check_collision_ep};
+use crate::collider::{check_collision, Bounds};
 use crate::enemie::Enemy;
 use crate::entity::EntityUniform;
 use crate::explosion::{self, Explosion};
@@ -8,6 +8,7 @@ use crate::input::Input;
 use crate::sprite_renderer::create_render_pipeline;
 use crate::uniform::Uniform;
 use crate::{player, projectile, sprite_renderer};
+use cgmath::{Point2, Vector2};
 use rand::{self, Rng};
 
 use pollster::block_on;
@@ -113,9 +114,11 @@ impl State {
         for i in 0..(config.width / 36) {
             for j in 0..(config.height / 80) {
                 let position = ((i as f32 + 1.0) * 40.0, (j as f32 + 1.0) * 25.0);
-                let mut uniform = Uniform::<EntityUniform>::new(&device);
-                uniform.data.set_position(position.into());
-                let mut enemy = Enemy::new(position.into(), uniform);
+                let uniform = Uniform::<EntityUniform>::new(&device);
+
+                let mut enemy = Enemy::new(position.into(), 24.0, uniform);
+                enemy.uniform.data.set_position(position.into());
+                enemy.uniform.data.set_size(24.0);
                 enemy.uniform.data.set_color((0.0, 1.0, 0.0, 1.0).into());
                 enemies.push(enemy);
             }
@@ -231,8 +234,21 @@ impl State {
         //check collsions
         for p in &mut self.projectile {
             for e in &mut self.enemies {
-                if check_collision(p, e) {
+                if check_collision(
+                    Bounds {
+                        origin: Point2::new(
+                            p.position.x + p.size / 2.0,
+                            p.position.y + p.size / 2.0,
+                        ),
+                        area: Vector2::new(2.5, 2.5),
+                    },
+                    Bounds {
+                        origin: Point2::new(e.position.x, e.position.y),
+                        area: Vector2::new(e.size, e.size),
+                    },
+                ) {
                     p.alive = false;
+                    e.uniform.data.set_color((1.0, 0.0, 0.0, 1.0).into());
                     let explosion =
                         Explosion::new(e.position.into(), 40.0, &self.device, &self.queue);
                     self.explosions.push(explosion);
@@ -249,7 +265,19 @@ impl State {
 
         for e in &mut self.enemies {
             for p in &mut e.projectiles {
-                if check_collision_ep(p, &self.player) {
+                if check_collision(
+                    Bounds {
+                        origin: Point2::new(
+                            p.position.x + p.size / 2.0,
+                            p.position.y + p.size / 2.0,
+                        ),
+                        area: Vector2::new(2.5, 2.5),
+                    },
+                    Bounds {
+                        origin: Point2::new(self.player.position.x, self.player.position.y),
+                        area: Vector2::new(self.player.size, self.player.size),
+                    },
+                ) {
                     p.alive = false;
                     self.player.alive = false;
                 }
