@@ -96,7 +96,7 @@ impl State {
         let diffuse_bytes = include_bytes!("./assets/bg.png");
         let bg_sprite = sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes);
         let mut bg_uniform = Uniform::<EntityUniform>::new(&device);
-        bg_uniform.data.set_scale((800.0, 600.0).into());
+        bg_uniform.data.set_scale((800.0, 600.0).into()).exec();
 
         //PLAYER
         let diffuse_bytes = include_bytes!("./assets/spaceship.png");
@@ -121,9 +121,13 @@ impl State {
                 let uniform = Uniform::<EntityUniform>::new(&device);
 
                 let mut enemy = Enemy::new(position.into(), (24.0, 24.0).into(), uniform);
-                enemy.uniform.data.set_position(position.into());
-                enemy.uniform.data.set_size(24.0);
-                enemy.uniform.data.set_color((0.0, 1.0, 0.0, 1.0).into());
+                enemy
+                    .uniform
+                    .data
+                    .set_position(position.into())
+                    .set_scale((24.0, 24.0).into())
+                    .set_color((0.0, 1.0, 0.0, 1.0).into())
+                    .exec();
                 enemies.push(enemy);
             }
         }
@@ -258,8 +262,12 @@ impl State {
                 ) {
                     p.alive = false;
                     e.uniform.data.set_color((1.0, 0.0, 0.0, 1.0).into());
-                    let explosion =
-                        Explosion::new(e.position.into(), 40.0, &self.device, &self.queue);
+                    let explosion = Explosion::new(
+                        e.position.into(),
+                        (40.0, 40.0).into(),
+                        &self.device,
+                        &self.queue,
+                    );
                     self.explosions.push(explosion);
                     self.audio.push(Sounds::Explosion);
                     e.alive = false;

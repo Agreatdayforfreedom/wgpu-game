@@ -7,7 +7,7 @@ const TIME_TO_NEXT_FRAME: f32 = 2.0 / 30.0;
 
 pub struct Explosion {
     pub position: cgmath::Vector2<f32>,
-    pub size: f32,
+    pub scale: cgmath::Vector2<f32>,
     pub end: bool,
     pub uniform: uniform::Uniform<EntityUniform>,
     pub i: u32,
@@ -18,7 +18,7 @@ pub struct Explosion {
 impl Explosion {
     pub fn new(
         position: cgmath::Vector2<f32>,
-        size: f32,
+        scale: cgmath::Vector2<f32>,
         device: &wgpu::Device,
         queue: &wgpu::Queue,
     ) -> Self {
@@ -39,7 +39,7 @@ impl Explosion {
         ];
         Self {
             position,
-            size,
+            scale,
             uniform,
             i: 0,
             time_to_next_frame: 0.0,
@@ -51,8 +51,9 @@ impl Explosion {
     pub fn update(&mut self, dt: &instant::Duration) {
         self.uniform
             .data
-            .set_position(self.position - cgmath::Vector2::new(8.0, 8.0));
-        self.uniform.data.set_size(self.size);
+            .set_position(self.position - cgmath::Vector2::new(8.0, 8.0))
+            .set_scale(self.scale)
+            .exec();
         self.time_to_next_frame += dt.as_secs_f32();
 
         if self.time_to_next_frame > TIME_TO_NEXT_FRAME {

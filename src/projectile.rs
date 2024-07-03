@@ -22,9 +22,12 @@ impl Projectile {
     }
 
     pub fn update(&mut self, dt: &instant::Duration, dir: f32, deg: f32, fire_speed: f32) {
-        self.uniform.data.set_position(self.position);
-        self.uniform.data.set_rotation(cgmath::Deg(deg));
-        self.uniform.data.set_scale(self.scale);
+        self.uniform
+            .data
+            .set_position(self.position)
+            .set_rotation(cgmath::Deg(deg))
+            .set_scale(self.scale)
+            .exec();
         if self.position.y < 0.0 || self.position.y > 600.0 {
             self.alive = false;
         }

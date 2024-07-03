@@ -27,47 +27,32 @@ impl Default for EntityUniform {
 }
 
 impl EntityUniform {
-    pub fn set_position(&mut self, position: cgmath::Vector2<f32>) {
+    pub fn set_position(&mut self, position: cgmath::Vector2<f32>) -> &mut Self {
         self.position = position;
-        self.model = cgmath::Matrix4::identity()
-            * cgmath::Matrix4::from_translation((position.x, position.y, 0.0).into())
-            * cgmath::Matrix4::from_translation((0.5 * self.size, 0.5*self.size, 0.0).into()) //move origin
-            * cgmath::Matrix4::from_angle_z(self.angle)
-            * cgmath::Matrix4::from_translation((-0.5 * self.size, -0.5*self.size, 0.0).into()) //move origin back
-            * cgmath::Matrix4::from_scale(self.size);
+        self
     }
 
-    pub fn set_rotation(&mut self, angle: Deg<f32>) {
+    pub fn set_rotation(&mut self, angle: Deg<f32>) -> &mut Self {
         self.angle = angle;
-        self.model = cgmath::Matrix4::identity()
-            * cgmath::Matrix4::from_translation((self.position.x, self.position.y, 0.0).into())
-            * cgmath::Matrix4::from_translation((0.5 * self.size, 0.5 * self.size, 0.0).into())
-            * cgmath::Matrix4::from_angle_z(angle)
-            * cgmath::Matrix4::from_translation((-0.5 * self.size, -0.5 * self.size, 0.0).into())
-            * cgmath::Matrix4::from_scale(self.size);
+        self
     }
 
-    pub fn set_size(&mut self, size: f32) {
-        self.size = size;
-        self.model = cgmath::Matrix4::identity()
-            * cgmath::Matrix4::from_translation((self.position.x, self.position.y, 0.0).into())
-            * cgmath::Matrix4::from_translation((0.5 * self.size, 0.5 * self.size, 0.0).into())
-            * cgmath::Matrix4::from_angle_z(self.angle)
-            * cgmath::Matrix4::from_translation((-0.5 * self.size, -0.5 * self.size, 0.0).into())
-            * cgmath::Matrix4::from_scale(size);
-    }
-
-    pub fn set_scale(&mut self, scale: cgmath::Vector2<f32>) {
+    pub fn set_scale(&mut self, scale: cgmath::Vector2<f32>) -> &mut Self {
         self.scale = scale;
+        self
+    }
+
+    pub fn set_color(&mut self, color: cgmath::Vector4<f32>) -> &mut Self {
+        self.color = color;
+        self
+    }
+
+    pub fn exec(&mut self) {
         self.model = cgmath::Matrix4::identity()
             * cgmath::Matrix4::from_translation((self.position.x, self.position.y, 0.0).into())
             * cgmath::Matrix4::from_translation((0.5 * self.size, 0.5 * self.size, 0.0).into())
             * cgmath::Matrix4::from_angle_z(self.angle)
             * cgmath::Matrix4::from_translation((-0.5 * self.size, -0.5 * self.size, 0.0).into())
-            * cgmath::Matrix4::from_nonuniform_scale(scale.x, scale.y, 0.0);
-    }
-
-    pub fn set_color(&mut self, color: cgmath::Vector4<f32>) {
-        self.color = color;
+            * cgmath::Matrix4::from_nonuniform_scale(self.scale.x, self.scale.y, 0.0);
     }
 }

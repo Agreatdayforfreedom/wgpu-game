@@ -39,8 +39,11 @@ impl Player {
         } else if input.is_pressed("w") {
             self.movement("w", dt);
         }
-        self.uniform.data.set_position(self.position);
-        self.uniform.data.set_scale(self.scale);
+        self.uniform
+            .data
+            .set_position(self.position)
+            .set_scale(self.scale)
+            .exec();
     }
 
     pub fn movement(&mut self, key: &str, dt: &instant::Duration) {
