@@ -93,7 +93,7 @@ impl State {
         let camera_uniform = Uniform::<Camera>::new(&device);
 
         //BG
-        let diffuse_bytes = include_bytes!("./assets/bg.webp");
+        let diffuse_bytes = include_bytes!("./assets/bg.png");
         let bg_sprite = sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes);
         let mut bg_uniform = Uniform::<EntityUniform>::new(&device);
         bg_uniform.data.set_scale(800.0, 600.0);
@@ -102,7 +102,8 @@ impl State {
         let diffuse_bytes = include_bytes!("./assets/spaceship.png");
         let sprite = sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes);
         let player_uniform = Uniform::<EntityUniform>::new(&device);
-        let player = player::Player::new(cgmath::Vector2::new(400.0, 550.0), player_uniform);
+        let mut player = player::Player::new(cgmath::Vector2::new(400.0, 550.0), player_uniform);
+        player.uniform.data.set_scale(44.0, 24.0);
         //ENEMIES
         let mut enemie_sprites = Vec::<sprite_renderer::SpriteRenderer>::new();
         let mut enemies = Vec::<Enemy>::new();
@@ -191,6 +192,8 @@ impl State {
         println!("FPS: {}", 1.0 / dt.as_secs_f64());
         self.bg_uniform.write(&mut self.queue);
         self.player.update(&dt, &self.input_controller);
+        self.player.uniform.data.set_scale(84.0, 84.0);
+
         self.player.uniform.write(&mut self.queue);
 
         for e in &mut self.enemies {

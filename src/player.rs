@@ -18,7 +18,7 @@ impl Player {
     pub fn new(position: cgmath::Vector2<f32>, uniform: uniform::Uniform<EntityUniform>) -> Self {
         Self {
             position,
-            size: 40.0,
+            size: 20.0,
             alive: true,
             uniform,
             interval: instant::Instant::now(),
