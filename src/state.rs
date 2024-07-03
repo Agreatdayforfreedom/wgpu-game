@@ -96,14 +96,17 @@ impl State {
         let diffuse_bytes = include_bytes!("./assets/bg.png");
         let bg_sprite = sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes);
         let mut bg_uniform = Uniform::<EntityUniform>::new(&device);
-        bg_uniform.data.set_scale(800.0, 600.0);
+        bg_uniform.data.set_scale((800.0, 600.0).into());
 
         //PLAYER
         let diffuse_bytes = include_bytes!("./assets/spaceship.png");
         let sprite = sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes);
         let player_uniform = Uniform::<EntityUniform>::new(&device);
-        let mut player = player::Player::new(cgmath::Vector2::new(400.0, 550.0), player_uniform);
-        player.uniform.data.set_scale(44.0, 24.0);
+        let player = player::Player::new(
+            cgmath::Vector2::new(400.0, 550.0),
+            (36.0, 32.0).into(),
+            player_uniform,
+        );
         //ENEMIES
         let mut enemie_sprites = Vec::<sprite_renderer::SpriteRenderer>::new();
         let mut enemies = Vec::<Enemy>::new();
@@ -117,7 +120,7 @@ impl State {
                 let position = ((i as f32 + 1.0) * 40.0, (j as f32 + 1.0) * 25.0);
                 let uniform = Uniform::<EntityUniform>::new(&device);
 
-                let mut enemy = Enemy::new(position.into(), 24.0, uniform);
+                let mut enemy = Enemy::new(position.into(), (24.0, 24.0).into(), uniform);
                 enemy.uniform.data.set_position(position.into());
                 enemy.uniform.data.set_size(24.0);
                 enemy.uniform.data.set_color((0.0, 1.0, 0.0, 1.0).into());
@@ -192,7 +195,7 @@ impl State {
         println!("FPS: {}", 1.0 / dt.as_secs_f64());
         self.bg_uniform.write(&mut self.queue);
         self.player.update(&dt, &self.input_controller);
-        self.player.uniform.data.set_scale(84.0, 84.0);
+        self.player.uniform.data.set_scale((36.0, 32.0).into());
 
         self.player.uniform.write(&mut self.queue);
 
@@ -202,9 +205,12 @@ impl State {
             }
         }
 
-        let new_projectile =
-            self.player
-                .spawn_fire(&self.device, 40.0, &self.input_controller, &mut self.audio);
+        let new_projectile = self.player.spawn_fire(
+            &self.device,
+            (40.0, 40.0).into(),
+            &self.input_controller,
+            &mut self.audio,
+        );
 
         if let Some(projectile) = new_projectile {
             self.projectile.push(projectile);
@@ -219,7 +225,7 @@ impl State {
 
         for e in &mut self.enemies {
             if rand::thread_rng().gen_range(0..10000) < 1 {
-                e.spawn_fire(40.0, &mut self.audio, &self.device);
+                e.spawn_fire((40.0, 40.0).into(), &mut self.audio, &self.device);
             }
             for p in &mut e.projectiles {
                 if p.alive {
@@ -240,14 +246,14 @@ impl State {
                 if check_collision(
                     Bounds {
                         origin: Point2::new(
-                            p.position.x + p.size / 2.0,
-                            p.position.y + p.size / 2.0,
+                            p.position.x + p.scale.x / 2.0,
+                            p.position.y + p.scale.y / 2.0,
                         ),
                         area: Vector2::new(2.5, 2.5),
                     },
                     Bounds {
                         origin: Point2::new(e.position.x, e.position.y),
-                        area: Vector2::new(e.size, e.size),
+                        area: Vector2::new(e.scale.x, e.scale.y),
                     },
                 ) {
                     p.alive = false;
@@ -271,14 +277,14 @@ impl State {
                 if check_collision(
                     Bounds {
                         origin: Point2::new(
-                            p.position.x + p.size / 2.0,
-                            p.position.y + p.size / 2.0,
+                            p.position.x + p.scale.x / 2.0,
+                            p.position.y + p.scale.y / 2.0,
                         ),
                         area: Vector2::new(2.5, 2.5),
                     },
                     Bounds {
                         origin: Point2::new(self.player.position.x, self.player.position.y),
-                        area: Vector2::new(self.player.size, self.player.size),
+                        area: Vector2::new(self.player.scale.x, self.player.scale.y),
                     },
                 ) {
                     p.alive = false;

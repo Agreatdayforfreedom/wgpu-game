@@ -4,7 +4,7 @@ use crate::projectile;
 use crate::uniform::Uniform;
 pub struct Enemy {
     pub position: cgmath::Vector2<f32>,
-    pub size: f32,
+    pub scale: cgmath::Vector2<f32>,
     pub alive: bool,
     pub uniform: Uniform<EntityUniform>,
     pub projectiles: Vec<projectile::Projectile>,
@@ -12,10 +12,14 @@ pub struct Enemy {
 }
 
 impl Enemy {
-    pub fn new(position: cgmath::Vector2<f32>, size: f32, uniform: Uniform<EntityUniform>) -> Self {
+    pub fn new(
+        position: cgmath::Vector2<f32>,
+        scale: cgmath::Vector2<f32>,
+        uniform: Uniform<EntityUniform>,
+    ) -> Self {
         Self {
             position,
-            size,
+            scale,
             alive: true,
             uniform,
             projectiles: vec![],
@@ -25,7 +29,7 @@ impl Enemy {
 
     pub fn spawn_fire(
         &mut self,
-        size: f32,
+        scale: cgmath::Vector2<f32>,
         audio: &mut Audio,
         device: &wgpu::Device,
     ) -> Option<projectile::Projectile> {
@@ -35,11 +39,11 @@ impl Enemy {
             audio.push(Sounds::Shoot);
             self.projectiles.push(projectile::Projectile::new(
                 (
-                    self.position.x + (self.size / 2.0) - (size / 2.0),
+                    self.position.x + (self.scale.x / 2.0) - (scale.x / 2.0),
                     self.position.y,
                 )
                     .into(),
-                size,
+                scale,
                 projectile_uniform,
             ));
         }

@@ -8,9 +8,7 @@ pub struct EntityUniform {
     position: cgmath::Vector2<f32>,
     size: f32,
     angle: Deg<f32>,
-
-    w: f32,
-    h: f32,
+    scale: cgmath::Vector2<f32>,
 }
 unsafe impl bytemuck::Pod for EntityUniform {}
 unsafe impl bytemuck::Zeroable for EntityUniform {}
@@ -23,8 +21,7 @@ impl Default for EntityUniform {
             position: (0.0, 0.0).into(),
             angle: Deg(0.0),
             size: 24.0,
-            w: 24.0,
-            h: 24.0,
+            scale: (24.0, 24.0).into(),
         }
     }
 }
@@ -60,15 +57,14 @@ impl EntityUniform {
             * cgmath::Matrix4::from_scale(size);
     }
 
-    pub fn set_scale(&mut self, w: f32, h: f32) {
-        self.w = w;
-        self.h = h;
+    pub fn set_scale(&mut self, scale: cgmath::Vector2<f32>) {
+        self.scale = scale;
         self.model = cgmath::Matrix4::identity()
             * cgmath::Matrix4::from_translation((self.position.x, self.position.y, 0.0).into())
             * cgmath::Matrix4::from_translation((0.5 * self.size, 0.5 * self.size, 0.0).into())
             * cgmath::Matrix4::from_angle_z(self.angle)
             * cgmath::Matrix4::from_translation((-0.5 * self.size, -0.5 * self.size, 0.0).into())
-            * cgmath::Matrix4::from_nonuniform_scale(w, h, 0.0);
+            * cgmath::Matrix4::from_nonuniform_scale(scale.x, scale.y, 0.0);
     }
 
     pub fn set_color(&mut self, color: cgmath::Vector4<f32>) {

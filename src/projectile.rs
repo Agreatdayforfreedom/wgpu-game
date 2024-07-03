@@ -1,7 +1,7 @@
 use crate::{entity::EntityUniform, uniform};
 pub struct Projectile {
     pub position: cgmath::Vector2<f32>,
-    pub size: f32,
+    pub scale: cgmath::Vector2<f32>,
     pub alive: bool,
 
     pub uniform: uniform::Uniform<EntityUniform>,
@@ -10,12 +10,12 @@ pub struct Projectile {
 impl Projectile {
     pub fn new(
         position: cgmath::Vector2<f32>,
-        size: f32,
+        scale: cgmath::Vector2<f32>,
         uniform: uniform::Uniform<EntityUniform>,
     ) -> Self {
         Self {
             position,
-            size,
+            scale,
             alive: true,
             uniform,
         }
@@ -24,7 +24,7 @@ impl Projectile {
     pub fn update(&mut self, dt: &instant::Duration, dir: f32, deg: f32, fire_speed: f32) {
         self.uniform.data.set_position(self.position);
         self.uniform.data.set_rotation(cgmath::Deg(deg));
-        self.uniform.data.set_size(self.size);
+        self.uniform.data.set_scale(self.scale);
         if self.position.y < 0.0 || self.position.y > 600.0 {
             self.alive = false;
         }
