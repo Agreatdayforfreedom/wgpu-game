@@ -7,8 +7,9 @@ pub struct Input {
     s_pressed: bool,
     w_pressed: bool,
     f_pressed: bool,
+    c_pressed: bool,
 }
-
+//todo: better input  manager
 impl Input {
     pub fn new() -> Self {
         Default::default()
@@ -32,6 +33,10 @@ impl Input {
             "f" => {
                 self.f_pressed = pressed;
             }
+            "c" => {
+                self.c_pressed = pressed;
+            }
+
             _ => (),
         }
     }
@@ -47,6 +52,8 @@ impl Input {
             self.w_pressed
         } else if key == "f" {
             self.f_pressed
+        } else if key == "c" {
+            self.c_pressed
         } else {
             false
         }

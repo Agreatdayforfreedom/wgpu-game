@@ -209,15 +209,17 @@ impl State {
             }
         }
 
-        let new_projectile = self.player.spawn_fire(
+        let new_projectile = self.player.spawn_rail_gun(
             &self.device,
             (40.0, 40.0).into(),
             &self.input_controller,
             &mut self.audio,
         );
 
-        if let Some(projectile) = new_projectile {
-            self.projectile.push(projectile);
+        for p in new_projectile {
+            if let Some(projectile) = p {
+                self.projectile.push(projectile);
+            }
         }
 
         for p in &mut self.projectile {
