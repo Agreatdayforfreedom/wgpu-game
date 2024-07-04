@@ -2,7 +2,9 @@ use crate::audio;
 use crate::audio::Audio;
 use crate::projectile;
 use crate::uniform;
+use crate::util::CompassDir;
 use crate::{entity::EntityUniform, input::Input};
+
 use cgmath::Vector2;
 
 //todo
@@ -113,6 +115,8 @@ impl Player {
             return vec![Some(projectile::Projectile::new(
                 (self.position.x - 2.0, self.position.y).into(),
                 scale,
+                cgmath::Deg(-90.0),
+                CompassDir::North,
                 projectile_uniform,
             ))];
         };
@@ -126,16 +130,25 @@ impl Player {
         input: &Input,
         audio: &mut Audio,
     ) -> Vec<Option<projectile::Projectile>> {
-        if input.is_pressed("c") && self.interval.elapsed().as_millis() >= 125 {
+        if input.is_pressed("c") && self.interval.elapsed().as_millis() >= 25 {
             self.interval = instant::Instant::now();
             let mut vec = vec![];
 
-            for i in 0..5 {
+            for i in -2..=2 {
                 let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
-                audio.push(audio::Sounds::Shoot);
+                // audio.push(audio::Sounds::Shoot);
                 vec.push(Some(projectile::Projectile::new(
-                    ((self.position.x - 2.0) + (i as f32 * 5.0), self.position.y).into(),
+                    ((self.position.x - 2.0) + i as f32 * 10.0, self.position.y).into(),
                     scale,
+                    cgmath::Deg(-90.0 + (i as f32 * 7.5)),
+                    // if i == 0 {
+                    //     CompassDir::North
+                    // } else if (i & 1) == 0 {
+                    //     CompassDir::NorthEast
+                    // } else {
+                    //     CompassDir::NNE
+                    // },
+                    CompassDir::NNE,
                     projectile_uniform,
                 )));
             }

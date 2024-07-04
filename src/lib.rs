@@ -11,6 +11,7 @@ mod sprite_renderer;
 mod state;
 mod texture;
 mod uniform;
+mod util;
 mod window;
 
 use window::App;

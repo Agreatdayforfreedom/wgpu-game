@@ -2,6 +2,7 @@ use crate::audio::{Audio, Sounds};
 use crate::entity::EntityUniform;
 use crate::projectile;
 use crate::uniform::Uniform;
+use crate::util::CompassDir;
 pub struct Enemy {
     pub position: cgmath::Vector2<f32>,
     pub scale: cgmath::Vector2<f32>,
@@ -44,6 +45,8 @@ impl Enemy {
                 )
                     .into(),
                 scale,
+                cgmath::Deg(90.0),
+                CompassDir::South,
                 projectile_uniform,
             ));
         }

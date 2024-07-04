@@ -224,7 +224,7 @@ impl State {
 
         for p in &mut self.projectile {
             if p.alive {
-                p.update(&dt, 1.0, -90.0, 500.0);
+                p.update(&dt, 500.0);
                 p.uniform.write(&mut self.queue);
             }
         }
@@ -235,7 +235,7 @@ impl State {
             }
             for p in &mut e.projectiles {
                 if p.alive {
-                    p.update(&dt, -1.0, 90.0, 275.0);
+                    p.update(&dt, 275.0);
                     p.uniform.write(&mut self.queue);
                 }
             }
