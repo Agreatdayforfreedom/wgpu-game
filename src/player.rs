@@ -141,14 +141,14 @@ impl Player {
                     ((self.position.x - 2.0) + i as f32 * 10.0, self.position.y).into(),
                     scale,
                     cgmath::Deg(-90.0 + (i as f32 * 7.5)),
-                    // if i == 0 {
-                    //     CompassDir::North
-                    // } else if (i & 1) == 0 {
-                    //     CompassDir::NorthEast
-                    // } else {
-                    //     CompassDir::NNE
-                    // },
-                    CompassDir::NNE,
+                    if i == 0 {
+                        CompassDir::North
+                    } else if (i & 1) == 0 {
+                        CompassDir::NorthEast
+                    } else {
+                        CompassDir::NNE
+                    },
+                    // CompassDir::NNE,
                     projectile_uniform,
                 )));
             }
