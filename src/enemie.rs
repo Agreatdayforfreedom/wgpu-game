@@ -46,7 +46,7 @@ impl Enemy {
                     .into(),
                 scale,
                 cgmath::Deg(90.0),
-                CompassDir::South,
+                CompassDir::from_deg(270.0),
                 projectile_uniform,
             ));
         }

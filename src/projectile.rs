@@ -1,3 +1,5 @@
+use cgmath::InnerSpace;
+
 use crate::{entity::EntityUniform, uniform, util::CompassDir};
 
 pub struct Projectile {
@@ -42,8 +44,8 @@ impl Projectile {
 
     pub fn fire(&mut self, dt: &instant::Duration, fire_speed: f32) {
         if self.alive {
-            self.position.x += fire_speed * self.dir.to_dir().x * dt.as_secs_f32();
-            self.position.y -= fire_speed * self.dir.to_dir().y * dt.as_secs_f32();
+            self.position.x += fire_speed * self.dir.dir.x * dt.as_secs_f32();
+            self.position.y -= fire_speed * self.dir.dir.y * dt.as_secs_f32();
         }
     }
 }

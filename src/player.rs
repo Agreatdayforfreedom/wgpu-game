@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use crate::audio;
 use crate::audio::Audio;
 use crate::projectile;
@@ -5,6 +7,7 @@ use crate::uniform;
 use crate::util::CompassDir;
 use crate::{entity::EntityUniform, input::Input};
 
+use cgmath::Angle;
 use cgmath::Vector2;
 
 //todo
@@ -116,7 +119,7 @@ impl Player {
                 (self.position.x - 2.0, self.position.y).into(),
                 scale,
                 cgmath::Deg(-90.0),
-                CompassDir::North,
+                CompassDir::from_deg(0.0),
                 projectile_uniform,
             ))];
         };
@@ -137,18 +140,22 @@ impl Player {
             for i in -2..=2 {
                 let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
                 // audio.push(audio::Sounds::Shoot);
+                println!("{:?}", cgmath::Deg(45.0).sin());
                 vec.push(Some(projectile::Projectile::new(
-                    ((self.position.x - 2.0) + i as f32 * 10.0, self.position.y).into(),
+                    ((self.position.x - 2.0) + i as f32 * 5.0, self.position.y).into(),
                     scale,
                     cgmath::Deg(-90.0 + (i as f32 * 7.5)),
-                    if i == 0 {
-                        CompassDir::North
-                    } else if (i & 1) == 0 {
-                        CompassDir::NorthEast
+                    if i == -2 {
+                        CompassDir::from_deg(110.0)
+                    } else if i == -1 {
+                        CompassDir::from_deg(100.0)
+                    } else if i == 0 {
+                        CompassDir::from_deg(90.0)
+                    } else if i == 1 {
+                        CompassDir::from_deg(80.0)
                     } else {
-                        CompassDir::NNE
+                        CompassDir::from_deg(70.0)
                     },
-                    // CompassDir::NNE,
                     projectile_uniform,
                 )));
             }
