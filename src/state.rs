@@ -106,6 +106,8 @@ impl State {
             cgmath::Vector2::new(400.0, 550.0),
             (36.0, 32.0).into(),
             player_uniform,
+            &device,
+            &queue,
         );
         //ENEMIES
         let mut enemie_sprites = Vec::<sprite_renderer::SpriteRenderer>::new();
@@ -209,25 +211,33 @@ impl State {
             }
         }
 
-        let new_projectile = self.player.spawn_rail_gun(
+        self.player.active_weapon.shoot(
             &self.device,
+            self.player.position,
             (40.0, 40.0).into(),
             &self.input_controller,
             &mut self.audio,
         );
+        // let new_projectile = (
+        //     &self.device,
+        //     (40.0, 40.0).into(),
+        //     &self.input_controller,
+        //     &mut self.audio,
+        // );
 
-        for p in new_projectile {
-            if let Some(projectile) = p {
-                self.projectile.push(projectile);
-            }
-        }
+        // for p in new_projectile {
+        //     if let Some(projectile) = p {
+        //         self.projectile.push(projectile);
+        //     }
+        // }
 
-        for p in &mut self.projectile {
-            if p.alive {
-                p.update(&dt, 500.0);
-                p.uniform.write(&mut self.queue);
-            }
-        }
+        // for p in &mut self.projectile {
+        //     if p.alive {
+        //         p.update(&dt, 500.0);
+        //         p.uniform.write(&mut self.queue);
+        //     }
+        // }
+        self.player.active_weapon.update(&mut self.queue, &dt);
 
         for e in &mut self.enemies {
             if rand::thread_rng().gen_range(0..10000) < 1 {
@@ -303,11 +313,7 @@ impl State {
             }
         }
 
-        self.projectile = self
-            .projectile
-            .drain(..)
-            .filter(|p| p.alive != false)
-            .collect();
+        self.player.active_weapon.drain();
 
         self.enemies = self
             .enemies
@@ -425,15 +431,16 @@ impl State {
             }
 
             // draw player projectiles
-            rpass.set_vertex_buffer(0, self.projectile_sprite.buffer.slice(..));
-            rpass.set_bind_group(0, &self.projectile_sprite.bind_group, &[]);
-            for p in &self.projectile {
-                if p.alive {
-                    rpass.set_vertex_buffer(2, p.uniform.buffer.slice(..));
-                    rpass.set_bind_group(2, &p.uniform.bind_group, &[]);
-                    rpass.draw(0..6, 0..1);
-                }
-            }
+            self.player.active_weapon.draw(&mut rpass);
+            // rpass.set_vertex_buffer(0, self.projectile_sprite.buffer.slice(..));
+            // rpass.set_bind_group(0, &self.projectile_sprite.bind_group, &[]);
+            // for p in &self.projectile {
+            //     if p.alive {
+            //         rpass.set_vertex_buffer(2, p.uniform.buffer.slice(..));
+            //         rpass.set_bind_group(2, &p.uniform.bind_group, &[]);
+            //         rpass.draw(0..6, 0..1);
+            //     }
+            // }
         }
 
         self.queue.submit(Some(encoder.finish()));

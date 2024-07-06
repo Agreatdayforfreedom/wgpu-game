@@ -48,4 +48,12 @@ impl Projectile {
             self.position.y -= fire_speed * self.dir.dir.y * dt.as_secs_f32();
         }
     }
+
+    pub fn draw<'a, 'b>(&'a self, rpass: &'b mut wgpu::RenderPass<'a>) {
+        if self.alive {
+            rpass.set_vertex_buffer(2, self.uniform.buffer.slice(..));
+            rpass.set_bind_group(2, &self.uniform.bind_group, &[]);
+            rpass.draw(0..6, 0..1);
+        }
+    }
 }

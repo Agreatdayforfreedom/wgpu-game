@@ -12,6 +12,7 @@ mod state;
 mod texture;
 mod uniform;
 mod util;
+mod weapon;
 mod window;
 
 use window::App;

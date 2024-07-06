@@ -1,20 +1,19 @@
-use std::fmt::Debug;
-
 use crate::audio;
 use crate::audio::Audio;
 use crate::projectile;
 use crate::uniform;
 use crate::util::CompassDir;
+use crate::weapon::cannon::Cannon;
+use crate::weapon::weapon::Weapon;
 use crate::{entity::EntityUniform, input::Input};
 
 use cgmath::Angle;
 use cgmath::Vector2;
-
 //todo
-pub enum Weapon {
-    Cannon,
-    RailGun,
-}
+// pub enum Weapon {
+//     Cannon,
+//     RailGun,
+// }
 
 // impl Weapon {
 // pub fn fire(
@@ -48,7 +47,7 @@ pub struct Player {
     pub scale: cgmath::Vector2<f32>,
     pub alive: bool,
     pub uniform: uniform::Uniform<EntityUniform>,
-    pub active_weapon: Weapon, //todo
+    pub active_weapon: Box<dyn Weapon>,
     interval: instant::Instant,
 }
 
@@ -58,13 +57,15 @@ impl Player {
         position: cgmath::Vector2<f32>,
         scale: cgmath::Vector2<f32>,
         uniform: uniform::Uniform<EntityUniform>,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
     ) -> Self {
         Self {
             position,
             scale,
             alive: true,
             uniform,
-            active_weapon: Weapon::Cannon,
+            active_weapon: Cannon::new(500, device, queue),
             interval: instant::Instant::now(),
         }
     }
