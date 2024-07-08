@@ -2,11 +2,11 @@ use crate::{
     audio::{Audio, Sounds},
     entity::EntityUniform,
     input::Input,
-    projectile::Projectile,
     sprite_renderer::SpriteRenderer,
     util::CompassDir,
 };
 
+use super::projectile::Projectile;
 use super::weapon::Weapon;
 pub struct Cannon {
     pub projectiles: Vec<Projectile>,

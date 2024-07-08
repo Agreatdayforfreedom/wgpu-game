@@ -1,9 +1,9 @@
 use crate::audio;
 use crate::audio::Audio;
-use crate::projectile;
 use crate::uniform;
 use crate::util::CompassDir;
 use crate::weapon::cannon::Cannon;
+use crate::weapon::projectile; //todo
 use crate::weapon::rail_gun::RailGun;
 use crate::weapon::weapon::Weapon;
 use crate::{entity::EntityUniform, input::Input};
@@ -66,7 +66,7 @@ impl Player {
             scale,
             alive: true,
             uniform,
-            active_weapon: RailGun::new(50, device, queue),
+            active_weapon: Cannon::new(50, device, queue),
             interval: instant::Instant::now(),
         }
     }

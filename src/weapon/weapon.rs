@@ -1,4 +1,5 @@
-use crate::{audio::Audio, input::Input, projectile::Projectile};
+use super::projectile::Projectile;
+use crate::{audio::Audio, input::Input};
 
 pub trait Weapon {
     fn shoot(

@@ -7,7 +7,8 @@ use crate::explosion::{self, Explosion};
 use crate::input::Input;
 use crate::sprite_renderer::create_render_pipeline;
 use crate::uniform::Uniform;
-use crate::{player, projectile, sprite_renderer};
+use crate::weapon::projectile;
+use crate::{player, sprite_renderer};
 use cgmath::{Point2, Vector2};
 use rand::{self, Rng};
 

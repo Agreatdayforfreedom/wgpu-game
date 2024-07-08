@@ -2,9 +2,9 @@ use crate::{
     audio::{Audio, Sounds},
     entity::EntityUniform,
     input::Input,
-    projectile::Projectile,
     sprite_renderer::SpriteRenderer,
     util::CompassDir,
+    weapon::projectile::Projectile,
 };
 
 use super::weapon::Weapon;
