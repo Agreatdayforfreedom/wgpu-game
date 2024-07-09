@@ -1,6 +1,7 @@
 use cgmath::Point2;
 use cgmath::Vector2;
 
+#[derive(Debug, Clone, Copy)]
 pub struct Bounds {
     pub origin: Point2<f32>,
     pub area: Vector2<f32>,

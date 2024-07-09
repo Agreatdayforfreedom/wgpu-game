@@ -1,8 +1,10 @@
 use crate::audio;
 use crate::audio::Audio;
+use crate::collider::Bounds;
 use crate::uniform;
 use crate::util::CompassDir;
 use crate::weapon::cannon::Cannon;
+use crate::weapon::laser::Laser;
 use crate::weapon::projectile; //todo
 use crate::weapon::rail_gun::RailGun;
 use crate::weapon::weapon::Weapon;
@@ -66,12 +68,19 @@ impl Player {
             scale,
             alive: true,
             uniform,
-            active_weapon: Cannon::new(50, device, queue),
+            active_weapon: Laser::new(device, queue),
             interval: instant::Instant::now(),
         }
     }
 
-    pub fn update(&mut self, dt: &instant::Duration, input: &Input) {
+    pub fn update(
+        &mut self,
+        dt: &instant::Duration,
+        input: &Input,
+        audio: &mut Audio,
+        device: &wgpu::Device,
+        queue: &mut wgpu::Queue,
+    ) {
         if input.is_pressed("d") {
             self.movement("d", dt);
         } else if input.is_pressed("a") {
@@ -81,6 +90,11 @@ impl Player {
         } else if input.is_pressed("w") {
             self.movement("w", dt);
         }
+
+        self.active_weapon
+            .shoot(device, self.position, (4.0, 400.0).into(), input, audio);
+        self.active_weapon.update(queue, &dt);
+
         self.uniform
             .data
             .set_position(self.position)
@@ -106,63 +120,64 @@ impl Player {
         self.position += position;
     }
 
-    pub fn spawn_fire(
-        &mut self,
-        device: &wgpu::Device,
-        scale: cgmath::Vector2<f32>,
-        input: &Input,
-        audio: &mut Audio,
-    ) -> Vec<Option<projectile::Projectile>> {
-        if input.is_pressed("f") && self.interval.elapsed().as_millis() >= 500 {
-            self.interval = instant::Instant::now();
-            let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
-            audio.push(audio::Sounds::Shoot);
-            return vec![Some(projectile::Projectile::new(
-                (self.position.x - 2.0, self.position.y).into(),
-                scale,
-                cgmath::Deg(-90.0),
-                CompassDir::from_deg(0.0),
-                projectile_uniform,
-            ))];
-        };
-        vec![None]
-    }
+    // pub fn spawn_fire(
+    //     &mut self,
+    //     device: &wgpu::Device,
+    //     scale: cgmath::Vector2<f32>,
+    //     input: &Input,
+    //     audio: &mut Audio,
+    // ) -> Vec<Option<projectile::Projectile>> {
+    //     if input.is_pressed("f") && self.interval.elapsed().as_millis() >= 500 {
+    //         self.interval = instant::Instant::now();
+    //         let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
+    //         audio.push(audio::Sounds::Shoot);
+    //         return vec![Some(projectile::Projectile::new(
+    //             (self.position.x - 2.0, self.position.y).into(),
+    //             scale,
+    //             cgmath::Deg(-90.0),
+    //             CompassDir::from_deg(0.0),
+    //             // Bounds: {}
+    //             projectile_uniform,
+    //         ))];
+    //     };
+    //     vec![None]
+    // }
 
-    pub fn spawn_rail_gun(
-        &mut self,
-        device: &wgpu::Device,
-        scale: cgmath::Vector2<f32>,
-        input: &Input,
-        audio: &mut Audio,
-    ) -> Vec<Option<projectile::Projectile>> {
-        if input.is_pressed("c") && self.interval.elapsed().as_millis() >= 25 {
-            self.interval = instant::Instant::now();
-            let mut vec = vec![];
+    // pub fn spawn_rail_gun(
+    //     &mut self,
+    //     device: &wgpu::Device,
+    //     scale: cgmath::Vector2<f32>,
+    //     input: &Input,
+    //     audio: &mut Audio,
+    // ) -> Vec<Option<projectile::Projectile>> {
+    //     if input.is_pressed("c") && self.interval.elapsed().as_millis() >= 25 {
+    //         self.interval = instant::Instant::now();
+    //         let mut vec = vec![];
 
-            for i in -2..=2 {
-                let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
-                // audio.push(audio::Sounds::Shoot);
-                println!("{:?}", cgmath::Deg(45.0).sin());
-                vec.push(Some(projectile::Projectile::new(
-                    ((self.position.x - 2.0) + i as f32 * 5.0, self.position.y).into(),
-                    scale,
-                    cgmath::Deg(-90.0 + (i as f32 * 7.5)),
-                    if i == -2 {
-                        CompassDir::from_deg(110.0)
-                    } else if i == -1 {
-                        CompassDir::from_deg(100.0)
-                    } else if i == 0 {
-                        CompassDir::from_deg(90.0)
-                    } else if i == 1 {
-                        CompassDir::from_deg(80.0)
-                    } else {
-                        CompassDir::from_deg(70.0)
-                    },
-                    projectile_uniform,
-                )));
-            }
-            return vec;
-        };
-        vec![None]
-    }
+    //         for i in -2..=2 {
+    //             let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
+    //             // audio.push(audio::Sounds::Shoot);
+    //             println!("{:?}", cgmath::Deg(45.0).sin());
+    //             vec.push(Some(projectile::Projectile::new(
+    //                 ((self.position.x - 2.0) + i as f32 * 5.0, self.position.y).into(),
+    //                 scale,
+    //                 cgmath::Deg(-90.0 + (i as f32 * 7.5)),
+    //                 if i == -2 {
+    //                     CompassDir::from_deg(110.0)
+    //                 } else if i == -1 {
+    //                     CompassDir::from_deg(100.0)
+    //                 } else if i == 0 {
+    //                     CompassDir::from_deg(90.0)
+    //                 } else if i == 1 {
+    //                     CompassDir::from_deg(80.0)
+    //                 } else {
+    //                     CompassDir::from_deg(70.0)
+    //                 },
+    //                 projectile_uniform,
+    //             )));
+    //         }
+    //         return vec;
+    //     };
+    //     vec![None]
+    // }
 }

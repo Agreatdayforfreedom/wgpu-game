@@ -201,7 +201,13 @@ impl State {
         }
         println!("FPS: {}", 1.0 / dt.as_secs_f64());
         self.bg_uniform.write(&mut self.queue);
-        self.player.update(&dt, &self.input_controller);
+        self.player.update(
+            &dt,
+            &self.input_controller,
+            &mut self.audio,
+            &self.device,
+            &mut self.queue,
+        );
         self.player.uniform.data.set_scale((36.0, 32.0).into());
 
         self.player.uniform.write(&mut self.queue);
@@ -211,34 +217,6 @@ impl State {
                 e.uniform.write(&mut self.queue);
             }
         }
-
-        self.player.active_weapon.shoot(
-            &self.device,
-            self.player.position,
-            (40.0, 40.0).into(),
-            &self.input_controller,
-            &mut self.audio,
-        );
-        // let new_projectile = (
-        //     &self.device,
-        //     (40.0, 40.0).into(),
-        //     &self.input_controller,
-        //     &mut self.audio,
-        // );
-
-        // for p in new_projectile {
-        //     if let Some(projectile) = p {
-        //         self.projectile.push(projectile);
-        //     }
-        // }
-
-        // for p in &mut self.projectile {
-        //     if p.alive {
-        //         p.update(&dt, 500.0);
-        //         p.uniform.write(&mut self.queue);
-        //     }
-        // }
-        self.player.active_weapon.update(&mut self.queue, &dt);
 
         for e in &mut self.enemies {
             if rand::thread_rng().gen_range(0..10000) < 1 {
@@ -258,22 +236,16 @@ impl State {
                 .collect();
         }
         //check collsions
-        for p in &mut self.projectile {
+        for p in &mut self.player.active_weapon.get_projectiles() {
             for e in &mut self.enemies {
                 if check_collision(
-                    Bounds {
-                        origin: Point2::new(
-                            p.position.x + p.scale.x / 2.0,
-                            p.position.y + p.scale.y / 2.0,
-                        ),
-                        area: Vector2::new(2.5, 2.5),
-                    },
+                    p.bounds,
                     Bounds {
                         origin: Point2::new(e.position.x, e.position.y),
                         area: Vector2::new(e.scale.x, e.scale.y),
                     },
                 ) {
-                    p.alive = false;
+                    // p.alive = false;
                     e.uniform.data.set_color((1.0, 0.0, 0.0, 1.0).into());
                     let explosion = Explosion::new(
                         e.position.into(),

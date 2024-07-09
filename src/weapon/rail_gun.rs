@@ -1,5 +1,8 @@
+use std::slice::IterMut;
+
 use crate::{
     audio::{Audio, Sounds},
+    collider::Bounds,
     entity::EntityUniform,
     input::Input,
     sprite_renderer::SpriteRenderer,
@@ -52,6 +55,13 @@ impl Weapon for RailGun {
                     ((position.x - 2.0) + i as f32 * 5.0, position.y).into(),
                     scale,
                     cgmath::Deg(-90.0 + (i as f32 * 7.5)),
+                    Bounds {
+                        area: scale,
+                        origin: cgmath::Point2 {
+                            x: position.x,
+                            y: position.y,
+                        },
+                    },
                     if i == -2 {
                         CompassDir::from_deg(110.0)
                     } else if i == -1 {
@@ -72,6 +82,13 @@ impl Weapon for RailGun {
     fn update(&mut self, queue: &mut wgpu::Queue, dt: &instant::Duration) {
         for projectile in &mut self.projectiles {
             if projectile.alive {
+                projectile.set_bounds(Bounds {
+                    origin: cgmath::Point2::new(
+                        projectile.position.x + projectile.scale.x / 2.0,
+                        projectile.position.y + projectile.scale.y / 2.0,
+                    ),
+                    area: cgmath::Vector2::new(2.5, 2.5),
+                });
                 projectile.update(&dt, 500.0);
                 projectile.uniform.write(queue);
             }
@@ -84,6 +101,10 @@ impl Weapon for RailGun {
             .drain(..)
             .filter(|p| p.alive != false)
             .collect();
+    }
+
+    fn get_projectiles(&mut self) -> IterMut<Projectile> {
+        self.projectiles.iter_mut()
     }
 
     fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {

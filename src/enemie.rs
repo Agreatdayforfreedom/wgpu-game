@@ -1,4 +1,5 @@
 use crate::audio::{Audio, Sounds};
+use crate::collider::Bounds;
 use crate::entity::EntityUniform;
 use crate::uniform::Uniform;
 use crate::util::CompassDir;
@@ -47,6 +48,13 @@ impl Enemy {
                     .into(),
                 scale,
                 cgmath::Deg(90.0),
+                Bounds {
+                    area: scale,
+                    origin: cgmath::Point2 {
+                        x: self.position.x,
+                        y: self.position.y,
+                    },
+                },
                 CompassDir::from_deg(270.0),
                 projectile_uniform,
             ));

@@ -1,5 +1,8 @@
+use std::slice::IterMut;
+
 use crate::{
     audio::{Audio, Sounds},
+    collider::Bounds,
     entity::EntityUniform,
     input::Input,
     sprite_renderer::SpriteRenderer,
@@ -46,6 +49,13 @@ impl Weapon for Cannon {
                 (position.x - 2.0, position.y).into(),
                 scale,
                 cgmath::Deg(-90.0),
+                Bounds {
+                    area: scale,
+                    origin: cgmath::Point2 {
+                        x: position.x,
+                        y: position.y,
+                    },
+                },
                 CompassDir::from_deg(90.0),
                 projectile_uniform,
             );
@@ -71,6 +81,9 @@ impl Weapon for Cannon {
             .collect();
     }
 
+    fn get_projectiles(&mut self) -> IterMut<Projectile> {
+        self.projectiles.iter_mut()
+    }
     fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
         rpass.set_vertex_buffer(0, self.sprite.buffer.slice(..));
         rpass.set_bind_group(0, &self.sprite.bind_group, &[]);

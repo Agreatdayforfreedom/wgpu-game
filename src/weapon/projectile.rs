@@ -1,12 +1,13 @@
 use cgmath::InnerSpace;
 
-use crate::{entity::EntityUniform, uniform, util::CompassDir};
+use crate::{collider::Bounds, entity::EntityUniform, uniform, util::CompassDir};
 
 pub struct Projectile {
     pub position: cgmath::Vector2<f32>,
     pub scale: cgmath::Vector2<f32>,
     pub alive: bool,
     pub dir: CompassDir,
+    pub bounds: Bounds,
     pub rotation: cgmath::Deg<f32>,
     pub uniform: uniform::Uniform<EntityUniform>,
 }
@@ -16,6 +17,7 @@ impl Projectile {
         position: cgmath::Vector2<f32>,
         scale: cgmath::Vector2<f32>,
         rotation: cgmath::Deg<f32>,
+        bounds: Bounds,
         dir: CompassDir,
         uniform: uniform::Uniform<EntityUniform>,
     ) -> Self {
@@ -23,6 +25,7 @@ impl Projectile {
             position,
             scale,
             rotation,
+            bounds,
             dir,
             alive: true,
             uniform,
@@ -39,6 +42,7 @@ impl Projectile {
         if self.position.y < 0.0 || self.position.y > 600.0 {
             self.alive = false;
         }
+
         self.fire(dt, fire_speed);
     }
 
@@ -47,6 +51,10 @@ impl Projectile {
             self.position.x += fire_speed * self.dir.dir.x * dt.as_secs_f32();
             self.position.y -= fire_speed * self.dir.dir.y * dt.as_secs_f32();
         }
+    }
+
+    pub fn set_bounds(&mut self, bounds: Bounds) {
+        self.bounds = bounds;
     }
 
     pub fn draw<'a, 'b>(&'a self, rpass: &'b mut wgpu::RenderPass<'a>) {
