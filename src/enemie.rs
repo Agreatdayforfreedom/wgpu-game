@@ -3,7 +3,6 @@ use crate::collider::Bounds;
 use crate::entity::EntityUniform;
 use crate::uniform::Uniform;
 use crate::util::CompassDir;
-use crate::weapon::projectile;
 use crate::weapon::projectile::Projectile;
 pub struct Enemy {
     pub position: cgmath::Vector2<f32>,

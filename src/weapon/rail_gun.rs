@@ -17,7 +17,6 @@ pub struct RailGun {
     time: instant::Instant,
     shooting_interval: u128, // milliseconds
     sprite: SpriteRenderer,
-    per_row: u32,
 }
 
 impl RailGun {
@@ -30,7 +29,6 @@ impl RailGun {
             time: instant::Instant::now(),
             shooting_interval,
             sprite,
-            per_row: 5,
         })
     }
 }

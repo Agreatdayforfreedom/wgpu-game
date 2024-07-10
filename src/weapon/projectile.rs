@@ -1,5 +1,3 @@
-use cgmath::InnerSpace;
-
 use crate::{collider::Bounds, entity::EntityUniform, uniform, util::CompassDir};
 
 pub struct Projectile {

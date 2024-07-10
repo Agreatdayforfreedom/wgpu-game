@@ -1,15 +1,9 @@
 use cgmath::{Angle, InnerSpace};
 
-//45.0
-const COS_SIN_PI_4: f32 = 0.70710677;
-
-//22.5
-const SIN_PI_8: f32 = 0.38268343;
-const COS_PI_8: f32 = 0.92387953;
-
 #[derive(Debug, Clone, Copy)]
 pub struct CompassDir {
     pub dir: cgmath::Vector2<f32>,
+    #[allow(dead_code)]
     pub angle: cgmath::Deg<f32>,
 }
 
