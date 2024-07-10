@@ -33,7 +33,7 @@ impl Weapon for Laser {
         input: &Input,
         audio: &mut Audio,
     ) {
-        if input.is_pressed("f") {
+        if input.is_pressed("f") && self.projectiles.len() < 1 {
             let uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
 
             self.projectiles.push(Projectile::new(
@@ -56,7 +56,15 @@ impl Weapon for Laser {
     fn update(&mut self, queue: &mut wgpu::Queue, dt: &instant::Duration) {
         for projectile in &mut self.projectiles {
             if projectile.alive {
-                projectile.update(&dt, 0.0);
+                projectile.set_bounds(Bounds {
+                    origin: cgmath::Point2::new(
+                        projectile.position.x,
+                        projectile.position.y + projectile.scale.y,
+                    ),
+                    area: cgmath::Vector2::new(2.5, 2.5),
+                });
+                projectile.update(&dt, 0.0, "laser");
+                projectile.scale.y -= 500.0 * dt.as_secs_f32();
                 projectile.uniform.write(queue);
             }
         }

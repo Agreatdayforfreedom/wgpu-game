@@ -89,7 +89,7 @@ impl Weapon for RailGun {
                     ),
                     area: cgmath::Vector2::new(2.5, 2.5),
                 });
-                projectile.update(&dt, 500.0);
+                projectile.update(&dt, 500.0, ":D");
                 projectile.uniform.write(queue);
             }
         }

@@ -68,7 +68,14 @@ impl Weapon for Cannon {
         println!("len: {}", self.projectiles.len());
         for projectile in &mut self.projectiles {
             if projectile.alive {
-                projectile.update(&dt, 500.0);
+                projectile.set_bounds(Bounds {
+                    origin: cgmath::Point2::new(
+                        projectile.position.x + projectile.scale.x / 2.0,
+                        projectile.position.y + projectile.scale.y / 2.0,
+                    ),
+                    area: cgmath::Vector2::new(2.5, 2.5),
+                });
+                projectile.update(&dt, 500.0, ":D");
                 projectile.uniform.write(queue);
             }
         }

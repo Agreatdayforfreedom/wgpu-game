@@ -91,8 +91,13 @@ impl Player {
             self.movement("w", dt);
         }
 
-        self.active_weapon
-            .shoot(device, self.position, (4.0, 400.0).into(), input, audio);
+        self.active_weapon.shoot(
+            device,
+            (self.position.x + self.scale.x / 3.0, self.position.y).into(),
+            (12.0, 0.0).into(),
+            input,
+            audio,
+        );
         self.active_weapon.update(queue, &dt);
 
         self.uniform

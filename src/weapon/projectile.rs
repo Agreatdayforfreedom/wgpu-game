@@ -31,8 +31,8 @@ impl Projectile {
             uniform,
         }
     }
-
-    pub fn update(&mut self, dt: &instant::Duration, fire_speed: f32) {
+    // todo remove label :3
+    pub fn update(&mut self, dt: &instant::Duration, fire_speed: f32, label: &str) {
         self.uniform
             .data
             .set_position(self.position)
@@ -43,13 +43,16 @@ impl Projectile {
             self.alive = false;
         }
 
-        self.fire(dt, fire_speed);
+        self.fire(dt, fire_speed, label);
     }
 
-    pub fn fire(&mut self, dt: &instant::Duration, fire_speed: f32) {
+    pub fn fire(&mut self, dt: &instant::Duration, fire_speed: f32, label: &str) {
         if self.alive {
-            self.position.x += fire_speed * self.dir.dir.x * dt.as_secs_f32();
-            self.position.y -= fire_speed * self.dir.dir.y * dt.as_secs_f32();
+            if label == "laser" {
+            } else {
+                self.position.x += fire_speed * self.dir.dir.x * dt.as_secs_f32();
+                self.position.y -= fire_speed * self.dir.dir.y * dt.as_secs_f32();
+            }
         }
     }
 

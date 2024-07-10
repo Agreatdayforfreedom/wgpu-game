@@ -224,7 +224,7 @@ impl State {
             }
             for p in &mut e.projectiles {
                 if p.alive {
-                    p.update(&dt, 275.0);
+                    p.update(&dt, 275.0, ":D");
                     p.uniform.write(&mut self.queue);
                 }
             }
@@ -245,7 +245,7 @@ impl State {
                         area: Vector2::new(e.scale.x, e.scale.y),
                     },
                 ) {
-                    // p.alive = false;
+                    p.alive = false;
                     e.uniform.data.set_color((1.0, 0.0, 0.0, 1.0).into());
                     let explosion = Explosion::new(
                         e.position.into(),
