@@ -31,11 +31,36 @@ impl Explosion {
         let diffuse_bytes5 = include_bytes!("./assets/exp5.png");
 
         let sprites = vec![
-            sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes1),
-            sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes2),
-            sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes3),
-            sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes4),
-            sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes5),
+            sprite_renderer::SpriteRenderer::new(
+                &device,
+                &queue,
+                wgpu::AddressMode::ClampToEdge,
+                diffuse_bytes1,
+            ),
+            sprite_renderer::SpriteRenderer::new(
+                &device,
+                &queue,
+                wgpu::AddressMode::ClampToEdge,
+                diffuse_bytes2,
+            ),
+            sprite_renderer::SpriteRenderer::new(
+                &device,
+                &queue,
+                wgpu::AddressMode::ClampToEdge,
+                diffuse_bytes3,
+            ),
+            sprite_renderer::SpriteRenderer::new(
+                &device,
+                &queue,
+                wgpu::AddressMode::ClampToEdge,
+                diffuse_bytes4,
+            ),
+            sprite_renderer::SpriteRenderer::new(
+                &device,
+                &queue,
+                wgpu::AddressMode::ClampToEdge,
+                diffuse_bytes5,
+            ),
         ];
         Self {
             position,

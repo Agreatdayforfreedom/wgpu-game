@@ -42,6 +42,7 @@ impl Player {
         audio: &mut Audio,
         device: &wgpu::Device,
         queue: &mut wgpu::Queue,
+        time: f64,
     ) {
         if input.is_pressed("d") {
             self.movement("d", dt);
@@ -56,11 +57,11 @@ impl Player {
         self.active_weapon.shoot(
             device,
             (self.position.x + self.scale.x / 3.0, self.position.y).into(),
-            (12.0, 0.0).into(),
+            (24.0, 0.0).into(),
             input,
             audio,
         );
-        self.active_weapon.update(queue, &dt);
+        self.active_weapon.update(queue, dt, time);
 
         self.uniform
             .data

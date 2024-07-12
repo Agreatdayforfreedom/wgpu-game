@@ -40,6 +40,7 @@ pub struct State {
     camera_uniform: Uniform<Camera>,
     audio: Audio,
     dt: instant::Duration,
+    time: f64,
 }
 impl State {
     pub fn new(window: Arc<Window>) -> Self {
@@ -95,13 +96,23 @@ impl State {
 
         //BG
         let diffuse_bytes = include_bytes!("./assets/bg.png");
-        let bg_sprite = sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes);
+        let bg_sprite = sprite_renderer::SpriteRenderer::new(
+            &device,
+            &queue,
+            wgpu::AddressMode::ClampToEdge,
+            diffuse_bytes,
+        );
         let mut bg_uniform = Uniform::<EntityUniform>::new(&device);
         bg_uniform.data.set_scale((800.0, 600.0).into()).exec();
 
         //PLAYER
         let diffuse_bytes = include_bytes!("./assets/spaceship.png");
-        let sprite = sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes);
+        let sprite = sprite_renderer::SpriteRenderer::new(
+            &device,
+            &queue,
+            wgpu::AddressMode::ClampToEdge,
+            diffuse_bytes,
+        );
         let player_uniform = Uniform::<EntityUniform>::new(&device);
         let player = player::Player::new(
             cgmath::Vector2::new(400.0, 550.0),
@@ -115,7 +126,12 @@ impl State {
         let mut enemies = Vec::<Enemy>::new();
 
         let enemie_bytes = include_bytes!("./assets/alien1.png");
-        let enemie_sprite = sprite_renderer::SpriteRenderer::new(&device, &queue, enemie_bytes);
+        let enemie_sprite = sprite_renderer::SpriteRenderer::new(
+            &device,
+            &queue,
+            wgpu::AddressMode::ClampToEdge,
+            enemie_bytes,
+        );
         enemie_sprites.push(enemie_sprite);
 
         for i in 0..(config.width / 36) {
@@ -137,12 +153,20 @@ impl State {
         //PROJECTILES
 
         let diffuse_bytes = include_bytes!("./assets/bullet.png");
-        let projectile_sprite =
-            sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes);
+        let projectile_sprite = sprite_renderer::SpriteRenderer::new(
+            &device,
+            &queue,
+            wgpu::AddressMode::ClampToEdge,
+            diffuse_bytes,
+        );
 
         let diffuse_bytes = include_bytes!("./assets/alien_bullet.png");
-        let enemy_projectile_sprite =
-            sprite_renderer::SpriteRenderer::new(&device, &queue, diffuse_bytes);
+        let enemy_projectile_sprite = sprite_renderer::SpriteRenderer::new(
+            &device,
+            &queue,
+            wgpu::AddressMode::ClampToEdge,
+            diffuse_bytes,
+        );
 
         let input_controller = Input::new();
 
@@ -187,11 +211,13 @@ impl State {
             input_controller,
             audio,
             dt: instant::Instant::now().elapsed(),
+            time: 0.0,
         }
     }
 
     pub fn update(&mut self, dt: instant::Duration) {
         self.dt = dt;
+        self.time += dt.as_secs_f64();
 
         self.audio.update();
         //todo
@@ -207,6 +233,7 @@ impl State {
             &mut self.audio,
             &self.device,
             &mut self.queue,
+            self.time,
         );
         self.player.uniform.data.set_scale((36.0, 32.0).into());
 

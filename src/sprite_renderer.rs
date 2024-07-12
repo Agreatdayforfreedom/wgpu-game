@@ -98,8 +98,13 @@ pub struct SpriteRenderer {
 }
 
 impl SpriteRenderer {
-    pub fn new(device: &wgpu::Device, queue: &wgpu::Queue, bytes: &[u8]) -> Self {
-        let texture = Texture::from_bytes(&device, &queue, bytes, "spaceship").unwrap();
+    pub fn new(
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        am: wgpu::AddressMode,
+        bytes: &[u8],
+    ) -> Self {
+        let texture = Texture::from_bytes(&device, &queue, bytes, am, "spaceship").unwrap();
 
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             entries: &[

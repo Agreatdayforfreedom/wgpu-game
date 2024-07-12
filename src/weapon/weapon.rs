@@ -14,7 +14,7 @@ pub trait Weapon {
     ) {
     }
 
-    fn update(&mut self, queue: &mut wgpu::Queue, dt: &instant::Duration) {}
+    fn update(&mut self, queue: &mut wgpu::Queue, dt: &instant::Duration, time: f64) {}
 
     fn drain(&mut self) {}
 

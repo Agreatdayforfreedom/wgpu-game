@@ -15,7 +15,7 @@ pub struct Laser {
 impl Laser {
     pub fn new(device: &wgpu::Device, queue: &wgpu::Queue) -> Box<Self> {
         let diffuse_bytes = include_bytes!("./../assets/laser.png");
-        let sprite = SpriteRenderer::new(&device, &queue, diffuse_bytes);
+        let sprite = SpriteRenderer::new(&device, &queue, wgpu::AddressMode::Repeat, diffuse_bytes);
 
         Box::new(Self {
             projectiles: vec![],
@@ -34,12 +34,12 @@ impl Weapon for Laser {
         audio: &mut Audio,
     ) {
         if input.is_pressed("f") && self.projectiles.len() < 1 {
-            let uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
-
+            let mut uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
+            uniform.data.set_tex_scale((1.0, 3.0).into()).exec();
             self.projectiles.push(Projectile::new(
                 position,
                 scale,
-                cgmath::Deg(0.0),
+                cgmath::Deg(180.0),
                 Bounds {
                     area: scale,
                     origin: cgmath::Point2 {
@@ -53,8 +53,9 @@ impl Weapon for Laser {
         }
     }
 
-    fn update(&mut self, queue: &mut wgpu::Queue, dt: &instant::Duration) {
+    fn update(&mut self, queue: &mut wgpu::Queue, dt: &instant::Duration, time: f64) {
         for projectile in &mut self.projectiles {
+            println!("{}", time);
             if projectile.alive {
                 projectile.set_bounds(Bounds {
                     origin: cgmath::Point2::new(
@@ -63,8 +64,10 @@ impl Weapon for Laser {
                     ),
                     area: cgmath::Vector2::new(2.5, 2.5),
                 });
+
                 projectile.update(&dt, 0.0, "laser");
-                projectile.scale.y -= 500.0 * dt.as_secs_f32();
+                projectile.uniform.data.tex_pos += dt.as_secs_f32() * 1.5;
+                projectile.scale.y = -400.0;
                 projectile.uniform.write(queue);
             }
         }

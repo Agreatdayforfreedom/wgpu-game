@@ -5,6 +5,8 @@ use cgmath::{Deg, SquareMatrix};
 pub struct EntityUniform {
     pub model: cgmath::Matrix4<f32>,
     color: cgmath::Vector4<f32>,
+    tex_scale: cgmath::Vector2<f32>,
+    pub tex_pos: f32,
     position: cgmath::Vector2<f32>,
     angle: Deg<f32>,
     scale: cgmath::Vector2<f32>,
@@ -17,6 +19,8 @@ impl Default for EntityUniform {
         Self {
             model: cgmath::Matrix4::identity(),
             color: (1.0, 1.0, 1.0, 1.0).into(),
+            tex_scale: (1.0, 1.0).into(), //TODO
+            tex_pos: 1.0,
             position: (0.0, 0.0).into(),
             angle: Deg(0.0),
             scale: (24.0, 24.0).into(),
@@ -37,6 +41,11 @@ impl EntityUniform {
 
     pub fn set_scale(&mut self, scale: cgmath::Vector2<f32>) -> &mut Self {
         self.scale = scale;
+        self
+    }
+
+    pub fn set_tex_scale(&mut self, scale: cgmath::Vector2<f32>) -> &mut Self {
+        self.tex_scale = scale;
         self
     }
 

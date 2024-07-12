@@ -21,7 +21,12 @@ pub struct Cannon {
 impl Cannon {
     pub fn new(shooting_interval: u128, device: &wgpu::Device, queue: &wgpu::Queue) -> Box<Self> {
         let diffuse_bytes = include_bytes!("./../assets/bullet.png");
-        let sprite = SpriteRenderer::new(&device, &queue, diffuse_bytes);
+        let sprite = SpriteRenderer::new(
+            &device,
+            &queue,
+            wgpu::AddressMode::ClampToEdge,
+            diffuse_bytes,
+        );
 
         Box::new(Self {
             projectiles: vec![],
@@ -64,7 +69,7 @@ impl Weapon for Cannon {
         };
     }
 
-    fn update(&mut self, queue: &mut wgpu::Queue, dt: &instant::Duration) {
+    fn update(&mut self, queue: &mut wgpu::Queue, dt: &instant::Duration, time: f64) {
         println!("len: {}", self.projectiles.len());
         for projectile in &mut self.projectiles {
             if projectile.alive {
