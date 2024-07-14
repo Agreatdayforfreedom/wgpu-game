@@ -66,8 +66,18 @@ impl Weapon for Laser {
                 });
 
                 projectile.update(&dt, 0.0, "laser");
+                projectile.uniform.data.set_color(
+                    (
+                        time.cos() as f32 * 0.5 + 0.5,
+                        time.sin() as f32 * 0.5 + 0.5,
+                        0.0,
+                        1.0,
+                    )
+                        .into(),
+                );
+                // projectile.position = position;
                 projectile.uniform.data.tex_pos += dt.as_secs_f32() * 1.5;
-                projectile.scale.y = -400.0;
+                // projectile.scale.y = -400.0;
                 projectile.uniform.write(queue);
             }
         }

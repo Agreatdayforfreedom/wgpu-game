@@ -42,6 +42,10 @@ pub struct State {
     dt: instant::Duration,
     time: f64,
 }
+//todo
+fn distance(a: cgmath::Vector2<f32>, b: cgmath::Vector2<f32>) -> f32 {
+    ((a.x - b.x).powi(2) + (a.y - b.y).powi(2)).sqrt()
+}
 impl State {
     pub fn new(window: Arc<Window>) -> Self {
         let size = window.inner_size();
@@ -264,7 +268,14 @@ impl State {
         }
         //check collsions
         for p in &mut self.player.active_weapon.get_projectiles() {
+            let mut min_dist = f32::MAX;
             for e in &mut self.enemies {
+                let dist = distance(self.player.position, e.position);
+                if dist < min_dist {
+                    min_dist = dist;
+                }
+                p.scale.y = -min_dist;
+                p.position = self.player.position;
                 if check_collision(
                     p.bounds,
                     Bounds {
@@ -272,7 +283,7 @@ impl State {
                         area: Vector2::new(e.scale.x, e.scale.y),
                     },
                 ) {
-                    p.alive = false;
+                    // p.alive = false;
                     e.uniform.data.set_color((1.0, 0.0, 0.0, 1.0).into());
                     let explosion = Explosion::new(
                         e.position.into(),
@@ -281,7 +292,7 @@ impl State {
                         &self.queue,
                     );
                     self.explosions.push(explosion);
-                    self.audio.push(Sounds::Explosion);
+                    // self.audio.push(Sounds::Explosion);
                     e.alive = false;
                 }
             }
