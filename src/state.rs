@@ -7,9 +7,10 @@ use crate::explosion::{self, Explosion};
 use crate::input::Input;
 use crate::sprite_renderer::create_render_pipeline;
 use crate::uniform::Uniform;
+use crate::util::CompassDir;
 use crate::weapon::projectile;
 use crate::{player, sprite_renderer};
-use cgmath::{Point2, Vector2};
+use cgmath::{Angle, Point2, Vector2};
 use rand::{self, Rng};
 
 use pollster::block_on;
@@ -138,22 +139,23 @@ impl State {
         );
         enemie_sprites.push(enemie_sprite);
 
-        for i in 0..(config.width / 36) {
-            for j in 0..(config.height / 80) {
-                let position = ((i as f32 + 1.0) * 40.0, (j as f32 + 1.0) * 25.0);
-                let uniform = Uniform::<EntityUniform>::new(&device);
+        // for i in 0..(config.width / 36) {
+        //     for j in 0..(config.height / 80) {
+        // let position = ((i as f32 + 1.0) * 40.0, (j as f32 + 1.0) * 25.0);
+        let position = (400.0, 300.0);
+        let uniform = Uniform::<EntityUniform>::new(&device);
 
-                let mut enemy = Enemy::new(position.into(), (24.0, 24.0).into(), uniform);
-                enemy
-                    .uniform
-                    .data
-                    .set_position(position.into())
-                    .set_scale((24.0, 24.0).into())
-                    .set_color((0.0, 1.0, 0.0, 1.0).into())
-                    .exec();
-                enemies.push(enemy);
-            }
-        }
+        let mut enemy = Enemy::new(position.into(), (24.0, 24.0).into(), uniform);
+        enemy
+            .uniform
+            .data
+            .set_position(position.into())
+            .set_scale((24.0, 24.0).into())
+            .set_color((0.0, 1.0, 0.0, 1.0).into())
+            .exec();
+        enemies.push(enemy);
+        //     }
+        // }
         //PROJECTILES
 
         let diffuse_bytes = include_bytes!("./assets/bullet.png");
@@ -231,6 +233,23 @@ impl State {
         }
         println!("FPS: {}", 1.0 / dt.as_secs_f64());
         self.bg_uniform.write(&mut self.queue);
+
+        self.player.uniform.write(&mut self.queue);
+
+        for e in &mut self.enemies {
+            let dx = e.position.x - self.player.position.x;
+            //set the point in the head
+            let dy = e.position.y - (self.player.position.y - 0.5);
+
+            let angle = dy.atan2(dx);
+
+            let angle = angle * 180.0 / std::f32::consts::PI;
+
+            self.player.rotation = cgmath::Deg(angle + 90.0);
+            if e.alive {
+                e.uniform.write(&mut self.queue);
+            }
+        }
         self.player.update(
             &dt,
             &self.input_controller,
@@ -239,16 +258,6 @@ impl State {
             &mut self.queue,
             self.time,
         );
-        self.player.uniform.data.set_scale((36.0, 32.0).into());
-
-        self.player.uniform.write(&mut self.queue);
-
-        for e in &mut self.enemies {
-            if e.alive {
-                e.uniform.write(&mut self.queue);
-            }
-        }
-
         for e in &mut self.enemies {
             if rand::thread_rng().gen_range(0..10000) < 1 {
                 e.spawn_fire((40.0, 40.0).into(), &mut self.audio, &self.device);
@@ -274,8 +283,8 @@ impl State {
                 if dist < min_dist {
                     min_dist = dist;
                 }
-                p.scale.y = -min_dist;
-                p.position = self.player.position;
+
+                println!("{:?},{:?}", p.position, self.player.position);
                 if check_collision(
                     p.bounds,
                     Bounds {
@@ -293,7 +302,7 @@ impl State {
                     );
                     self.explosions.push(explosion);
                     // self.audio.push(Sounds::Explosion);
-                    e.alive = false;
+                    // e.alive = false;
                 }
             }
         }

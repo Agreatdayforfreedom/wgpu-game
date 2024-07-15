@@ -13,6 +13,7 @@ pub struct Player {
     pub position: cgmath::Vector2<f32>,
     pub scale: cgmath::Vector2<f32>,
     pub alive: bool,
+    pub rotation: cgmath::Deg<f32>,
     pub uniform: uniform::Uniform<EntityUniform>,
     pub active_weapon: Box<dyn Weapon>,
 }
@@ -30,6 +31,7 @@ impl Player {
             position,
             scale,
             alive: true,
+            rotation: cgmath::Deg(0.0),
             uniform,
             active_weapon: Laser::new(device, queue),
         }
@@ -66,6 +68,7 @@ impl Player {
         self.uniform
             .data
             .set_position(self.position)
+            .set_rotation(self.rotation)
             .set_scale(self.scale)
             .exec();
     }

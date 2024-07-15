@@ -7,6 +7,8 @@ use crate::{
 
 use super::{projectile::Projectile, weapon::Weapon};
 
+const SPEED_LASER_MOVEMENT: f32 = 1.5;
+
 pub struct Laser {
     projectiles: Vec<Projectile>,
     sprite: SpriteRenderer,
@@ -31,7 +33,7 @@ impl Weapon for Laser {
         position: cgmath::Vector2<f32>,
         scale: cgmath::Vector2<f32>,
         input: &Input,
-        audio: &mut Audio,
+        _audio: &mut Audio,
     ) {
         if input.is_pressed("f") && self.projectiles.len() < 1 {
             let mut uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
@@ -39,7 +41,7 @@ impl Weapon for Laser {
             self.projectiles.push(Projectile::new(
                 position,
                 scale,
-                cgmath::Deg(180.0),
+                cgmath::Deg(0.0),
                 Bounds {
                     area: scale,
                     origin: cgmath::Point2 {
@@ -55,14 +57,13 @@ impl Weapon for Laser {
 
     fn update(&mut self, queue: &mut wgpu::Queue, dt: &instant::Duration, time: f64) {
         for projectile in &mut self.projectiles {
-            println!("{}", time);
             if projectile.alive {
                 projectile.set_bounds(Bounds {
                     origin: cgmath::Point2::new(
                         projectile.position.x,
                         projectile.position.y + projectile.scale.y,
                     ),
-                    area: cgmath::Vector2::new(2.5, 2.5),
+                    area: cgmath::Vector2::new(2.5, 2.5), //todo
                 });
 
                 projectile.update(&dt, 0.0, "laser");
@@ -75,9 +76,7 @@ impl Weapon for Laser {
                     )
                         .into(),
                 );
-                // projectile.position = position;
-                projectile.uniform.data.tex_pos += dt.as_secs_f32() * 1.5;
-                // projectile.scale.y = -400.0;
+                projectile.uniform.data.tex_pos += SPEED_LASER_MOVEMENT * dt.as_secs_f32();
                 projectile.uniform.write(queue);
             }
         }
