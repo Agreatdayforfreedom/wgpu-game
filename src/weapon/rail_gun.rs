@@ -5,7 +5,6 @@ use crate::{
     collider::Bounds,
     entity::EntityUniform,
     input::Input,
-    player::{self, Player},
     sprite_renderer::SpriteRenderer,
     util::CompassDir,
     weapon::projectile::Projectile,
@@ -59,7 +58,7 @@ impl Weapon for RailGun {
                 self.projectiles.push(Projectile::new(
                     ((position.x - 2.0) + i as f32 * 5.0, position.y).into(),
                     scale,
-                    (dir.angle + cgmath::Deg(180.0)),
+                    dir.angle + cgmath::Deg(180.0),
                     Bounds {
                         area: scale,
                         origin: cgmath::Point2 {
@@ -86,7 +85,6 @@ impl Weapon for RailGun {
 
     fn update(&mut self, queue: &mut wgpu::Queue, dt: &instant::Duration, time: f64) {
         for projectile in &mut self.projectiles {
-            // println!("p: {:?}", projectile.dir);
             if projectile.alive {
                 projectile.set_bounds(Bounds {
                     origin: cgmath::Point2::new(

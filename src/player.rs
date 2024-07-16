@@ -34,7 +34,7 @@ impl Player {
             alive: true,
             rotation: cgmath::Deg(360.0),
             uniform,
-            active_weapon: RailGun::new(60, device, queue),
+            active_weapon: Laser::new(device, queue),
         }
     }
 
@@ -56,7 +56,6 @@ impl Player {
         } else if input.is_pressed("w") {
             self.movement("w", dt);
         }
-        println!("{:?}", self.rotation);
         self.active_weapon.shoot(
             device,
             (self.position.x + self.scale.x / 3.0, self.position.y).into(),

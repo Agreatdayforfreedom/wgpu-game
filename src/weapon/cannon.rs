@@ -1,5 +1,7 @@
 use std::slice::IterMut;
 
+use cgmath::Angle;
+
 use crate::{
     audio::{Audio, Sounds},
     collider::Bounds,
@@ -55,7 +57,7 @@ impl Weapon for Cannon {
             let p = Projectile::new(
                 (position.x - 2.0, position.y).into(),
                 scale,
-                cgmath::Deg(-90.0),
+                dir.angle.opposite(),
                 Bounds {
                     area: scale,
                     origin: cgmath::Point2 {
@@ -63,7 +65,7 @@ impl Weapon for Cannon {
                         y: position.y,
                     },
                 },
-                CompassDir::from_deg(90.0),
+                dir,
                 projectile_uniform,
             );
 
