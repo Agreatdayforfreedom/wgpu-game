@@ -5,6 +5,7 @@ use crate::{
     collider::Bounds,
     entity::EntityUniform,
     input::Input,
+    player::{self, Player},
     sprite_renderer::SpriteRenderer,
     util::CompassDir,
     weapon::projectile::Projectile,
@@ -44,6 +45,7 @@ impl Weapon for RailGun {
         device: &wgpu::Device,
         position: cgmath::Vector2<f32>,
         scale: cgmath::Vector2<f32>,
+        dir: CompassDir,
         input: &Input,
         audio: &mut Audio,
     ) {
@@ -57,7 +59,7 @@ impl Weapon for RailGun {
                 self.projectiles.push(Projectile::new(
                     ((position.x - 2.0) + i as f32 * 5.0, position.y).into(),
                     scale,
-                    cgmath::Deg(-90.0 + (i as f32 * 7.5)),
+                    (dir.angle + cgmath::Deg(180.0)),
                     Bounds {
                         area: scale,
                         origin: cgmath::Point2 {
@@ -66,15 +68,15 @@ impl Weapon for RailGun {
                         },
                     },
                     if i == -2 {
-                        CompassDir::from_deg(110.0)
+                        dir
                     } else if i == -1 {
-                        CompassDir::from_deg(100.0)
+                        dir
                     } else if i == 0 {
-                        CompassDir::from_deg(90.0)
+                        dir
                     } else if i == 1 {
-                        CompassDir::from_deg(80.0)
+                        dir
                     } else {
-                        CompassDir::from_deg(70.0)
+                        dir
                     },
                     projectile_uniform,
                 ));
@@ -84,6 +86,7 @@ impl Weapon for RailGun {
 
     fn update(&mut self, queue: &mut wgpu::Queue, dt: &instant::Duration, time: f64) {
         for projectile in &mut self.projectiles {
+            // println!("p: {:?}", projectile.dir);
             if projectile.alive {
                 projectile.set_bounds(Bounds {
                     origin: cgmath::Point2::new(

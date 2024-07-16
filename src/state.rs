@@ -244,8 +244,7 @@ impl State {
             let angle = dy.atan2(dx);
 
             let angle = angle * 180.0 / std::f32::consts::PI;
-
-            self.player.rotation = cgmath::Deg(angle + 90.0);
+            self.player.rotation = cgmath::Deg(angle + 90.0); // adjust sprite rotation;
             if e.alive {
                 e.uniform.write(&mut self.queue);
             }
@@ -284,7 +283,6 @@ impl State {
                     min_dist = dist;
                 }
 
-                println!("{:?},{:?}", p.position, self.player.position);
                 if check_collision(
                     p.bounds,
                     Bounds {

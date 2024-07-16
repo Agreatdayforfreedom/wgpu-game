@@ -1,5 +1,6 @@
 use crate::audio::Audio;
 use crate::uniform;
+use crate::util::CompassDir;
 use crate::weapon::cannon::Cannon;
 use crate::weapon::laser::Laser;
 use crate::weapon::rail_gun::RailGun;
@@ -31,9 +32,9 @@ impl Player {
             position,
             scale,
             alive: true,
-            rotation: cgmath::Deg(0.0),
+            rotation: cgmath::Deg(360.0),
             uniform,
-            active_weapon: Laser::new(device, queue),
+            active_weapon: RailGun::new(60, device, queue),
         }
     }
 
@@ -55,11 +56,12 @@ impl Player {
         } else if input.is_pressed("w") {
             self.movement("w", dt);
         }
-
+        println!("{:?}", self.rotation);
         self.active_weapon.shoot(
             device,
             (self.position.x + self.scale.x / 3.0, self.position.y).into(),
-            (24.0, 0.0).into(),
+            (40.0, 40.0).into(),
+            CompassDir::from_deg(self.rotation.0),
             input,
             audio,
         );

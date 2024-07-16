@@ -9,12 +9,16 @@ pub struct CompassDir {
 
 impl CompassDir {
     pub fn from_deg(angle: f32) -> Self {
-        let angle = cgmath::Deg(angle);
+        let mut angle = cgmath::Deg(90.0 - angle);
         let dir = cgmath::Vector2 {
             x: angle.cos(),
             y: angle.sin(),
         }
         .normalize();
+
+        if angle < cgmath::Deg(0.0) {
+            angle += cgmath::Deg(360.0);
+        }
 
         Self { dir, angle }
     }

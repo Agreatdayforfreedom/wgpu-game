@@ -1,7 +1,13 @@
 use std::slice::IterMut;
 
 use super::projectile::Projectile;
-use crate::{audio::Audio, collider::Bounds, input::Input};
+use crate::{
+    audio::Audio,
+    collider::Bounds,
+    input::Input,
+    player::{self, Player},
+    util::CompassDir,
+};
 
 pub trait Weapon {
     fn shoot(
@@ -9,6 +15,7 @@ pub trait Weapon {
         device: &wgpu::Device,
         position: cgmath::Vector2<f32>,
         scale: cgmath::Vector2<f32>,
+        dir: CompassDir,
         input: &Input,
         audio: &mut Audio,
     ) {

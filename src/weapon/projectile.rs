@@ -1,4 +1,6 @@
-use crate::{collider::Bounds, entity::EntityUniform, uniform, util::CompassDir};
+use crate::{
+    collider::Bounds, entity::EntityUniform, uniform, util::CompassDir, weapon::projectile,
+};
 
 pub struct Projectile {
     pub position: cgmath::Vector2<f32>,
@@ -22,7 +24,7 @@ impl Projectile {
         Self {
             position,
             scale,
-            rotation,
+            rotation: CompassDir::from_deg(dir.angle.0).angle,
             bounds,
             dir,
             alive: true,
@@ -31,6 +33,7 @@ impl Projectile {
     }
     // todo remove label :3
     pub fn update(&mut self, dt: &instant::Duration, fire_speed: f32, label: &str) {
+        println!("p: {:?}", self.rotation);
         self.uniform
             .data
             .set_position(self.position)

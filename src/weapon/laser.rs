@@ -32,6 +32,7 @@ impl Weapon for Laser {
         device: &wgpu::Device,
         position: cgmath::Vector2<f32>,
         scale: cgmath::Vector2<f32>,
+        dir: CompassDir,
         input: &Input,
         _audio: &mut Audio,
     ) {

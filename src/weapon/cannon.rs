@@ -5,6 +5,7 @@ use crate::{
     collider::Bounds,
     entity::EntityUniform,
     input::Input,
+    player,
     sprite_renderer::SpriteRenderer,
     util::CompassDir,
 };
@@ -43,6 +44,7 @@ impl Weapon for Cannon {
         device: &wgpu::Device,
         position: cgmath::Vector2<f32>,
         scale: cgmath::Vector2<f32>,
+        dir: CompassDir,
         input: &Input,
         audio: &mut Audio,
     ) {
