@@ -141,19 +141,21 @@ impl State {
 
         // for i in 0..(config.width / 36) {
         //     for j in 0..(config.height / 80) {
-        // let position = ((i as f32 + 1.0) * 40.0, (j as f32 + 1.0) * 25.0);
-        let position = (400.0, 300.0);
-        let uniform = Uniform::<EntityUniform>::new(&device);
+        for i in 0..2 {
+            // let position = ((i as f32 + 1.0) * 40.0, (j as f32 + 1.0) * 25.0);
+            let position = (400.0 * i as f32, 300.0 * i as f32);
+            let uniform = Uniform::<EntityUniform>::new(&device);
 
-        let mut enemy = Enemy::new(position.into(), (24.0, 24.0).into(), uniform);
-        enemy
-            .uniform
-            .data
-            .set_position(position.into())
-            .set_scale((24.0, 24.0).into())
-            .set_color((0.0, 1.0, 0.0, 1.0).into())
-            .exec();
-        enemies.push(enemy);
+            let mut enemy = Enemy::new(position.into(), (24.0, 24.0).into(), uniform);
+            enemy
+                .uniform
+                .data
+                .set_position(position.into())
+                .set_scale((24.0, 24.0).into())
+                .set_color((0.0, 1.0, 0.0, 1.0).into())
+                .exec();
+            enemies.push(enemy);
+        }
         //     }
         // }
         //PROJECTILES
@@ -236,15 +238,21 @@ impl State {
 
         self.player.uniform.write(&mut self.queue);
 
+        let mut min_dist = f32::MAX;
         for e in &mut self.enemies {
-            let dx = e.position.x - self.player.position.x;
-            //set the point in the head
-            let dy = e.position.y - (self.player.position.y - 0.5);
+            let dist = distance(self.player.position, e.position);
+            if dist < min_dist {
+                let dx = e.position.x - self.player.position.x;
+                //set the point in the head
+                let dy = e.position.y - (self.player.position.y - 0.5);
 
-            let angle = dy.atan2(dx);
+                let angle = dy.atan2(dx);
 
-            let angle = angle * 180.0 / std::f32::consts::PI;
-            self.player.rotation = cgmath::Deg(angle + 90.0); // adjust sprite rotation;
+                let angle = angle * 180.0 / std::f32::consts::PI;
+                self.player.rotation = cgmath::Deg(angle + 90.0); // adjust sprite rotation;
+
+                min_dist = dist;
+            }
             if e.alive {
                 e.uniform.write(&mut self.queue);
             }

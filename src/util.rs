@@ -22,4 +22,19 @@ impl CompassDir {
 
         Self { dir, angle }
     }
+    //todo
+    pub fn rotate(&self, angle: f32) -> Self {
+        let mut angle = self.angle + cgmath::Deg(angle);
+        let dir = cgmath::Vector2 {
+            x: angle.cos(),
+            y: angle.sin(),
+        }
+        .normalize();
+
+        if angle < cgmath::Deg(0.0) {
+            angle += cgmath::Deg(360.0);
+        }
+
+        Self { dir, angle }
+    }
 }

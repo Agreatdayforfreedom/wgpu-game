@@ -53,10 +53,11 @@ impl Weapon for RailGun {
             audio.push(Sounds::Shoot);
             audio.push(Sounds::Shoot);
             //todo
+            println!("a: {:?}", dir);
             for i in -2..=2 {
                 let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
                 self.projectiles.push(Projectile::new(
-                    ((position.x - 2.0) + i as f32 * 5.0, position.y).into(),
+                    ((position.x), position.y).into(),
                     scale,
                     dir.angle + cgmath::Deg(180.0),
                     Bounds {
@@ -67,15 +68,15 @@ impl Weapon for RailGun {
                         },
                     },
                     if i == -2 {
-                        dir
+                        dir.rotate(0.0)
                     } else if i == -1 {
-                        dir
+                        dir.rotate(10.0)
                     } else if i == 0 {
-                        dir
+                        dir.rotate(20.0)
                     } else if i == 1 {
-                        dir
+                        dir.rotate(-10.0)
                     } else {
-                        dir
+                        dir.rotate(-20.0)
                     },
                     projectile_uniform,
                 ));

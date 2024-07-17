@@ -33,7 +33,6 @@ impl Projectile {
     }
     // todo remove label :3
     pub fn update(&mut self, dt: &instant::Duration, fire_speed: f32, label: &str) {
-        println!("p: {:?}", self.rotation);
         self.uniform
             .data
             .set_position(self.position)
