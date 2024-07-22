@@ -1,5 +1,5 @@
 use crate::audio::{Audio, Sounds};
-use crate::camera::Camera;
+use crate::camera::{Camera, CameraUniform};
 use crate::collider::{check_collision, Bounds};
 use crate::enemie::Enemy;
 use crate::entity::EntityUniform;
@@ -10,7 +10,7 @@ use crate::uniform::Uniform;
 use crate::util::CompassDir;
 use crate::weapon::projectile;
 use crate::{player, sprite_renderer};
-use cgmath::{Angle, Point2, Vector2};
+use cgmath::{Angle, Point2, Vector2, Vector3};
 use rand::{self, Rng};
 
 use pollster::block_on;
@@ -38,7 +38,7 @@ pub struct State {
     projectile: Vec<projectile::Projectile>,
     explosions: Vec<explosion::Explosion>,
     input_controller: Input,
-    camera_uniform: Uniform<Camera>,
+    camera: Camera,
     audio: Audio,
     dt: instant::Duration,
     time: f64,
@@ -97,8 +97,8 @@ impl State {
 
         let shader = device.create_shader_module(wgpu::include_wgsl!("shader.wgsl"));
 
-        let camera_uniform = Uniform::<Camera>::new(&device);
-
+        let camera_uniform = Uniform::<CameraUniform>::new(&device);
+        let camera = Camera::new(camera_uniform);
         //BG
         let diffuse_bytes = include_bytes!("./assets/bg.png");
         let bg_sprite = sprite_renderer::SpriteRenderer::new(
@@ -182,7 +182,7 @@ impl State {
             label: None,
             bind_group_layouts: &[
                 &sprite.bind_group_layout,
-                &camera_uniform.bind_group_layout,
+                &camera.uniform.bind_group_layout,
                 &player.uniform.bind_group_layout,
             ],
             push_constant_ranges: &[],
@@ -205,7 +205,7 @@ impl State {
             enemy_projectile_sprite,
 
             sprite,
-            camera_uniform,
+            camera,
             player,
 
             bg_sprite,
@@ -234,6 +234,12 @@ impl State {
             return;
         }
         println!("FPS: {}", 1.0 / dt.as_secs_f64());
+
+        self.camera.update(Vector3::new(
+            self.player.position.x,
+            self.player.position.y,
+            1.0,
+        ));
         self.bg_uniform.write(&mut self.queue);
 
         self.player.uniform.write(&mut self.queue);
@@ -265,6 +271,7 @@ impl State {
             &mut self.queue,
             self.time,
         );
+        self.camera.uniform.write(&mut self.queue);
         for e in &mut self.enemies {
             if rand::thread_rng().gen_range(0..10000) < 1 {
                 e.spawn_fire((40.0, 40.0).into(), &mut self.audio, &self.device);
@@ -401,8 +408,8 @@ impl State {
             //pipeline
             rpass.set_pipeline(&self.render_pipeline);
 
-            rpass.set_bind_group(1, &self.camera_uniform.bind_group, &[]);
-            rpass.set_vertex_buffer(1, self.camera_uniform.buffer.slice(..));
+            rpass.set_bind_group(1, &self.camera.uniform.bind_group, &[]);
+            rpass.set_vertex_buffer(1, self.camera.uniform.buffer.slice(..));
 
             rpass.set_bind_group(0, &self.bg_sprite.bind_group, &[]);
             rpass.set_bind_group(2, &self.bg_uniform.bind_group, &[]);

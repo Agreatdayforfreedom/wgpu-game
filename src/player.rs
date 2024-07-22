@@ -84,10 +84,10 @@ impl Player {
             position.x -= SPEED * dt;
         }
         if key == "w" {
-            position.y -= SPEED * dt;
+            position.y += SPEED * dt;
         }
         if key == "s" {
-            position.y += SPEED * dt;
+            position.y -= SPEED * dt;
         }
         self.position += position;
     }
