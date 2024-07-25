@@ -1,4 +1,5 @@
 use crate::audio::Audio;
+use crate::entity::Entity;
 use crate::uniform;
 use crate::util::CompassDir;
 use crate::weapon::cannon::Cannon;
@@ -20,25 +21,9 @@ pub struct Player {
 }
 
 const SPEED: f32 = 500.0;
-impl Player {
-    pub fn new(
-        position: cgmath::Vector2<f32>,
-        scale: cgmath::Vector2<f32>,
-        uniform: uniform::Uniform<EntityUniform>,
-        device: &wgpu::Device,
-        queue: &wgpu::Queue,
-    ) -> Self {
-        Self {
-            position,
-            scale,
-            alive: true,
-            rotation: cgmath::Deg(360.0),
-            uniform,
-            active_weapon: RailGun::new(50, device, queue),
-        }
-    }
 
-    pub fn update(
+impl Entity for Player {
+    fn update(
         &mut self,
         dt: &instant::Duration,
         input: &Input,
@@ -72,6 +57,25 @@ impl Player {
             .set_rotation(self.rotation)
             .set_scale(self.scale)
             .exec();
+    }
+}
+
+impl Player {
+    pub fn new(
+        position: cgmath::Vector2<f32>,
+        scale: cgmath::Vector2<f32>,
+        uniform: uniform::Uniform<EntityUniform>,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+    ) -> Self {
+        Self {
+            position,
+            scale,
+            alive: true,
+            rotation: cgmath::Deg(360.0),
+            uniform,
+            active_weapon: RailGun::new(50, device, queue),
+        }
     }
 
     pub fn movement(&mut self, key: &str, dt: &instant::Duration) {

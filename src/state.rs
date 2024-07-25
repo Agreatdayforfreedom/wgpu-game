@@ -2,7 +2,7 @@ use crate::audio::{Audio, Sounds};
 use crate::camera::{Camera, CameraUniform};
 use crate::collider::{check_collision, Bounds};
 use crate::enemie::Enemy;
-use crate::entity::EntityUniform;
+use crate::entity::{Entity, EntityUniform};
 use crate::explosion::{self, Explosion};
 use crate::input::Input;
 use crate::sprite_renderer::create_render_pipeline;

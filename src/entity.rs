@@ -1,5 +1,20 @@
 use cgmath::{Deg, SquareMatrix};
 
+use crate::{audio::Audio, input::Input};
+
+pub trait Entity {
+    fn update(
+        &mut self,
+        _dt: &instant::Duration,
+        _input: &Input,
+        _audio: &mut Audio,
+        _device: &wgpu::Device,
+        _queue: &mut wgpu::Queue,
+        _time: f64,
+    ) {
+    }
+}
+
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct EntityUniform {
