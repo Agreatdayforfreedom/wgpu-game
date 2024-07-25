@@ -108,7 +108,11 @@ impl State {
             diffuse_bytes,
         );
         let mut bg_uniform = Uniform::<EntityUniform>::new(&device);
-        bg_uniform.data.set_scale((800.0, 600.0).into()).exec();
+        bg_uniform
+            .data
+            // .set_tex_scale((8.0, 8.0).into())
+            .set_scale((856.0 * 2.0, 375.0 * 2.0).into())
+            .exec();
 
         //PLAYER
         let diffuse_bytes = include_bytes!("./assets/spaceship.png");
@@ -120,7 +124,7 @@ impl State {
         );
         let player_uniform = Uniform::<EntityUniform>::new(&device);
         let player = player::Player::new(
-            cgmath::Vector2::new(400.0, 550.0),
+            cgmath::Vector2::new(0.0, 0.0),
             (36.0, 32.0).into(),
             player_uniform,
             &device,
@@ -143,7 +147,7 @@ impl State {
         //     for j in 0..(config.height / 80) {
         for i in 0..2 {
             // let position = ((i as f32 + 1.0) * 40.0, (j as f32 + 1.0) * 25.0);
-            let position = (400.0 * i as f32, 300.0 * i as f32);
+            let position = (0.0 * 0 as f32, 300.0 * i as f32);
             let uniform = Uniform::<EntityUniform>::new(&device);
 
             let mut enemy = Enemy::new(position.into(), (24.0, 24.0).into(), uniform);
