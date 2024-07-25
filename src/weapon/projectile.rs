@@ -9,6 +9,7 @@ pub struct Projectile {
     pub dir: CompassDir,
     pub bounds: Bounds,
     pub rotation: cgmath::Deg<f32>,
+    pub initial_position: cgmath::Vector2<f32>,
     pub uniform: uniform::Uniform<EntityUniform>,
 }
 
@@ -28,11 +29,18 @@ impl Projectile {
             bounds,
             dir,
             alive: true,
+            initial_position: position,
             uniform,
         }
     }
     // todo remove label :3
-    pub fn update(&mut self, dt: &instant::Duration, fire_speed: f32, label: &str) {
+    pub fn update(
+        &mut self,
+        dt: &instant::Duration,
+        fire_speed: f32,
+        entity_position: cgmath::Vector2<f32>,
+        label: &str,
+    ) {
         self.uniform
             .data
             .set_position(self.position)
@@ -43,15 +51,25 @@ impl Projectile {
             self.alive = false;
         }
 
-        self.fire(dt, fire_speed, label);
+        self.fire(dt, fire_speed, entity_position, label);
     }
 
-    pub fn fire(&mut self, dt: &instant::Duration, fire_speed: f32, label: &str) {
+    pub fn fire(
+        &mut self,
+        dt: &instant::Duration,
+        fire_speed: f32,
+        entity_position: cgmath::Vector2<f32>,
+        label: &str,
+    ) {
         if self.alive {
             if label == "laser" {
             } else {
-                self.position.x += fire_speed * self.dir.dir.x * dt.as_secs_f32();
-                self.position.y -= fire_speed * self.dir.dir.y * dt.as_secs_f32();
+                let spaceship_displacement = entity_position - self.initial_position;
+                self.position.x +=
+                    fire_speed * self.dir.dir.x * dt.as_secs_f32() + spaceship_displacement.x;
+                self.position.y -=
+                    fire_speed * self.dir.dir.y * dt.as_secs_f32() - spaceship_displacement.y;
+                self.initial_position = entity_position;
             }
         }
     }

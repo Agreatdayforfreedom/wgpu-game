@@ -84,7 +84,13 @@ impl Weapon for RailGun {
         }
     }
 
-    fn update(&mut self, queue: &mut wgpu::Queue, dt: &instant::Duration, time: f64) {
+    fn update(
+        &mut self,
+        position: cgmath::Vector2<f32>,
+        queue: &mut wgpu::Queue,
+        dt: &instant::Duration,
+        time: f64,
+    ) {
         for projectile in &mut self.projectiles {
             if projectile.alive {
                 projectile.set_bounds(Bounds {
@@ -94,7 +100,7 @@ impl Weapon for RailGun {
                     ),
                     area: cgmath::Vector2::new(2.5, 2.5),
                 });
-                projectile.update(&dt, 500.0, ":D");
+                projectile.update(&dt, 500.0, position, ":D");
                 projectile.uniform.write(queue);
             }
         }

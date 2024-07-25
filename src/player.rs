@@ -49,7 +49,7 @@ impl Entity for Player {
             input,
             audio,
         );
-        self.active_weapon.update(queue, dt, time);
+        self.active_weapon.update(self.position, queue, dt, time);
 
         self.uniform
             .data

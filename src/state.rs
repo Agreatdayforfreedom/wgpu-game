@@ -282,7 +282,7 @@ impl State {
             }
             for p in &mut e.projectiles {
                 if p.alive {
-                    p.update(&dt, 275.0, ":D");
+                    p.update(&dt, 275.0, self.player.position, ":D");
                     p.uniform.write(&mut self.queue);
                 }
             }

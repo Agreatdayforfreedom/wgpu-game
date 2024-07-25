@@ -56,7 +56,13 @@ impl Weapon for Laser {
         }
     }
 
-    fn update(&mut self, queue: &mut wgpu::Queue, dt: &instant::Duration, time: f64) {
+    fn update(
+        &mut self,
+        position: cgmath::Vector2<f32>,
+        queue: &mut wgpu::Queue,
+        dt: &instant::Duration,
+        time: f64,
+    ) {
         for projectile in &mut self.projectiles {
             if projectile.alive {
                 projectile.set_bounds(Bounds {
@@ -67,7 +73,7 @@ impl Weapon for Laser {
                     area: cgmath::Vector2::new(2.5, 2.5), //todo
                 });
 
-                projectile.update(&dt, 0.0, "laser");
+                projectile.update(&dt, 0.0, position, "laser");
                 projectile.uniform.data.set_color(
                     (
                         time.cos() as f32 * 0.5 + 0.5,
