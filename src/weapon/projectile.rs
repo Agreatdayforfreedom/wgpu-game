@@ -33,13 +33,12 @@ impl Projectile {
             uniform,
         }
     }
-    // todo remove label :3
+    // todo
     pub fn update(
         &mut self,
         dt: &instant::Duration,
         fire_speed: f32,
         entity_position: cgmath::Vector2<f32>,
-        label: &str,
     ) {
         self.uniform
             .data
@@ -50,28 +49,13 @@ impl Projectile {
         if self.position.y < 0.0 || self.position.y > 600.0 {
             self.alive = false;
         }
-
-        self.fire(dt, fire_speed, entity_position, label);
     }
 
-    pub fn fire(
-        &mut self,
-        dt: &instant::Duration,
-        fire_speed: f32,
-        entity_position: cgmath::Vector2<f32>,
-        label: &str,
-    ) {
-        if self.alive {
-            if label == "laser" {
-            } else {
-                let spaceship_displacement = entity_position - self.initial_position;
-                self.position.x +=
-                    fire_speed * self.dir.dir.x * dt.as_secs_f32() + spaceship_displacement.x;
-                self.position.y -=
-                    fire_speed * self.dir.dir.y * dt.as_secs_f32() - spaceship_displacement.y;
-                self.initial_position = entity_position;
-            }
-        }
+    pub fn set_direction<F>(&mut self, mut f: F)
+    where
+        F: FnMut(&mut Self),
+    {
+        f(self);
     }
 
     pub fn set_bounds(&mut self, bounds: Bounds) {

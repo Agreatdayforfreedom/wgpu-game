@@ -100,7 +100,17 @@ impl Weapon for RailGun {
                     ),
                     area: cgmath::Vector2::new(2.5, 2.5),
                 });
-                projectile.update(&dt, 500.0, position, ":D");
+                projectile.update(&dt, 500.0, position);
+                projectile.set_direction(|this| {
+                    if this.alive {
+                        let spaceship_displacement = position - this.initial_position;
+                        this.position.x +=
+                            500.0 * this.dir.dir.x * dt.as_secs_f32() + spaceship_displacement.x;
+                        this.position.y -=
+                            500.0 * this.dir.dir.y * dt.as_secs_f32() - spaceship_displacement.y;
+                        this.initial_position = position;
+                    }
+                });
                 projectile.uniform.write(queue);
             }
         }

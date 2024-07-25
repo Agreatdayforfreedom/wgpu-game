@@ -262,6 +262,19 @@ impl State {
                 self.player.rotation = cgmath::Deg(angle + 90.0); // adjust sprite rotation;
 
                 min_dist = dist;
+                //todo: this is only for the laser
+                //todo: set origin correctly
+                for p in self.player.active_weapon.get_projectiles() {
+                    p.set_direction(|this| {
+                        this.rotation = cgmath::Deg(angle + 90.0);
+                        this.position = (
+                            self.player.position.x,
+                            self.player.position.y - min_dist + self.player.scale.y,
+                        )
+                            .into();
+                        this.scale.y = min_dist;
+                    });
+                }
             }
             if e.alive {
                 e.uniform.write(&mut self.queue);
@@ -282,7 +295,7 @@ impl State {
             }
             for p in &mut e.projectiles {
                 if p.alive {
-                    p.update(&dt, 275.0, self.player.position, ":D");
+                    // p.update(&dt, 275.0, self.player.position, ":D");
                     p.uniform.write(&mut self.queue);
                 }
             }
@@ -311,13 +324,13 @@ impl State {
                 ) {
                     // p.alive = false;
                     e.uniform.data.set_color((1.0, 0.0, 0.0, 1.0).into());
-                    let explosion = Explosion::new(
-                        e.position.into(),
-                        (40.0, 40.0).into(),
-                        &self.device,
-                        &self.queue,
-                    );
-                    self.explosions.push(explosion);
+                    // let explosion = Explosion::new(
+                    //     e.position.into(),
+                    //     (40.0, 40.0).into(),
+                    //     &self.device,
+                    //     &self.queue,
+                    // );
+                    // self.explosions.push(explosion);
                     // self.audio.push(Sounds::Explosion);
                     // e.alive = false;
                 }

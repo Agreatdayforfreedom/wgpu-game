@@ -74,7 +74,7 @@ impl Player {
             alive: true,
             rotation: cgmath::Deg(360.0),
             uniform,
-            active_weapon: RailGun::new(50, device, queue),
+            active_weapon: Laser::new(device, queue),
         }
     }
 

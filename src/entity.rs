@@ -25,6 +25,7 @@ pub struct EntityUniform {
     position: cgmath::Vector2<f32>,
     angle: Deg<f32>,
     scale: cgmath::Vector2<f32>,
+    pivot: cgmath::Point2<f32>,
 }
 unsafe impl bytemuck::Pod for EntityUniform {}
 unsafe impl bytemuck::Zeroable for EntityUniform {}
@@ -35,6 +36,7 @@ impl Default for EntityUniform {
             model: cgmath::Matrix4::identity(),
             color: (1.0, 1.0, 1.0, 1.0).into(),
             tex_scale: (1.0, 1.0).into(), //TODO
+            pivot: (0.5, 0.5).into(),
             tex_pos: 1.0,
             position: (0.0, 0.0).into(),
             angle: Deg(0.0),
@@ -59,6 +61,11 @@ impl EntityUniform {
         self
     }
 
+    pub fn set_pivot(&mut self, pivot: cgmath::Point2<f32>) -> &mut Self {
+        self.pivot = pivot;
+        self
+    }
+
     pub fn set_tex_scale(&mut self, scale: cgmath::Vector2<f32>) -> &mut Self {
         self.tex_scale = scale;
         self
@@ -73,11 +80,21 @@ impl EntityUniform {
         self.model = cgmath::Matrix4::identity()
             * cgmath::Matrix4::from_translation((self.position.x, self.position.y, 0.0).into())
             * cgmath::Matrix4::from_translation(
-                (0.5 * self.scale.x, 0.5 * self.scale.y, 0.0).into(),
+                (
+                    self.pivot.x * self.scale.x,
+                    self.pivot.y * self.scale.y,
+                    0.0,
+                )
+                    .into(),
             )
             * cgmath::Matrix4::from_angle_z(self.angle)
             * cgmath::Matrix4::from_translation(
-                (-0.5 * self.scale.x, -0.5 * self.scale.y, 0.0).into(),
+                (
+                    -self.pivot.x * self.scale.x,
+                    -self.pivot.y * self.scale.y,
+                    0.0,
+                )
+                    .into(),
             )
             * cgmath::Matrix4::from_nonuniform_scale(self.scale.x, self.scale.y, 0.0);
     }

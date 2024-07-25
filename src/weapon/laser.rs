@@ -73,7 +73,12 @@ impl Weapon for Laser {
                     area: cgmath::Vector2::new(2.5, 2.5), //todo
                 });
 
-                projectile.update(&dt, 0.0, position, "laser");
+                projectile.update(&dt, 0.0, position);
+                projectile
+                    .uniform
+                    .data
+                    .set_pivot(cgmath::Point2::new(0.5, 1.0))
+                    .exec();
                 projectile.uniform.data.set_color(
                     (
                         time.cos() as f32 * 0.5 + 0.5,

@@ -90,7 +90,7 @@ impl Weapon for Cannon {
                     ),
                     area: cgmath::Vector2::new(2.5, 2.5),
                 });
-                projectile.update(&dt, 500.0, position, ":D");
+                // projectile.update(&dt, 500.0, position, ":D");
                 projectile.uniform.write(queue);
             }
         }
