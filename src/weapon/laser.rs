@@ -98,6 +98,10 @@ impl Weapon for Laser {
         self.projectiles.iter_mut()
     }
 
+    fn get_name(&self) -> &str {
+        "laser"
+    }
+
     fn drain(&mut self) {
         self.projectiles = self
             .projectiles

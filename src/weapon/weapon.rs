@@ -34,5 +34,9 @@ pub trait Weapon {
 
     fn get_projectiles(&mut self) -> IterMut<'_, Projectile>;
 
+    fn get_name(&self) -> &str {
+        ""
+    }
+
     fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {}
 }

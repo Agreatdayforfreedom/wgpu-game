@@ -82,6 +82,7 @@ impl Weapon for Cannon {
     ) {
         println!("len: {}", self.projectiles.len());
         for projectile in &mut self.projectiles {
+            println!("{}", projectile.position.x);
             if projectile.alive {
                 projectile.set_bounds(Bounds {
                     origin: cgmath::Point2::new(
@@ -90,7 +91,17 @@ impl Weapon for Cannon {
                     ),
                     area: cgmath::Vector2::new(2.5, 2.5),
                 });
-                // projectile.update(&dt, 500.0, position, ":D");
+                projectile.update(&dt, 500.0, position);
+                projectile.set_direction(|this| {
+                    if this.alive {
+                        let spaceship_displacement = position - this.initial_position;
+                        this.position.x +=
+                            500.0 * this.dir.dir.x * dt.as_secs_f32() + spaceship_displacement.x;
+                        this.position.y -=
+                            500.0 * this.dir.dir.y * dt.as_secs_f32() - spaceship_displacement.y;
+                        this.initial_position = position;
+                    }
+                });
                 projectile.uniform.write(queue);
             }
         }
@@ -106,6 +117,11 @@ impl Weapon for Cannon {
     fn get_projectiles(&mut self) -> IterMut<Projectile> {
         self.projectiles.iter_mut()
     }
+
+    fn get_name(&self) -> &str {
+        "cannon"
+    }
+
     fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
         rpass.set_vertex_buffer(0, self.sprite.buffer.slice(..));
         rpass.set_bind_group(0, &self.sprite.bind_group, &[]);

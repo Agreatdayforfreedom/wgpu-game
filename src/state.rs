@@ -262,18 +262,19 @@ impl State {
                 self.player.rotation = cgmath::Deg(angle + 90.0); // adjust sprite rotation;
 
                 min_dist = dist;
-                //todo: this is only for the laser
                 //todo: set origin correctly
-                for p in self.player.active_weapon.get_projectiles() {
-                    p.set_direction(|this| {
-                        this.rotation = cgmath::Deg(angle + 90.0);
-                        this.position = (
-                            self.player.position.x,
-                            self.player.position.y - min_dist + self.player.scale.y,
-                        )
-                            .into();
-                        this.scale.y = min_dist;
-                    });
+                if self.player.active_weapon.get_name() == "laser" {
+                    for p in self.player.active_weapon.get_projectiles() {
+                        p.set_direction(|this| {
+                            this.rotation = cgmath::Deg(angle + 90.0);
+                            this.position = (
+                                self.player.position.x,
+                                self.player.position.y - min_dist + self.player.scale.y,
+                            )
+                                .into();
+                            this.scale.y = min_dist;
+                        });
+                    }
                 }
             }
             if e.alive {

@@ -46,9 +46,8 @@ impl Projectile {
             .set_rotation(self.rotation)
             .set_scale(self.scale)
             .exec();
-        if self.position.y < 0.0 || self.position.y > 600.0 {
-            self.alive = false;
-        }
+        // if self.position.y < 0.0 || self.position.y > 600.0 {
+        //     self.alive = false; // todo life bounds
     }
 
     pub fn set_direction<F>(&mut self, mut f: F)

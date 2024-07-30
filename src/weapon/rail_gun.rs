@@ -128,6 +128,10 @@ impl Weapon for RailGun {
         self.projectiles.iter_mut()
     }
 
+    fn get_name(&self) -> &str {
+        "rail_gun"
+    }
+
     fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
         rpass.set_vertex_buffer(0, self.sprite.buffer.slice(..));
         rpass.set_bind_group(0, &self.sprite.bind_group, &[]);
