@@ -2,7 +2,7 @@ use crate::audio::{Audio, Sounds};
 use crate::camera::{Camera, CameraUniform};
 use crate::collider::{check_collision, Bounds};
 use crate::enemie::Enemy;
-use crate::entity::{Entity, EntityUniform};
+use crate::entity::{self, Entity, EntityUniform};
 use crate::explosion::{self, Explosion};
 use crate::input::Input;
 use crate::sprite_renderer::create_render_pipeline;
@@ -37,6 +37,8 @@ pub struct State {
     player: player::Player,
     projectile: Vec<projectile::Projectile>,
     explosions: Vec<explosion::Explosion>,
+    entities: Vec<Box<dyn Entity>>, //todo this does not go here
+
     input_controller: Input,
     camera: Camera,
     audio: Audio,
@@ -142,15 +144,13 @@ impl State {
             enemie_bytes,
         );
         enemie_sprites.push(enemie_sprite);
-
-        // for i in 0..(config.width / 36) {
-        //     for j in 0..(config.height / 80) {
+        let mut entities: Vec<Box<dyn Entity>> = vec![];
         for i in 0..2 {
             // let position = ((i as f32 + 1.0) * 40.0, (j as f32 + 1.0) * 25.0);
             let position = (0.0 * 0 as f32, 300.0 * i as f32);
             let uniform = Uniform::<EntityUniform>::new(&device);
 
-            let mut enemy = Enemy::new(position.into(), (24.0, 24.0).into(), uniform);
+            let mut enemy = Box::new(Enemy::new(position.into(), (24.0, 24.0).into(), uniform));
             enemy
                 .uniform
                 .data
@@ -158,10 +158,8 @@ impl State {
                 .set_scale((24.0, 24.0).into())
                 .set_color((0.0, 1.0, 0.0, 1.0).into())
                 .exec();
-            enemies.push(enemy);
+            entities.push(enemy);
         }
-        //     }
-        // }
         //PROJECTILES
 
         let diffuse_bytes = include_bytes!("./assets/bullet.png");
@@ -217,6 +215,7 @@ impl State {
 
             projectile: vec![],
             explosions: vec![],
+            entities,
 
             projectile_sprite,
 
@@ -249,37 +248,43 @@ impl State {
         self.player.uniform.write(&mut self.queue);
 
         let mut min_dist = f32::MAX;
-        for e in &mut self.enemies {
-            let dist = distance(self.player.position, e.position);
-            if dist < min_dist {
-                let dx = e.position.x - self.player.position.x;
-                //set the point in the head
-                let dy = e.position.y - (self.player.position.y - 0.5);
+        for e in &mut self.entities {
+            //todo:
+            // let dist = distance(self.player.position, e.position);
+            // if dist < min_dist {
+            //     let dx = e.position.x - self.player.position.x;
+            //     //set the point in the head
+            //     let dy = e.position.y - (self.player.position.y - 0.5);
 
-                let angle = dy.atan2(dx);
+            //     let angle = dy.atan2(dx);
 
-                let angle = angle * 180.0 / std::f32::consts::PI;
-                self.player.rotation = cgmath::Deg(angle + 90.0); // adjust sprite rotation;
+            //     let angle = angle * 180.0 / std::f32::consts::PI;
+            //     self.player.rotation = cgmath::Deg(angle + 90.0); // adjust sprite rotation;
 
-                min_dist = dist;
-                //todo: set origin correctly
-                if self.player.active_weapon.get_name() == "laser" {
-                    for p in self.player.active_weapon.get_projectiles() {
-                        p.set_direction(|this| {
-                            this.rotation = cgmath::Deg(angle + 90.0);
-                            this.position = (
-                                self.player.position.x,
-                                self.player.position.y - min_dist + self.player.scale.y,
-                            )
-                                .into();
-                            this.scale.y = min_dist;
-                        });
-                    }
-                }
-            }
-            if e.alive {
-                e.uniform.write(&mut self.queue);
-            }
+            //     min_dist = dist;
+            //     //todo: set origin correctly
+            //     if self.player.active_weapon.get_name() == "laser" {
+            //         for p in self.player.active_weapon.get_projectiles() {
+            //             p.set_direction(|this| {
+            //                 this.rotation = cgmath::Deg(angle + 90.0);
+            //                 this.position = (
+            //                     self.player.position.x,
+            //                     self.player.position.y - min_dist + self.player.scale.y,
+            //                 )
+            //                     .into();
+            //                 this.scale.y = min_dist;
+            //             });
+            //         }
+            //     }
+            // }
+            e.update(
+                &dt,
+                &self.input_controller,
+                &mut self.audio,
+                &self.device,
+                &mut self.queue,
+                self.time,
+            );
         }
         self.player.update(
             &dt,
@@ -449,11 +454,9 @@ impl State {
             rpass.set_vertex_buffer(0, self.enemie_sprites[0].buffer.slice(..));
             rpass.set_bind_group(0, &self.enemie_sprites[0].bind_group, &[]);
             //bind_groups
-            for e in &self.enemies {
-                if e.alive {
-                    rpass.set_vertex_buffer(2, e.uniform.buffer.slice(..));
-                    rpass.set_bind_group(2, &e.uniform.bind_group, &[]);
-                    rpass.draw(0..6, 0..1);
+            for e in &mut self.entities {
+                if e.alive() {
+                    e.draw(&mut rpass);
                 }
             }
 

@@ -1,6 +1,6 @@
 use crate::audio::{Audio, Sounds};
 use crate::collider::Bounds;
-use crate::entity::EntityUniform;
+use crate::entity::{Entity, EntityUniform};
 use crate::uniform::Uniform;
 use crate::util::CompassDir;
 use crate::weapon::projectile::Projectile;
@@ -11,6 +11,30 @@ pub struct Enemy {
     pub uniform: Uniform<EntityUniform>,
     pub projectiles: Vec<Projectile>,
     pub interval: instant::Instant,
+}
+
+impl Entity for Enemy {
+    fn update(
+        &mut self,
+        _dt: &instant::Duration,
+        _input: &crate::input::Input,
+        _audio: &mut Audio,
+        _device: &wgpu::Device,
+        _queue: &mut wgpu::Queue,
+        _time: f64,
+    ) {
+        self.uniform.write(_queue);
+    }
+
+    fn alive(&self) -> bool {
+        self.alive
+    }
+
+    fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
+        rpass.set_vertex_buffer(2, self.uniform.buffer.slice(..));
+        rpass.set_bind_group(2, &self.uniform.bind_group, &[]);
+        rpass.draw(0..6, 0..1);
+    }
 }
 
 impl Enemy {

@@ -13,6 +13,11 @@ pub trait Entity {
         _time: f64,
     ) {
     }
+
+    fn alive(&self) -> bool {
+        true
+    }
+    fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {}
 }
 
 #[repr(C)]
