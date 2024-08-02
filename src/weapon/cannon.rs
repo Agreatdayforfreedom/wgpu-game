@@ -80,9 +80,7 @@ impl Weapon for Cannon {
         dt: &instant::Duration,
         time: f64,
     ) {
-        println!("len: {}", self.projectiles.len());
         for projectile in &mut self.projectiles {
-            println!("{}", projectile.position.x);
             if projectile.alive {
                 projectile.set_bounds(Bounds {
                     origin: cgmath::Point2::new(

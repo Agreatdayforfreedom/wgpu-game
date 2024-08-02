@@ -53,7 +53,6 @@ impl Weapon for RailGun {
             audio.push(Sounds::Shoot);
             audio.push(Sounds::Shoot);
             //todo
-            println!("a: {:?}", dir);
             for i in -2..=2 {
                 let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
                 self.projectiles.push(Projectile::new(

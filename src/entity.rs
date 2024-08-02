@@ -1,4 +1,4 @@
-use cgmath::{Deg, SquareMatrix};
+use cgmath::{Deg, SquareMatrix, Vector2};
 
 use crate::{audio::Audio, input::Input};
 
@@ -17,6 +17,13 @@ pub trait Entity {
     fn alive(&self) -> bool {
         true
     }
+
+    fn id(&self) -> u32;
+
+    fn position(&self) -> Vector2<f32>;
+
+    fn rotate(&mut self, rotation: Deg<f32>) {}
+
     fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {}
 }
 

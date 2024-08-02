@@ -14,6 +14,8 @@ use cgmath::{Angle, Point2, Vector2, Vector3};
 use rand::{self, Rng};
 
 use pollster::block_on;
+use std::borrow::{Borrow, BorrowMut};
+use std::collections::HashMap;
 use std::sync::Arc;
 use winit::{event::*, keyboard::Key, window::Window};
 
@@ -37,7 +39,7 @@ pub struct State {
     player: player::Player,
     projectile: Vec<projectile::Projectile>,
     explosions: Vec<explosion::Explosion>,
-    entities: Vec<Box<dyn Entity>>, //todo this does not go here
+    entities: Vec<Box<dyn Entity>>,
 
     input_controller: Input,
     camera: Camera,
@@ -150,7 +152,12 @@ impl State {
             let position = (0.0 * 0 as f32, 300.0 * i as f32);
             let uniform = Uniform::<EntityUniform>::new(&device);
 
-            let mut enemy = Box::new(Enemy::new(position.into(), (24.0, 24.0).into(), uniform));
+            let mut enemy = Box::new(Enemy::new(
+                position.into(),
+                (24.0, 24.0).into(),
+                uniform,
+                100 + i + 1,
+            ));
             enemy
                 .uniform
                 .data
@@ -248,44 +255,34 @@ impl State {
         self.player.uniform.write(&mut self.queue);
 
         let mut min_dist = f32::MAX;
+        let player_pos = self.entities.first().unwrap().position();
         for e in &mut self.entities {
             //todo:
-            // let dist = distance(self.player.position, e.position);
-            // if dist < min_dist {
-            //     let dx = e.position.x - self.player.position.x;
-            //     //set the point in the head
-            //     let dy = e.position.y - (self.player.position.y - 0.5);
+            let dist = distance(player_pos, e.position());
 
-            //     let angle = dy.atan2(dx);
+            if dist < min_dist {
+                let dx = e.position().x - self.player.position.x;
+                //set the point in the head
+                let dy = e.position().y - (self.player.position.y - 0.5);
 
-            //     let angle = angle * 180.0 / std::f32::consts::PI;
-            //     self.player.rotation = cgmath::Deg(angle + 90.0); // adjust sprite rotation;
+                let angle = dy.atan2(dx);
 
-            //     min_dist = dist;
-            //     //todo: set origin correctly
-            //     if self.player.active_weapon.get_name() == "laser" {
-            //         for p in self.player.active_weapon.get_projectiles() {
-            //             p.set_direction(|this| {
-            //                 this.rotation = cgmath::Deg(angle + 90.0);
-            //                 this.position = (
-            //                     self.player.position.x,
-            //                     self.player.position.y - min_dist + self.player.scale.y,
-            //                 )
-            //                     .into();
-            //                 this.scale.y = min_dist;
-            //             });
-            //         }
-            //     }
-            // }
-            e.update(
-                &dt,
-                &self.input_controller,
-                &mut self.audio,
-                &self.device,
-                &mut self.queue,
-                self.time,
-            );
+                let angle = angle * 180.0 / std::f32::consts::PI;
+                self.player.rotation = cgmath::Deg(angle + 90.0); // adjust sprite rotation;
+
+                min_dist = dist;
+
+                e.update(
+                    &dt,
+                    &self.input_controller,
+                    &mut self.audio,
+                    &self.device,
+                    &mut self.queue,
+                    self.time,
+                );
+            }
         }
+
         self.player.update(
             &dt,
             &self.input_controller,

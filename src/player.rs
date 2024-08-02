@@ -12,6 +12,7 @@ use cgmath::Vector2;
 //todo
 
 pub struct Player {
+    id: u32,
     pub position: cgmath::Vector2<f32>,
     pub scale: cgmath::Vector2<f32>,
     pub alive: bool,
@@ -58,6 +59,17 @@ impl Entity for Player {
             .set_scale(self.scale)
             .exec();
     }
+
+    fn rotate(&mut self, rotation: cgmath::Deg<f32>) {
+        self.rotation = rotation;
+    }
+    fn position(&self) -> Vector2<f32> {
+        self.position
+    }
+
+    fn id(&self) -> u32 {
+        self.id
+    }
 }
 
 impl Player {
@@ -69,6 +81,7 @@ impl Player {
         queue: &wgpu::Queue,
     ) -> Self {
         Self {
+            id: 100,
             position,
             scale,
             alive: true,
@@ -77,6 +90,25 @@ impl Player {
             active_weapon: Cannon::new(50, device, queue),
         }
     }
+
+    // pub fn dir(&mut self) {
+    //     {
+    //         //     //todo: set origin correctly
+    //         if self.player.active_weapon.get_name() == "laser" {
+    //             for p in self.player.active_weapon.get_projectiles() {
+    //                 p.set_direction(|this| {
+    //                     this.rotation = cgmath::Deg(angle + 90.0);
+    //                     this.position = (
+    //                         self.player.position.x,
+    //                         self.player.position.y - min_dist + self.player.scale.y,
+    //                     )
+    //                         .into();
+    //                     this.scale.y = min_dist;
+    //                 });
+    //             }
+    //         }
+    //     }
+    // }
 
     pub fn movement(&mut self, key: &str, dt: &instant::Duration) {
         let dt = dt.as_secs_f32();

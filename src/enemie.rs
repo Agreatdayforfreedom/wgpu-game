@@ -1,3 +1,5 @@
+use cgmath::Vector2;
+
 use crate::audio::{Audio, Sounds};
 use crate::collider::Bounds;
 use crate::entity::{Entity, EntityUniform};
@@ -5,6 +7,7 @@ use crate::uniform::Uniform;
 use crate::util::CompassDir;
 use crate::weapon::projectile::Projectile;
 pub struct Enemy {
+    id: u32,
     pub position: cgmath::Vector2<f32>,
     pub scale: cgmath::Vector2<f32>,
     pub alive: bool,
@@ -30,6 +33,14 @@ impl Entity for Enemy {
         self.alive
     }
 
+    fn position(&self) -> Vector2<f32> {
+        self.position
+    }
+
+    fn id(&self) -> u32 {
+        self.id
+    }
+
     fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
         rpass.set_vertex_buffer(2, self.uniform.buffer.slice(..));
         rpass.set_bind_group(2, &self.uniform.bind_group, &[]);
@@ -42,8 +53,10 @@ impl Enemy {
         position: cgmath::Vector2<f32>,
         scale: cgmath::Vector2<f32>,
         uniform: Uniform<EntityUniform>,
+        id: u32,
     ) -> Self {
         Self {
+            id,
             position,
             scale,
             alive: true,
