@@ -1,6 +1,6 @@
 use crate::audio::Audio;
 use crate::entity::Entity;
-use crate::uniform;
+use crate::uniform::{self, Uniform};
 use crate::util::CompassDir;
 use crate::weapon::cannon::Cannon;
 use crate::weapon::laser::Laser;

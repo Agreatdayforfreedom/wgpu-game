@@ -39,7 +39,7 @@ pub struct State {
     player: player::Player,
     projectile: Vec<projectile::Projectile>,
     explosions: Vec<explosion::Explosion>,
-    entities: Vec<Box<dyn Entity>>,
+    entities: HashMap<u32, Box<dyn Entity>>,
 
     input_controller: Input,
     camera: Camera,
@@ -119,6 +119,7 @@ impl State {
             .exec();
 
         //PLAYER
+
         let diffuse_bytes = include_bytes!("./assets/spaceship.png");
         let sprite = sprite_renderer::SpriteRenderer::new(
             &device,
@@ -135,6 +136,7 @@ impl State {
             &queue,
         );
         //ENEMIES
+        let mut entities: HashMap<u32, Box<dyn Entity>> = HashMap::new();
         let mut enemie_sprites = Vec::<sprite_renderer::SpriteRenderer>::new();
         let mut enemies = Vec::<Enemy>::new();
 
@@ -146,7 +148,6 @@ impl State {
             enemie_bytes,
         );
         enemie_sprites.push(enemie_sprite);
-        let mut entities: Vec<Box<dyn Entity>> = vec![];
         for i in 0..2 {
             // let position = ((i as f32 + 1.0) * 40.0, (j as f32 + 1.0) * 25.0);
             let position = (0.0 * 0 as f32, 300.0 * i as f32);
@@ -165,7 +166,7 @@ impl State {
                 .set_scale((24.0, 24.0).into())
                 .set_color((0.0, 1.0, 0.0, 1.0).into())
                 .exec();
-            entities.push(enemy);
+            entities.insert(enemy.id(), enemy);
         }
         //PROJECTILES
 
@@ -255,10 +256,9 @@ impl State {
         self.player.uniform.write(&mut self.queue);
 
         let mut min_dist = f32::MAX;
-        let player_pos = self.entities.first().unwrap().position();
-        for e in &mut self.entities {
+        for (_, e) in &mut self.entities.iter_mut() {
             //todo:
-            let dist = distance(player_pos, e.position());
+            let dist = distance(self.player.position, e.position());
 
             if dist < min_dist {
                 let dx = e.position().x - self.player.position.x;
@@ -451,7 +451,7 @@ impl State {
             rpass.set_vertex_buffer(0, self.enemie_sprites[0].buffer.slice(..));
             rpass.set_bind_group(0, &self.enemie_sprites[0].bind_group, &[]);
             //bind_groups
-            for e in &mut self.entities {
+            for (_, e) in &mut self.entities.iter_mut() {
                 if e.alive() {
                     e.draw(&mut rpass);
                 }

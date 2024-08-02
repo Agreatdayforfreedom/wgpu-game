@@ -1,6 +1,6 @@
 use cgmath::{Deg, SquareMatrix, Vector2};
 
-use crate::{audio::Audio, input::Input};
+use crate::{audio::Audio, input::Input, uniform::Uniform};
 
 pub trait Entity {
     fn update(
