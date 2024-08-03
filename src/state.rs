@@ -39,7 +39,7 @@ pub struct State {
     player: player::Player,
     projectile: Vec<projectile::Projectile>,
     explosions: Vec<explosion::Explosion>,
-    entities: HashMap<u32, Box<dyn Entity>>,
+    entities: Vec<Box<dyn Entity>>,
 
     input_controller: Input,
     camera: Camera,
@@ -136,7 +136,7 @@ impl State {
             &queue,
         );
         //ENEMIES
-        let mut entities: HashMap<u32, Box<dyn Entity>> = HashMap::new();
+        let mut entities: Vec<Box<dyn Entity>> = vec![];
         let mut enemie_sprites = Vec::<sprite_renderer::SpriteRenderer>::new();
         let mut enemies = Vec::<Enemy>::new();
 
@@ -166,7 +166,7 @@ impl State {
                 .set_scale((24.0, 24.0).into())
                 .set_color((0.0, 1.0, 0.0, 1.0).into())
                 .exec();
-            entities.insert(enemy.id(), enemy);
+            entities.push(enemy);
         }
         //PROJECTILES
 
@@ -256,7 +256,7 @@ impl State {
         self.player.uniform.write(&mut self.queue);
 
         let mut min_dist = f32::MAX;
-        for (_, e) in &mut self.entities.iter_mut() {
+        for e in &mut self.entities {
             //todo:
             let dist = distance(self.player.position, e.position());
 
@@ -451,7 +451,7 @@ impl State {
             rpass.set_vertex_buffer(0, self.enemie_sprites[0].buffer.slice(..));
             rpass.set_bind_group(0, &self.enemie_sprites[0].bind_group, &[]);
             //bind_groups
-            for (_, e) in &mut self.entities.iter_mut() {
+            for e in &mut self.entities {
                 if e.alive() {
                     e.draw(&mut rpass);
                 }
