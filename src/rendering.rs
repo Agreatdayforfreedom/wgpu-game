@@ -90,14 +90,14 @@ pub fn create_render_pipeline(
 }
 
 #[allow(dead_code)]
-pub struct SpriteRenderer {
+pub struct Sprite {
     pub texture: Texture,
     pub bind_group: wgpu::BindGroup,
     pub bind_group_layout: wgpu::BindGroupLayout,
     pub buffer: wgpu::Buffer,
 }
 
-impl SpriteRenderer {
+impl Sprite {
     pub fn new(
         device: &wgpu::Device,
         queue: &wgpu::Queue,

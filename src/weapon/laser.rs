@@ -1,8 +1,8 @@
 use std::slice::IterMut;
 
 use crate::{
-    audio::Audio, collider::Bounds, entity::EntityUniform, input::Input,
-    sprite_renderer::SpriteRenderer, util::CompassDir,
+    audio::Audio, collider::Bounds, entity::EntityUniform, input::Input, rendering::Sprite,
+    util::CompassDir,
 };
 
 use super::{projectile::Projectile, weapon::Weapon};
@@ -11,13 +11,13 @@ const SPEED_LASER_MOVEMENT: f32 = 1.5;
 
 pub struct Laser {
     projectiles: Vec<Projectile>,
-    sprite: SpriteRenderer,
+    sprite: Sprite,
 }
 
 impl Laser {
     pub fn new(device: &wgpu::Device, queue: &wgpu::Queue) -> Box<Self> {
         let diffuse_bytes = include_bytes!("./../assets/laser.png");
-        let sprite = SpriteRenderer::new(&device, &queue, wgpu::AddressMode::Repeat, diffuse_bytes);
+        let sprite = Sprite::new(&device, &queue, wgpu::AddressMode::Repeat, diffuse_bytes);
 
         Box::new(Self {
             projectiles: vec![],

@@ -5,11 +5,11 @@ use crate::enemie::Enemy;
 use crate::entity::{self, Entity, EntityUniform};
 use crate::explosion::{self, Explosion};
 use crate::input::Input;
-use crate::sprite_renderer::create_render_pipeline;
+use crate::rendering::create_render_pipeline;
 use crate::uniform::Uniform;
 use crate::util::CompassDir;
 use crate::weapon::projectile;
-use crate::{player, sprite_renderer};
+use crate::{player, rendering};
 use cgmath::{Angle, Point2, Vector2, Vector3};
 use rand::{self, Rng};
 
@@ -28,11 +28,11 @@ pub struct State {
 
     render_pipeline: wgpu::RenderPipeline,
 
-    sprite: sprite_renderer::SpriteRenderer,
-    enemie_sprites: Vec<sprite_renderer::SpriteRenderer>,
-    projectile_sprite: sprite_renderer::SpriteRenderer,
-    enemy_projectile_sprite: sprite_renderer::SpriteRenderer, // the same for all
-    bg_sprite: sprite_renderer::SpriteRenderer,
+    sprite: rendering::Sprite,
+    enemie_sprites: Vec<rendering::Sprite>,
+    projectile_sprite: rendering::Sprite,
+    enemy_projectile_sprite: rendering::Sprite, // the same for all
+    bg_sprite: rendering::Sprite,
 
     bg_uniform: Uniform<EntityUniform>,
     enemies: Vec<Enemy>,
@@ -105,7 +105,7 @@ impl State {
         let camera = Camera::new(camera_uniform);
         //BG
         let diffuse_bytes = include_bytes!("./assets/bg.png");
-        let bg_sprite = sprite_renderer::SpriteRenderer::new(
+        let bg_sprite = rendering::Sprite::new(
             &device,
             &queue,
             wgpu::AddressMode::ClampToEdge,
@@ -121,7 +121,7 @@ impl State {
         //PLAYER
 
         let diffuse_bytes = include_bytes!("./assets/spaceship.png");
-        let sprite = sprite_renderer::SpriteRenderer::new(
+        let sprite = rendering::Sprite::new(
             &device,
             &queue,
             wgpu::AddressMode::ClampToEdge,
@@ -137,11 +137,11 @@ impl State {
         );
         //ENEMIES
         let mut entities: Vec<Box<dyn Entity>> = vec![];
-        let mut enemie_sprites = Vec::<sprite_renderer::SpriteRenderer>::new();
+        let mut enemie_sprites = Vec::<rendering::Sprite>::new();
         let mut enemies = Vec::<Enemy>::new();
 
         let enemie_bytes = include_bytes!("./assets/alien1.png");
-        let enemie_sprite = sprite_renderer::SpriteRenderer::new(
+        let enemie_sprite = rendering::Sprite::new(
             &device,
             &queue,
             wgpu::AddressMode::ClampToEdge,
@@ -171,7 +171,7 @@ impl State {
         //PROJECTILES
 
         let diffuse_bytes = include_bytes!("./assets/bullet.png");
-        let projectile_sprite = sprite_renderer::SpriteRenderer::new(
+        let projectile_sprite = rendering::Sprite::new(
             &device,
             &queue,
             wgpu::AddressMode::ClampToEdge,
@@ -179,7 +179,7 @@ impl State {
         );
 
         let diffuse_bytes = include_bytes!("./assets/alien_bullet.png");
-        let enemy_projectile_sprite = sprite_renderer::SpriteRenderer::new(
+        let enemy_projectile_sprite = rendering::Sprite::new(
             &device,
             &queue,
             wgpu::AddressMode::ClampToEdge,

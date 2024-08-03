@@ -1,5 +1,5 @@
 use crate::entity::EntityUniform;
-use crate::sprite_renderer;
+use crate::rendering;
 use crate::uniform;
 use crate::uniform::Uniform;
 
@@ -11,7 +11,7 @@ pub struct Explosion {
     pub end: bool,
     pub uniform: uniform::Uniform<EntityUniform>,
     pub i: u32,
-    pub sprites: Vec<sprite_renderer::SpriteRenderer>,
+    pub sprites: Vec<rendering::Sprite>,
     time_to_next_frame: f32,
 }
 
@@ -31,31 +31,31 @@ impl Explosion {
         let diffuse_bytes5 = include_bytes!("./assets/exp5.png");
 
         let sprites = vec![
-            sprite_renderer::SpriteRenderer::new(
+            rendering::Sprite::new(
                 &device,
                 &queue,
                 wgpu::AddressMode::ClampToEdge,
                 diffuse_bytes1,
             ),
-            sprite_renderer::SpriteRenderer::new(
+            rendering::Sprite::new(
                 &device,
                 &queue,
                 wgpu::AddressMode::ClampToEdge,
                 diffuse_bytes2,
             ),
-            sprite_renderer::SpriteRenderer::new(
+            rendering::Sprite::new(
                 &device,
                 &queue,
                 wgpu::AddressMode::ClampToEdge,
                 diffuse_bytes3,
             ),
-            sprite_renderer::SpriteRenderer::new(
+            rendering::Sprite::new(
                 &device,
                 &queue,
                 wgpu::AddressMode::ClampToEdge,
                 diffuse_bytes4,
             ),
-            sprite_renderer::SpriteRenderer::new(
+            rendering::Sprite::new(
                 &device,
                 &queue,
                 wgpu::AddressMode::ClampToEdge,

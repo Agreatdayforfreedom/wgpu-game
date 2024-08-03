@@ -8,7 +8,7 @@ use crate::{
     entity::EntityUniform,
     input::Input,
     player,
-    sprite_renderer::SpriteRenderer,
+    rendering::Sprite,
     util::CompassDir,
 };
 
@@ -18,13 +18,13 @@ pub struct Cannon {
     pub projectiles: Vec<Projectile>,
     time: instant::Instant,
     shooting_interval: u128, // milliseconds
-    sprite: SpriteRenderer,
+    sprite: Sprite,
 }
 
 impl Cannon {
     pub fn new(shooting_interval: u128, device: &wgpu::Device, queue: &wgpu::Queue) -> Box<Self> {
         let diffuse_bytes = include_bytes!("./../assets/bullet.png");
-        let sprite = SpriteRenderer::new(
+        let sprite = Sprite::new(
             &device,
             &queue,
             wgpu::AddressMode::ClampToEdge,

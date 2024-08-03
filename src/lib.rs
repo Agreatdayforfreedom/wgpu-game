@@ -6,7 +6,7 @@ mod entity;
 mod explosion;
 mod input;
 mod player;
-mod sprite_renderer;
+mod rendering;
 mod state;
 mod texture;
 mod uniform;
