@@ -54,7 +54,11 @@ impl Weapon for RailGun {
             audio.push(Sounds::Shoot);
             //todo
             for i in -2..=2 {
-                let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
+                let mut projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
+                projectile_uniform
+                    .data
+                    .set_pivot((0.5 * scale.x, 0.5 * scale.y).into())
+                    .exec();
                 self.projectiles.push(Projectile::new(
                     ((position.x), position.y).into(),
                     scale,
@@ -103,10 +107,8 @@ impl Weapon for RailGun {
                 projectile.set_direction(|this| {
                     if this.alive {
                         let spaceship_displacement = position - this.initial_position;
-                        this.position.x +=
-                            500.0 * this.dir.dir.x * dt.as_secs_f32() + spaceship_displacement.x;
-                        this.position.y -=
-                            500.0 * this.dir.dir.y * dt.as_secs_f32() - spaceship_displacement.y;
+                        this.position.x += 500.0 * this.dir.dir.x * dt.as_secs_f32();
+                        this.position.y -= 500.0 * this.dir.dir.y * dt.as_secs_f32();
                         this.initial_position = position;
                     }
                 });

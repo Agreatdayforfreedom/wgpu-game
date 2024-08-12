@@ -10,7 +10,10 @@ use crate::uniform::Uniform;
 use crate::util::CompassDir;
 use crate::weapon::projectile;
 use crate::{player, rendering};
-use cgmath::{Angle, Point2, Vector2, Vector3};
+use cgmath::{
+    Angle, InnerSpace, Matrix3, Point2, Quaternion, Rad, Rotation3, Transform, Vector2, Vector3,
+    Vector4,
+};
 use rand::{self, Rng};
 
 use pollster::block_on;
@@ -130,7 +133,7 @@ impl State {
         let player_uniform = Uniform::<EntityUniform>::new(&device);
         let player = player::Player::new(
             cgmath::Vector2::new(0.0, 0.0),
-            (36.0, 32.0).into(),
+            (30.0, 30.0).into(),
             player_uniform,
             &device,
             &queue,
@@ -308,6 +311,34 @@ impl State {
                 .drain(..)
                 .filter(|p| p.alive != false)
                 .collect();
+        }
+        if self.player.active_weapon.get_name() == "laser" {
+            for p in self.player.active_weapon.get_projectiles() {
+                let mut min_dist = f32::MAX;
+                for e in &mut self.entities {
+                    let dist = distance(self.player.position, e.position());
+                    if dist < min_dist {
+                        min_dist = dist;
+                        p.set_direction(|this| {
+                            let center = Vector2::new(
+                                self.player.position.x + (self.player.scale.x / 2.0) - 5.0,
+                                self.player.position.y + (self.player.scale.y / 2.0),
+                            );
+
+                            this.position.x = center.x;
+                            this.position.y = center.y;
+                            // Apply the rotation
+                            this.rotation = self.player.rotation;
+                            this.uniform
+                                .data
+                                .set_pivot(cgmath::Point2::new(0.5 * 10.0, 1.0))
+                                .exec();
+                            this.scale.x = 10.0;
+                            this.scale.y = -min_dist;
+                        });
+                    }
+                }
+            }
         }
         //check collsions
         for p in &mut self.player.active_weapon.get_projectiles() {

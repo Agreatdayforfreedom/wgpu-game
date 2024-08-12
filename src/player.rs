@@ -8,7 +8,7 @@ use crate::weapon::rail_gun::RailGun;
 use crate::weapon::weapon::Weapon;
 use crate::{entity::EntityUniform, input::Input};
 
-use cgmath::Vector2;
+use cgmath::{Angle, Point2, Vector2};
 //todo
 
 pub struct Player {
@@ -42,9 +42,17 @@ impl Entity for Player {
         } else if input.is_pressed("w") {
             self.movement("w", dt);
         }
+        self.uniform
+            .data
+            .set_pivot(Point2::new(self.scale.x * 0.5, self.scale.y * 0.5));
+
+        let center = Vector2::new(
+            self.position.x + (self.scale.x / 2.0) - 20.0,
+            self.position.y + (self.scale.y / 2.0) - 20.0,
+        );
         self.active_weapon.shoot(
             device,
-            (self.position.x + self.scale.x / 3.0, self.position.y).into(),
+            center,
             (40.0, 40.0).into(),
             CompassDir::from_deg(self.rotation.0),
             input,
@@ -87,7 +95,7 @@ impl Player {
             alive: true,
             rotation: cgmath::Deg(360.0),
             uniform,
-            active_weapon: Cannon::new(50, device, queue),
+            active_weapon: RailGun::new(50, device, queue),
         }
     }
 

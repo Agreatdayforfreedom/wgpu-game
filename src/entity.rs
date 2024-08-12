@@ -48,7 +48,7 @@ impl Default for EntityUniform {
             model: cgmath::Matrix4::identity(),
             color: (1.0, 1.0, 1.0, 1.0).into(),
             tex_scale: (1.0, 1.0).into(), //TODO
-            pivot: (0.5, 0.5).into(),
+            pivot: (0.5 * 24.0, 0.5 * 24.0).into(),
             tex_pos: 1.0,
             position: (0.0, 0.0).into(),
             angle: Deg(0.0),
@@ -91,23 +91,9 @@ impl EntityUniform {
     pub fn exec(&mut self) {
         self.model = cgmath::Matrix4::identity()
             * cgmath::Matrix4::from_translation((self.position.x, self.position.y, 0.0).into())
-            * cgmath::Matrix4::from_translation(
-                (
-                    self.pivot.x * self.scale.x,
-                    self.pivot.y * self.scale.y,
-                    0.0,
-                )
-                    .into(),
-            )
+            * cgmath::Matrix4::from_translation((self.pivot.x, self.pivot.y, 0.0).into())
             * cgmath::Matrix4::from_angle_z(self.angle)
-            * cgmath::Matrix4::from_translation(
-                (
-                    -self.pivot.x * self.scale.x,
-                    -self.pivot.y * self.scale.y,
-                    0.0,
-                )
-                    .into(),
-            )
+            * cgmath::Matrix4::from_translation((-self.pivot.x, -self.pivot.y, 0.0).into())
             * cgmath::Matrix4::from_nonuniform_scale(self.scale.x, self.scale.y, 0.0);
     }
 }

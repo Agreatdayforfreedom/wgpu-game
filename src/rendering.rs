@@ -156,3 +156,7 @@ impl Sprite {
         }
     }
 }
+
+pub struct Mesh {}
+
+pub struct Material {}

@@ -1,6 +1,6 @@
 use std::slice::IterMut;
 
-use cgmath::Angle;
+use cgmath::{Angle, Quaternion, Rotation3, Vector2, Vector3};
 
 use crate::{
     audio::{Audio, Sounds},
@@ -54,8 +54,8 @@ impl Weapon for Cannon {
             self.time = instant::Instant::now();
             let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
             audio.push(Sounds::Shoot);
-            let p = Projectile::new(
-                (position.x - 2.0, position.y).into(),
+            let mut p = Projectile::new(
+                (position.x, position.y).into(),
                 scale,
                 dir.angle.opposite(),
                 Bounds {
@@ -68,6 +68,10 @@ impl Weapon for Cannon {
                 dir,
                 projectile_uniform,
             );
+            p.uniform
+                .data
+                .set_pivot((0.5 * scale.x, 0.5 * scale.y).into())
+                .exec();
 
             self.projectiles.push(p);
         };
@@ -92,11 +96,15 @@ impl Weapon for Cannon {
                 projectile.update(&dt, 500.0, position);
                 projectile.set_direction(|this| {
                     if this.alive {
+                        let q = Quaternion::from_angle_z(this.dir.angle);
+
+                        // let offset = Vector3::new(15.0, 15.0, 0.0);
                         let spaceship_displacement = position - this.initial_position;
+                        let spaceship_displacement = 0.0;
                         this.position.x +=
-                            500.0 * this.dir.dir.x * dt.as_secs_f32() + spaceship_displacement.x;
+                            500.0 * this.dir.dir.x * dt.as_secs_f32() + spaceship_displacement;
                         this.position.y -=
-                            500.0 * this.dir.dir.y * dt.as_secs_f32() - spaceship_displacement.y;
+                            500.0 * this.dir.dir.y * dt.as_secs_f32() - spaceship_displacement;
                         this.initial_position = position;
                     }
                 });
