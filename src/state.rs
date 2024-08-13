@@ -328,6 +328,7 @@ impl State {
                             this.position.x = center.x;
                             this.position.y = center.y;
                             // Apply the rotation
+
                             this.rotation = self.player.rotation;
                             this.uniform
                                 .data

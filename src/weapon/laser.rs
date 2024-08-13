@@ -38,7 +38,7 @@ impl Weapon for Laser {
     ) {
         if input.is_pressed("f") && self.projectiles.len() < 1 {
             let mut uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
-            uniform.data.set_tex_scale((1.0, 3.0).into()).exec();
+            uniform.data.set_tex_scale((-1.0, -3.0).into()).exec();
             self.projectiles.push(Projectile::new(
                 position,
                 scale,
@@ -70,7 +70,7 @@ impl Weapon for Laser {
                         projectile.position.x,
                         projectile.position.y + projectile.scale.y,
                     ),
-                    area: cgmath::Vector2::new(2.5, 2.5), //todo
+                    area: cgmath::Vector2::new(projectile.scale.x, projectile.scale.y), //todo
                 });
 
                 projectile.update(&dt, 0.0, position);
@@ -84,7 +84,7 @@ impl Weapon for Laser {
                     )
                         .into(),
                 );
-                projectile.uniform.data.tex_pos += SPEED_LASER_MOVEMENT * dt.as_secs_f32();
+                projectile.uniform.data.tex_pos -= SPEED_LASER_MOVEMENT * dt.as_secs_f32();
                 projectile.uniform.write(queue);
             }
         }
