@@ -65,16 +65,12 @@ impl Weapon for Laser {
     ) {
         for projectile in &mut self.projectiles {
             if projectile.alive {
-                projectile.set_bounds(Bounds {
-                    origin: cgmath::Point2::new(
-                        projectile.position.x,
-                        projectile.position.y + projectile.scale.y,
-                    ),
-                    area: cgmath::Vector2::new(projectile.scale.x, projectile.scale.y), //todo
-                });
-
                 projectile.update(&dt, 0.0, position);
 
+                // projectile.set_bounds(Bounds {
+                //     origin: cgmath::Point2::new(projectile.position.x, projectile.position.y),
+                //     area: cgmath::Vector2::new(1000.0, 1000.0), //todo
+                // });
                 projectile.uniform.data.set_color(
                     (
                         time.cos() as f32 * 0.5 + 0.5,

@@ -1,4 +1,4 @@
-use cgmath::{Deg, SquareMatrix, Vector2};
+use cgmath::{Deg, SquareMatrix, Vector2, Vector4};
 
 use crate::{audio::Audio, input::Input, uniform::Uniform};
 
@@ -21,6 +21,8 @@ pub trait Entity {
     fn id(&self) -> u32;
 
     fn position(&self) -> Vector2<f32>;
+    fn scale(&self) -> Vector2<f32>;
+    fn set_colors(&mut self, color: Vector4<f32>);
 
     fn rotate(&mut self, rotation: Deg<f32>) {}
 

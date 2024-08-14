@@ -321,20 +321,22 @@ impl State {
                         min_dist = dist;
                         p.set_direction(|this| {
                             let center = Vector2::new(
-                                self.player.position.x + (self.player.scale.x / 2.0) - 5.0,
+                                self.player.position.x + (self.player.scale.x / 2.0) - 10.0,
                                 self.player.position.y + (self.player.scale.y / 2.0),
                             );
 
-                            this.position.x = center.x;
-                            this.position.y = center.y;
+                            this.position.x =
+                                center.x + self.player.scale.x / 2.0 * self.player.rotation.sin();
+                            this.position.y =
+                                center.y - self.player.scale.y / 2.0 * self.player.rotation.cos();
                             // Apply the rotation
 
                             this.rotation = self.player.rotation;
                             this.uniform
                                 .data
-                                .set_pivot(cgmath::Point2::new(0.5 * 10.0, 1.0))
+                                .set_pivot(cgmath::Point2::new(0.5 * 20.0, 1.0))
                                 .exec();
-                            this.scale.x = 10.0;
+                            this.scale.x = 20.0;
                             this.scale.y = -min_dist;
                         });
                     }
@@ -344,21 +346,22 @@ impl State {
         //check collsions
         for p in &mut self.player.active_weapon.get_projectiles() {
             let mut min_dist = f32::MAX;
-            for e in &mut self.enemies {
-                let dist = distance(self.player.position, e.position);
+            for e in &mut self.entities {
+                let dist = distance(self.player.position, e.position());
                 if dist < min_dist {
                     min_dist = dist;
                 }
 
+                println!("{:?}, {:?}", p.bounds, self.player.position);
                 if check_collision(
                     p.bounds,
                     Bounds {
-                        origin: Point2::new(e.position.x, e.position.y),
-                        area: Vector2::new(e.scale.x, e.scale.y),
+                        origin: Point2::new(e.position().x, e.position().y),
+                        area: Vector2::new(e.scale().x, e.scale().y),
                     },
                 ) {
                     // p.alive = false;
-                    e.uniform.data.set_color((1.0, 0.0, 0.0, 1.0).into());
+                    e.set_colors((1.0, 0.0, 0.0, 1.0).into());
                     // let explosion = Explosion::new(
                     //     e.position.into(),
                     //     (40.0, 40.0).into(),
@@ -368,6 +371,8 @@ impl State {
                     // self.explosions.push(explosion);
                     // self.audio.push(Sounds::Explosion);
                     // e.alive = false;
+                } else {
+                    e.set_colors((0.0, 1.0, 0.0, 1.0).into());
                 }
             }
         }

@@ -1,4 +1,4 @@
-use cgmath::Vector2;
+use cgmath::{Vector2, Vector4};
 
 use crate::audio::{Audio, Sounds};
 use crate::collider::Bounds;
@@ -36,7 +36,12 @@ impl Entity for Enemy {
     fn position(&self) -> Vector2<f32> {
         self.position
     }
-
+    fn scale(&self) -> Vector2<f32> {
+        self.scale
+    }
+    fn set_colors(&mut self, color: Vector4<f32>) {
+        self.uniform.data.set_color(color);
+    }
     fn id(&self) -> u32 {
         self.id
     }

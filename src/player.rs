@@ -8,7 +8,7 @@ use crate::weapon::rail_gun::RailGun;
 use crate::weapon::weapon::Weapon;
 use crate::{entity::EntityUniform, input::Input};
 
-use cgmath::{Angle, Point2, Vector2};
+use cgmath::{Angle, Point2, Vector2, Vector4};
 //todo
 
 pub struct Player {
@@ -75,6 +75,12 @@ impl Entity for Player {
         self.position
     }
 
+    fn scale(&self) -> Vector2<f32> {
+        self.scale
+    }
+    fn set_colors(&mut self, color: Vector4<f32>) {
+        self.uniform.data.set_color(color);
+    }
     fn id(&self) -> u32 {
         self.id
     }
