@@ -19,6 +19,7 @@ pub struct Cannon {
     time: instant::Instant,
     shooting_interval: u128, // milliseconds
     sprite: Sprite,
+    velocity: f32,
 }
 
 impl Cannon {
@@ -36,6 +37,7 @@ impl Cannon {
             time: instant::Instant::now(),
             shooting_interval,
             sprite,
+            velocity: 500.0,
         })
     }
 }
@@ -55,7 +57,11 @@ impl Weapon for Cannon {
             let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
             audio.push(Sounds::Shoot);
             let mut p = Projectile::new(
-                (position.x, position.y).into(),
+                (
+                    position.x + 15.0 * dir.angle.cos(),
+                    position.y - 15.0 * dir.angle.sin(),
+                )
+                    .into(),
                 scale,
                 dir.angle.opposite(),
                 Bounds {
@@ -94,20 +100,18 @@ impl Weapon for Cannon {
                     area: cgmath::Vector2::new(2.5, 2.5),
                 });
                 projectile.update(&dt, 500.0, position);
+
                 projectile.set_direction(|this| {
                     if this.alive {
-                        let q = Quaternion::from_angle_z(this.dir.angle);
+                        // let spaceship_displacement = position - this.initial_position;
+                        // println!("x: {}", );
 
-                        // let offset = Vector3::new(15.0, 15.0, 0.0);
-                        let spaceship_displacement = position - this.initial_position;
-                        let spaceship_displacement = 0.0;
-                        this.position.x +=
-                            500.0 * this.dir.dir.x * dt.as_secs_f32() + spaceship_displacement;
-                        this.position.y -=
-                            500.0 * this.dir.dir.y * dt.as_secs_f32() - spaceship_displacement;
+                        this.position.x += (500.0 + 500.0) * this.dir.dir.x * dt.as_secs_f32();
+                        this.position.y -= (500.0 + 500.0) * this.dir.dir.y * dt.as_secs_f32();
                         this.initial_position = position;
                     }
                 });
+                // projectile.update(&dt, 500.0, position);
                 projectile.uniform.write(queue);
             }
         }

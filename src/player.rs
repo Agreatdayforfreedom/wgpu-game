@@ -50,6 +50,7 @@ impl Entity for Player {
             self.position.x + (self.scale.x / 2.0) - 20.0,
             self.position.y + (self.scale.y / 2.0) - 20.0,
         );
+        self.active_weapon.update(self.position, queue, dt, time);
         self.active_weapon.shoot(
             device,
             center,
@@ -58,7 +59,6 @@ impl Entity for Player {
             input,
             audio,
         );
-        self.active_weapon.update(self.position, queue, dt, time);
 
         self.uniform
             .data
@@ -104,25 +104,6 @@ impl Player {
             active_weapon: Laser::new(device, queue),
         }
     }
-
-    // pub fn dir(&mut self) {
-    //     {
-    //         //     //todo: set origin correctly
-    //         if self.player.active_weapon.get_name() == "laser" {
-    //             for p in self.player.active_weapon.get_projectiles() {
-    //                 p.set_direction(|this| {
-    //                     this.rotation = cgmath::Deg(angle + 90.0);
-    //                     this.position = (
-    //                         self.player.position.x,
-    //                         self.player.position.y - min_dist + self.player.scale.y,
-    //                     )
-    //                         .into();
-    //                     this.scale.y = min_dist;
-    //                 });
-    //             }
-    //         }
-    //     }
-    // }
 
     pub fn movement(&mut self, key: &str, dt: &instant::Duration) {
         let dt = dt.as_secs_f32();
