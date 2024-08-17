@@ -5,6 +5,7 @@ mod enemie;
 mod entity;
 mod explosion;
 mod input;
+mod particle_system;
 mod player;
 mod rendering;
 mod state;

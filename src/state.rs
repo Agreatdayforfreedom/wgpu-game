@@ -5,6 +5,8 @@ use crate::enemie::Enemy;
 use crate::entity::{self, Entity, EntityUniform};
 use crate::explosion::{self, Explosion};
 use crate::input::Input;
+use crate::particle_system::particle::Particle;
+use crate::particle_system::system::ParticleSystem;
 use crate::rendering::create_render_pipeline;
 use crate::uniform::Uniform;
 use crate::util::CompassDir;
@@ -30,6 +32,7 @@ pub struct State {
     config: wgpu::SurfaceConfiguration,
 
     render_pipeline: wgpu::RenderPipeline,
+    render_pipeline_particles: wgpu::RenderPipeline,
 
     sprite: rendering::Sprite,
     enemie_sprites: Vec<rendering::Sprite>,
@@ -48,6 +51,7 @@ pub struct State {
     camera: Camera,
     audio: Audio,
     dt: instant::Duration,
+    particle_system: ParticleSystem,
     time: f64,
 }
 //todo
@@ -103,6 +107,8 @@ impl State {
         surface.configure(&device, &config);
 
         let shader = device.create_shader_module(wgpu::include_wgsl!("shader.wgsl"));
+        let shader_particles =
+            device.create_shader_module(wgpu::include_wgsl!("./shaders/particles.wgsl"));
 
         let camera_uniform = Uniform::<CameraUniform>::new(&device);
         let camera = Camera::new(camera_uniform);
@@ -201,7 +207,39 @@ impl State {
             push_constant_ranges: &[],
         });
 
+        ////! PARTICLES
+        let particle_bytes = include_bytes!("./assets/particle.png");
+        let particle_sprite = rendering::Sprite::new(
+            &device,
+            &queue,
+            wgpu::AddressMode::ClampToEdge,
+            particle_bytes,
+        );
+
+        // let mut particles: Vec<Particle> = vec![];
+        // let center = Vector2::new(
+        //     player.position.x + (player.scale.x / 2.0),
+        //     player.position.y + (player.scale.y / 2.0),
+        // );
+        // for n in 0..=100 {
+        //     let uniform = Uniform::<EntityUniform>::new(&device);
+        //     let particle = Particle::new(
+        //         center,
+        //         (8.0, 8.0).into(),
+        //         (0.0, 1.0, 1.0, 1.0).into(),
+        //         100.0,
+        //         1.0,
+        //         uniform,
+        //     );
+
+        //     particles.push(particle);
+        // }
+
+        let particle_system = ParticleSystem::new(particle_sprite, vec![]);
+
         let render_pipeline = create_render_pipeline(&device, &shader, &config, &pipeline_layout);
+        let render_pipeline_particles =
+            create_render_pipeline(&device, &shader_particles, &config, &pipeline_layout);
         //audio
         let audio = Audio::new();
         audio.start_track(Sounds::MainTheme);
@@ -212,7 +250,7 @@ impl State {
             queue,
             config,
             render_pipeline,
-
+            render_pipeline_particles,
             enemie_sprites,
             enemies,
             enemy_projectile_sprite,
@@ -234,6 +272,8 @@ impl State {
             audio,
             dt: instant::Instant::now().elapsed(),
             time: 0.0,
+
+            particle_system,
         }
     }
 
@@ -403,6 +443,16 @@ impl State {
         }
 
         self.player.active_weapon.drain();
+        self.particle_system.update(
+            Vector2::new(
+                self.player.position.x + (self.player.scale.x / 2.0) - 4.0,
+                self.player.position.y + (self.player.scale.y / 2.0) - 4.0,
+            ),
+            CompassDir::from_deg(self.player.rotation.opposite().0),
+            &mut self.device,
+            &mut self.queue,
+            &self.dt,
+        );
 
         self.enemies = self
             .enemies
@@ -475,6 +525,9 @@ impl State {
 
             rpass.draw(0..6, 0..1);
 
+            rpass.set_pipeline(&self.render_pipeline_particles);
+            self.particle_system.render(&mut rpass);
+
             rpass.set_bind_group(0, &self.sprite.bind_group, &[]);
             rpass.set_bind_group(2, &self.player.uniform.bind_group, &[]);
             //buffers
@@ -517,17 +570,7 @@ impl State {
                 rpass.draw(0..6, 0..1);
             }
 
-            // draw player projectiles
             self.player.active_weapon.draw(&mut rpass);
-            // rpass.set_vertex_buffer(0, self.projectile_sprite.buffer.slice(..));
-            // rpass.set_bind_group(0, &self.projectile_sprite.bind_group, &[]);
-            // for p in &self.projectile {
-            //     if p.alive {
-            //         rpass.set_vertex_buffer(2, p.uniform.buffer.slice(..));
-            //         rpass.set_bind_group(2, &p.uniform.bind_group, &[]);
-            //         rpass.draw(0..6, 0..1);
-            //     }
-            // }
         }
 
         self.queue.submit(Some(encoder.finish()));
