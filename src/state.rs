@@ -352,7 +352,6 @@ impl State {
                     min_dist = dist;
                 }
 
-                println!("{:?}, {:?}", p.bounds, self.player.position);
                 if check_collision(
                     p.bounds,
                     Bounds {

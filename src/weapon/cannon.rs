@@ -14,6 +14,8 @@ use crate::{
 
 use super::projectile::Projectile;
 use super::weapon::Weapon;
+
+const LIFETIME: u128 = 5000;
 pub struct Cannon {
     pub projectiles: Vec<Projectile>,
     time: instant::Instant,
@@ -120,7 +122,7 @@ impl Weapon for Cannon {
         self.projectiles = self
             .projectiles
             .drain(..)
-            .filter(|p| p.alive != false)
+            .filter(|p| p.alive != false && p.lifetime.elapsed().as_millis() <= LIFETIME)
             .collect();
     }
 

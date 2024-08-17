@@ -10,6 +10,7 @@ pub struct Projectile {
     pub bounds: Bounds,
     pub rotation: cgmath::Deg<f32>,
     pub initial_position: cgmath::Vector2<f32>,
+    pub lifetime: instant::Instant,
     pub uniform: uniform::Uniform<EntityUniform>,
 }
 
@@ -30,6 +31,7 @@ impl Projectile {
             dir,
             alive: true,
             initial_position: position,
+            lifetime: instant::Instant::now(),
             uniform,
         }
     }

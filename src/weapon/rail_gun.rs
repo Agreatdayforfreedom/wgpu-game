@@ -12,6 +12,8 @@ use crate::{
 
 use super::weapon::Weapon;
 
+const LIFETIME: u128 = 5000;
+
 pub struct RailGun {
     projectiles: Vec<Projectile>,
     time: instant::Instant,
@@ -94,6 +96,8 @@ impl Weapon for RailGun {
         dt: &instant::Duration,
         time: f64,
     ) {
+        println!("{}", self.projectiles.len());
+
         for projectile in &mut self.projectiles {
             if projectile.alive {
                 projectile.set_bounds(Bounds {
@@ -121,7 +125,7 @@ impl Weapon for RailGun {
         self.projectiles = self
             .projectiles
             .drain(..)
-            .filter(|p| p.alive != false)
+            .filter(|p| p.alive != false && p.lifetime.elapsed().as_millis() <= LIFETIME)
             .collect();
     }
 
