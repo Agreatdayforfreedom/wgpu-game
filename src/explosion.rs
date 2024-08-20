@@ -1,5 +1,6 @@
 use crate::entity::EntityUniform;
 use crate::rendering;
+use crate::rendering::create_bind_group_layout;
 use crate::uniform;
 use crate::uniform::Uniform;
 
@@ -22,7 +23,9 @@ impl Explosion {
         device: &wgpu::Device,
         queue: &wgpu::Queue,
     ) -> Self {
-        let uniform = Uniform::<EntityUniform>::new(&device);
+        let uniform = Uniform::<EntityUniform>::new(device);
+
+        let bind_group_layout = create_bind_group_layout(device);
 
         let diffuse_bytes1 = include_bytes!("./assets/exp1.png");
         let diffuse_bytes2 = include_bytes!("./assets/exp2.png");
@@ -35,30 +38,35 @@ impl Explosion {
                 &device,
                 &queue,
                 wgpu::AddressMode::ClampToEdge,
+                &bind_group_layout,
                 diffuse_bytes1,
             ),
             rendering::Sprite::new(
                 &device,
                 &queue,
                 wgpu::AddressMode::ClampToEdge,
+                &bind_group_layout,
                 diffuse_bytes2,
             ),
             rendering::Sprite::new(
                 &device,
                 &queue,
                 wgpu::AddressMode::ClampToEdge,
+                &bind_group_layout,
                 diffuse_bytes3,
             ),
             rendering::Sprite::new(
                 &device,
                 &queue,
                 wgpu::AddressMode::ClampToEdge,
+                &bind_group_layout,
                 diffuse_bytes4,
             ),
             rendering::Sprite::new(
                 &device,
                 &queue,
                 wgpu::AddressMode::ClampToEdge,
+                &bind_group_layout,
                 diffuse_bytes5,
             ),
         ];

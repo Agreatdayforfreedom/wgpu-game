@@ -5,7 +5,7 @@ use crate::{
     collider::Bounds,
     entity::EntityUniform,
     input::Input,
-    rendering::Sprite,
+    rendering::{create_bind_group_layout, Sprite},
     util::CompassDir,
     weapon::projectile::Projectile,
 };
@@ -24,10 +24,13 @@ pub struct RailGun {
 impl RailGun {
     pub fn new(shooting_interval: u128, device: &wgpu::Device, queue: &wgpu::Queue) -> Box<Self> {
         let diffuse_bytes = include_bytes!("./../assets/bullet.png");
+        let bind_group_layout = create_bind_group_layout(device);
+
         let sprite = Sprite::new(
             &device,
             &queue,
             wgpu::AddressMode::ClampToEdge,
+            &bind_group_layout,
             diffuse_bytes,
         );
 

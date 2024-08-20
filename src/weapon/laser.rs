@@ -1,7 +1,11 @@
 use std::slice::IterMut;
 
 use crate::{
-    audio::Audio, collider::Bounds, entity::EntityUniform, input::Input, rendering::Sprite,
+    audio::Audio,
+    collider::Bounds,
+    entity::EntityUniform,
+    input::Input,
+    rendering::{create_bind_group_layout, Sprite},
     util::CompassDir,
 };
 
@@ -17,7 +21,15 @@ pub struct Laser {
 impl Laser {
     pub fn new(device: &wgpu::Device, queue: &wgpu::Queue) -> Box<Self> {
         let diffuse_bytes = include_bytes!("./../assets/laser.png");
-        let sprite = Sprite::new(&device, &queue, wgpu::AddressMode::Repeat, diffuse_bytes);
+        let bind_group_layout = create_bind_group_layout(device);
+
+        let sprite = Sprite::new(
+            &device,
+            &queue,
+            wgpu::AddressMode::Repeat,
+            &bind_group_layout,
+            diffuse_bytes,
+        );
 
         Box::new(Self {
             projectiles: vec![],

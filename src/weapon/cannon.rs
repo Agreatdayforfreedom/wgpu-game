@@ -8,7 +8,7 @@ use crate::{
     entity::EntityUniform,
     input::Input,
     player,
-    rendering::Sprite,
+    rendering::{create_bind_group_layout, Sprite},
     util::CompassDir,
 };
 
@@ -27,10 +27,13 @@ pub struct Cannon {
 impl Cannon {
     pub fn new(shooting_interval: u128, device: &wgpu::Device, queue: &wgpu::Queue) -> Box<Self> {
         let diffuse_bytes = include_bytes!("./../assets/bullet.png");
+        let bind_group_layout = create_bind_group_layout(device);
+
         let sprite = Sprite::new(
             &device,
             &queue,
             wgpu::AddressMode::ClampToEdge,
+            &bind_group_layout,
             diffuse_bytes,
         );
 

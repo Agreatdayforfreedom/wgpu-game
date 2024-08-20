@@ -7,7 +7,7 @@ use crate::explosion::{self, Explosion};
 use crate::input::Input;
 use crate::particle_system::particle::Particle;
 use crate::particle_system::system::ParticleSystem;
-use crate::rendering::create_render_pipeline;
+use crate::rendering::{create_bind_group_layout, create_render_pipeline};
 use crate::uniform::Uniform;
 use crate::util::CompassDir;
 use crate::weapon::projectile;
@@ -113,11 +113,13 @@ impl State {
         let camera_uniform = Uniform::<CameraUniform>::new(&device);
         let camera = Camera::new(camera_uniform);
         //BG
+        let bind_group_layout = create_bind_group_layout(&device);
         let diffuse_bytes = include_bytes!("./assets/bg.png");
         let bg_sprite = rendering::Sprite::new(
             &device,
             &queue,
             wgpu::AddressMode::ClampToEdge,
+            &bind_group_layout,
             diffuse_bytes,
         );
         let mut bg_uniform = Uniform::<EntityUniform>::new(&device);
@@ -134,6 +136,7 @@ impl State {
             &device,
             &queue,
             wgpu::AddressMode::ClampToEdge,
+            &bind_group_layout,
             diffuse_bytes,
         );
         let player_uniform = Uniform::<EntityUniform>::new(&device);
@@ -154,6 +157,7 @@ impl State {
             &device,
             &queue,
             wgpu::AddressMode::ClampToEdge,
+            &bind_group_layout,
             enemie_bytes,
         );
         enemie_sprites.push(enemie_sprite);
@@ -184,6 +188,7 @@ impl State {
             &device,
             &queue,
             wgpu::AddressMode::ClampToEdge,
+            &bind_group_layout,
             diffuse_bytes,
         );
 
@@ -192,6 +197,7 @@ impl State {
             &device,
             &queue,
             wgpu::AddressMode::ClampToEdge,
+            &bind_group_layout,
             diffuse_bytes,
         );
 
@@ -200,7 +206,7 @@ impl State {
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: None,
             bind_group_layouts: &[
-                &sprite.bind_group_layout,
+                &bind_group_layout,
                 &camera.uniform.bind_group_layout,
                 &player.uniform.bind_group_layout,
             ],
@@ -213,6 +219,7 @@ impl State {
             &device,
             &queue,
             wgpu::AddressMode::ClampToEdge,
+            &bind_group_layout,
             particle_bytes,
         );
 
