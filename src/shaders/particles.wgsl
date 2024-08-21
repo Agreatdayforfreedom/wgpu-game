@@ -42,5 +42,33 @@ var s_diffuse: sampler;
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-    return textureSample(t_diffuse, s_diffuse, in.tex_coords ) *in.color ;
+    let texSize = vec2<f32>(textureDimensions(t_diffuse));
+    let uv = in.tex_coords;
+
+    // Sample original color
+    let originalColor = textureSample(t_diffuse, s_diffuse, uv);
+
+    // Define the blur radius
+    let blurRadius = 2.0 / texSize;
+
+    // Accumulate surrounding pixel colors for blur effect
+    var blurredColor = vec4<f32>(0.0);
+    for (var x: i32 = -2; x <=2; x++) {
+        for (var y: i32 = -2; y <= 2; y++) {
+            let offset = vec2<f32>(f32(x), f32(y)) * blurRadius;
+            blurredColor += textureSample(t_diffuse, s_diffuse, uv + offset);
+        }
+    }
+
+    // Average the accumulated color
+    blurredColor /= 25.0;
+    blurredColor *= in.color;
+    // Combine the original color with the blurred color
+    let threshold = 0.5; // Example threshold for glowing areas
+    let glow = smoothstep(threshold, 1.0, length(originalColor.rgb)) * 1.5;
+    let finalColor = mix(originalColor, blurredColor, glow);
+
+    return finalColor ;
+    
+    // return textureSample(t_diffuse, s_diffuse, in.tex_coords ) *in.color ;
 }

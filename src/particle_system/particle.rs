@@ -27,7 +27,7 @@ impl Particle {
     ) -> Self {
         let random = ((rand::thread_rng().gen_range(0..10000) as f32 % 100.0) - 50.0) / 10.0;
         Self {
-            position: (position.x + random, position.y + random).into(),
+            position: (position.x + random * 20.0, position.y + random).into(),
             scale,
             color,
             velocity,
@@ -46,7 +46,7 @@ impl Particle {
         } else {
             self.position.x += self.velocity * self.dir.dir.x * dt;
             self.position.y -= self.velocity * self.dir.dir.y * dt;
-            self.color.w -= dt * 1.5;
+            // self.color.w -= dt * 1.5;
         };
 
         self.uniform

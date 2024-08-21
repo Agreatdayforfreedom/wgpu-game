@@ -534,6 +534,7 @@ impl State {
 
             rpass.set_pipeline(&self.render_pipeline_particles);
             self.particle_system.render(&mut rpass);
+            rpass.set_pipeline(&self.render_pipeline);
 
             rpass.set_bind_group(0, &self.sprite.bind_group, &[]);
             rpass.set_bind_group(2, &self.player.uniform.bind_group, &[]);

@@ -35,10 +35,10 @@ impl ParticleSystem {
             let uniform = Uniform::<EntityUniform>::new(&device);
             Particle::new(
                 start_position,
-                (8.0, 8.0).into(),
-                (1.0, 0.75, 0.0, 1.0).into(),
+                (10.0, 10.0).into(),
+                (0.0, 1.0, 1.0, 1.0).into(),
                 80.0,
-                2.0,
+                10.0,
                 dir,
                 uniform,
             )
