@@ -7,11 +7,12 @@ use crate::explosion::{self, Explosion};
 use crate::input::Input;
 use crate::particle_system::particle::Particle;
 use crate::particle_system::system::ParticleSystem;
+use crate::post_processing::{self, PostProcessing};
 use crate::rendering::{create_bind_group_layout, create_render_pipeline};
 use crate::uniform::Uniform;
 use crate::util::CompassDir;
 use crate::weapon::projectile;
-use crate::{player, rendering};
+use crate::{player, rendering, texture};
 use cgmath::{
     Angle, InnerSpace, Matrix3, Point2, Quaternion, Rad, Rotation3, Transform, Vector2, Vector3,
     Vector4,
@@ -52,6 +53,7 @@ pub struct State {
     audio: Audio,
     dt: instant::Duration,
     particle_system: ParticleSystem,
+    post_processing: PostProcessing,
     time: f64,
 }
 //todo
@@ -142,7 +144,7 @@ impl State {
         let player_uniform = Uniform::<EntityUniform>::new(&device);
         let player = player::Player::new(
             cgmath::Vector2::new(0.0, 0.0),
-            (30.0, 30.0).into(),
+            (32.0, 32.0).into(),
             player_uniform,
             &device,
             &queue,
@@ -242,11 +244,50 @@ impl State {
         //     particles.push(particle);
         // }
 
+        let offscreen_texture = texture::Texture::empty(
+            &device,
+            (config.width, config.height),
+            Some(wgpu::AddressMode::ClampToEdge),
+            Some("offscreen texture"),
+        );
+
+        // let offscreen_texture = device.create_texture(&wgpu::TextureDescriptor {
+        //     size: wgpu::Extent3d {
+        //         depth_or_array_layers: 1,
+        //         width: config.width,
+        //         height: config.height,
+        //     },
+        //     mip_level_count: 1,
+        //     sample_count: 1,
+        //     dimension: wgpu::TextureDimension::D2,
+        //     format: wgpu::TextureFormat::Bgra8UnormSrgb,
+        //     usage: wgpu::TextureUsages::TEXTURE_BINDING
+        //         | wgpu::TextureUsages::RENDER_ATTACHMENT
+        //         | wgpu::TextureUsages::COPY_DST,
+        //     label: Some("OFFSCREEN TEXTURE"),
+        //     view_formats: &[],
+        // });
+
+        // let offscreen_texture = rendering::Sprite::from_empty(
+        //     &device,
+        //     (config.width, config.height),
+        //     wgpu::AddressMode::ClampToEdge,
+        //     &bind_group_layout,
+        //     "offscreen",
+        // );
+
         let particle_system = ParticleSystem::new(particle_sprite, vec![]);
 
         let render_pipeline = create_render_pipeline(&device, &shader, &config, &pipeline_layout);
+        let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: None,
+            bind_group_layouts: &[&bind_group_layout],
+            push_constant_ranges: &[],
+        });
         let render_pipeline_particles =
             create_render_pipeline(&device, &shader_particles, &config, &pipeline_layout);
+        let post_processing = PostProcessing::new(&device, &config);
+
         //audio
         let audio = Audio::new();
         audio.start_track(Sounds::MainTheme);
@@ -281,6 +322,7 @@ impl State {
             time: 0.0,
 
             particle_system,
+            post_processing, // offscreen_texture,
         }
     }
 
@@ -491,22 +533,35 @@ impl State {
         }
     }
 
+    // pub fn set_dest_texture(&mut self, texture: wgpu::TextureView) {
+    //     self.destination_texture = Some(texture);
+    // }
+
     pub fn render(&mut self) {
         let frame = self
             .surface
             .get_current_texture()
             .expect("Failed to acquire next swap chain texture");
-        let view = frame
-            .texture
-            .create_view(&wgpu::TextureViewDescriptor::default());
+        // let view = if let Some(texture) = &self.destination_texture {
+        //     texture
+        // } else {
+        //     &frame
+        //         .texture
+        //         .create_view(&wgpu::TextureViewDescriptor::default())
+        // };
+
         let mut encoder = self
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+        let context_view = frame
+            .texture
+            .create_view(&wgpu::TextureViewDescriptor::default());
+
         {
             let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: None,
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &view,
+                    view: &context_view,
                     resolve_target: None,
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT),
@@ -520,6 +575,13 @@ impl State {
 
             //pipeline
             rpass.set_pipeline(&self.render_pipeline);
+            // self.set_dest_texture(
+            //     self.particle_system
+            //         .offscreen
+            //         .texture
+            //         .texture
+            //         .create_view(&wgpu::TextureViewDescriptor::default()),
+            // );
 
             rpass.set_bind_group(1, &self.camera.uniform.bind_group, &[]);
             rpass.set_vertex_buffer(1, self.camera.uniform.buffer.slice(..));
@@ -532,9 +594,7 @@ impl State {
 
             rpass.draw(0..6, 0..1);
 
-            rpass.set_pipeline(&self.render_pipeline_particles);
-            self.particle_system.render(&mut rpass);
-            rpass.set_pipeline(&self.render_pipeline);
+            self.particle_system.draw(&mut rpass);
 
             rpass.set_bind_group(0, &self.sprite.bind_group, &[]);
             rpass.set_bind_group(2, &self.player.uniform.bind_group, &[]);
@@ -580,8 +640,10 @@ impl State {
 
             self.player.active_weapon.draw(&mut rpass);
         }
+        // self.post_processing.render(&mut encoder, &context_view);
 
         self.queue.submit(Some(encoder.finish()));
+
         frame.present();
     }
 }

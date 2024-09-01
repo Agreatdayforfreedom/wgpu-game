@@ -132,6 +132,42 @@ impl Sprite {
             buffer,
         }
     }
+
+    pub fn from_empty(
+        device: &wgpu::Device,
+        dimensions: (u32, u32),
+        am: wgpu::AddressMode,
+        layout: &wgpu::BindGroupLayout,
+        label: &str,
+    ) -> Self {
+        let texture = Texture::empty(&device, dimensions, Some(am), Some(label)).unwrap();
+
+        let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: wgpu::BindingResource::TextureView(&texture.view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: wgpu::BindingResource::Sampler(&texture.sampler),
+                },
+            ],
+            label: Some("diffuse_bind_group"),
+        });
+        let buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Vertex buffer"),
+            contents: bytemuck::cast_slice(VERTICES),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
+
+        Self {
+            texture,
+            bind_group,
+            buffer,
+        }
+    }
 }
 
 pub fn create_bind_group_layout(device: &wgpu::Device) -> wgpu::BindGroupLayout {

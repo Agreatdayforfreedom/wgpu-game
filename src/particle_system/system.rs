@@ -1,8 +1,9 @@
 use cgmath::Vector2;
 
 use crate::{
+    camera::Camera,
     entity::EntityUniform,
-    rendering,
+    rendering, texture,
     uniform::{self, Uniform},
     util::CompassDir,
 };
@@ -13,6 +14,7 @@ pub struct ParticleSystem {
     sprite: rendering::Sprite,
     particles: Vec<Particle>,
 }
+static mut n: u32 = 0;
 
 impl ParticleSystem {
     pub fn new(sprite: rendering::Sprite, particles: Vec<Particle>) -> Self {
@@ -35,10 +37,10 @@ impl ParticleSystem {
             let uniform = Uniform::<EntityUniform>::new(&device);
             Particle::new(
                 start_position,
-                (10.0, 10.0).into(),
-                (0.0, 1.0, 1.0, 1.0).into(),
-                80.0,
-                10.0,
+                (4.0, 4.0).into(),
+                (1.0, 1.0, 0.0, 1.0).into(),
+                20.0,
+                2.75,
                 dir,
                 uniform,
             )
@@ -50,7 +52,8 @@ impl ParticleSystem {
             .collect();
     }
 
-    pub fn render<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
+    pub fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
+        //todo batching
         rpass.set_vertex_buffer(0, self.sprite.buffer.slice(..));
         rpass.set_bind_group(0, &self.sprite.bind_group, &[]);
         for particle in &mut self.particles {

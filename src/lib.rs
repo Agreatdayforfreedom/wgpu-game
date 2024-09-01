@@ -7,6 +7,7 @@ mod explosion;
 mod input;
 mod particle_system;
 mod player;
+mod post_processing;
 mod rendering;
 mod state;
 mod texture;
