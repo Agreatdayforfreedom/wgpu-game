@@ -33,7 +33,6 @@ pub struct State {
     config: wgpu::SurfaceConfiguration,
 
     render_pipeline: wgpu::RenderPipeline,
-    render_pipeline_particles: wgpu::RenderPipeline,
 
     sprite: rendering::Sprite,
     enemie_sprites: Vec<rendering::Sprite>,
@@ -204,7 +203,7 @@ impl State {
         );
 
         let input_controller = Input::new();
-
+        // let bind_groups_layouts = %
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: None,
             bind_group_layouts: &[
@@ -244,48 +243,45 @@ impl State {
         //     particles.push(particle);
         // }
 
-        let offscreen_texture = texture::Texture::empty(
+        let offscreen_texture = rendering::Sprite::from_empty(
             &device,
             (config.width, config.height),
-            Some(wgpu::AddressMode::ClampToEdge),
-            Some("offscreen texture"),
+            wgpu::AddressMode::ClampToEdge,
+            &bind_group_layout,
+            "offscreen",
         );
-
-        // let offscreen_texture = device.create_texture(&wgpu::TextureDescriptor {
-        //     size: wgpu::Extent3d {
-        //         depth_or_array_layers: 1,
-        //         width: config.width,
-        //         height: config.height,
-        //     },
-        //     mip_level_count: 1,
-        //     sample_count: 1,
-        //     dimension: wgpu::TextureDimension::D2,
-        //     format: wgpu::TextureFormat::Bgra8UnormSrgb,
-        //     usage: wgpu::TextureUsages::TEXTURE_BINDING
-        //         | wgpu::TextureUsages::RENDER_ATTACHMENT
-        //         | wgpu::TextureUsages::COPY_DST,
-        //     label: Some("OFFSCREEN TEXTURE"),
-        //     view_formats: &[],
-        // });
-
-        // let offscreen_texture = rendering::Sprite::from_empty(
+        // let sprite = rendering::Sprite::new(
         //     &device,
-        //     (config.width, config.height),
+        //     &queue,
         //     wgpu::AddressMode::ClampToEdge,
         //     &bind_group_layout,
-        //     "offscreen",
+        //     diffuse_bytes,
         // );
 
-        let particle_system = ParticleSystem::new(particle_sprite, vec![]);
+        // let render_pipeline = create_render_pipeline(
+        //     &device,
+        //     &device.create_shader_module(wgpu::include_wgsl!("./shaders/particles.wgsl")),
+        //     &config,
+        //     &pipeline_layout,
+        // );
+
+        let particle_system = ParticleSystem::new(
+            &device,
+            particle_sprite,
+            config.format,
+            offscreen_texture.texture.texture,
+            &camera,
+            &bind_group_layout, // render_pipeline,
+        );
 
         let render_pipeline = create_render_pipeline(&device, &shader, &config, &pipeline_layout);
-        let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            label: None,
-            bind_group_layouts: &[&bind_group_layout],
-            push_constant_ranges: &[],
-        });
-        let render_pipeline_particles =
-            create_render_pipeline(&device, &shader_particles, &config, &pipeline_layout);
+        // let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+        //     label: None,
+        //     bind_group_layouts: &[&bind_group_layout],
+        //     push_constant_ranges: &[],
+        // });
+        // let render_pipeline_particles =
+        //     create_render_pipeline(&device, &shader_particles, &config, &pipeline_layout);
         let post_processing = PostProcessing::new(&device, &config);
 
         //audio
@@ -298,7 +294,6 @@ impl State {
             queue,
             config,
             render_pipeline,
-            render_pipeline_particles,
             enemie_sprites,
             enemies,
             enemy_projectile_sprite,
@@ -492,16 +487,16 @@ impl State {
         }
 
         self.player.active_weapon.drain();
-        self.particle_system.update(
-            Vector2::new(
-                self.player.position.x + (self.player.scale.x / 2.0) - 4.0,
-                self.player.position.y + (self.player.scale.y / 2.0) - 4.0,
-            ),
-            CompassDir::from_deg(self.player.rotation.opposite().0),
-            &mut self.device,
-            &mut self.queue,
-            &self.dt,
-        );
+        // self.particle_system.update(
+        //     Vector2::new(
+        //         self.player.position.x + (self.player.scale.x / 2.0) - 4.0,
+        //         self.player.position.y + (self.player.scale.y / 2.0) - 4.0,
+        //     ),
+        //     CompassDir::from_deg(self.player.rotation.opposite().0),
+        //     &mut self.device,
+        //     &mut self.queue,
+        //     &self.dt,
+        // );
 
         self.enemies = self
             .enemies
@@ -594,7 +589,7 @@ impl State {
 
             rpass.draw(0..6, 0..1);
 
-            self.particle_system.draw(&mut rpass);
+            // self.particle_system.draw(&mut rpass);
 
             rpass.set_bind_group(0, &self.sprite.bind_group, &[]);
             rpass.set_bind_group(2, &self.player.uniform.bind_group, &[]);
@@ -640,7 +635,13 @@ impl State {
 
             self.player.active_weapon.draw(&mut rpass);
         }
-        // self.post_processing.render(&mut encoder, &context_view);
+        self.particle_system.render(
+            &self.device,
+            &mut self.queue,
+            &mut encoder,
+            &frame.texture,
+            &self.camera,
+        );
 
         self.queue.submit(Some(encoder.finish()));
 
