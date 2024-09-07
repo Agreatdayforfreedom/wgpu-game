@@ -86,6 +86,7 @@ pub fn create_render_pipeline(
         depth_stencil: None,
         multisample: wgpu::MultisampleState::default(),
         multiview: None,
+        cache: None,
     })
 }
 

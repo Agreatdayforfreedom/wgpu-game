@@ -132,6 +132,7 @@ impl ParticleSystem {
             depth_stencil: None,
             multisample: wgpu::MultisampleState::default(),
             multiview: None,
+            cache: None,
         });
 
         let compute_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
@@ -140,6 +141,7 @@ impl ParticleSystem {
             module: &shader,
             entry_point: "simulate",
             compilation_options: wgpu::PipelineCompilationOptions::default(),
+            cache: None,
         });
 
         //bind groups
