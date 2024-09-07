@@ -1,6 +1,14 @@
+struct Color {
+  color: vec4<f32>,
+}
+
+@group(1) @binding(0)
+var<uniform> color: Color;
 
 struct VertexOutput {
     @builtin(position) clip_position: vec4<f32>,
+    @location(0) tex_coords: vec2<f32>,
+
 }
 
 struct VertexInput {
@@ -8,20 +16,32 @@ struct VertexInput {
     @location(1) pos: vec2<f32>,
 }
 
+
 @vertex
 fn vs_main(model: VertexInput) -> VertexOutput {
     var out: VertexOutput;
     
     out.clip_position = vec4<f32>(model.position + model.pos, 0.0, 1.0);
-    
+    out.tex_coords = model.position * vec2f(100.0,100.0);
     return out;
 }
 
 
+@group(0) @binding(0)
+var t_diffuse: texture_2d<f32>;
+@group(0) @binding(1)
+var s_diffuse: sampler;
+
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-    return vec4<f32>(0.0, 1.0, 1.0, 0.4) ;
+    return textureSample(t_diffuse, s_diffuse, in.tex_coords);
 }
+
+// @fragment
+// fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+//     return vec4f(1.0);
+// }
+
 var<private> rand_seed : vec2<f32>;
 
 fn init_rand(invocation_id : u32, seed : vec4<f32>) {

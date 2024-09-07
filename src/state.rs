@@ -208,14 +208,14 @@ impl State {
             label: None,
             bind_group_layouts: &[
                 &bind_group_layout,
-                &camera.uniform.bind_group_layout,
                 &player.uniform.bind_group_layout,
+                &camera.uniform.bind_group_layout,
             ],
             push_constant_ranges: &[],
         });
 
         ////! PARTICLES
-        let particle_bytes = include_bytes!("./assets/particle.png");
+        let particle_bytes = include_bytes!("./assets/spaceship.png");
         let particle_sprite = rendering::Sprite::new(
             &device,
             &queue,
@@ -269,7 +269,6 @@ impl State {
             &device,
             particle_sprite,
             config.format,
-            offscreen_texture.texture.texture,
             &camera,
             &bind_group_layout, // render_pipeline,
         );
@@ -579,7 +578,7 @@ impl State {
             // );
 
             rpass.set_bind_group(1, &self.camera.uniform.bind_group, &[]);
-            rpass.set_vertex_buffer(1, self.camera.uniform.buffer.slice(..));
+            // rpass.set_vertex_buffer(1, self.camera.uniform.buffer.slice(..));
 
             rpass.set_bind_group(0, &self.bg_sprite.bind_group, &[]);
             rpass.set_bind_group(2, &self.bg_uniform.bind_group, &[]);
@@ -635,6 +634,7 @@ impl State {
 
             self.player.active_weapon.draw(&mut rpass);
         }
+
         self.particle_system.render(
             &self.device,
             &mut self.queue,
@@ -642,7 +642,6 @@ impl State {
             &frame.texture,
             &self.camera,
         );
-
         self.queue.submit(Some(encoder.finish()));
 
         frame.present();
