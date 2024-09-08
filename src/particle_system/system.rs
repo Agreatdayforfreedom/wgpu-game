@@ -25,9 +25,9 @@ impl Default for Color {
     fn default() -> Self {
         Self {
             color: cgmath::Vector4 {
-                x: 0.0_f32,
-                y: 1.0_f32,
-                z: 1.0_f32,
+                x: 1.0_f32,
+                y: 0.0_f32,
+                z: 0.0_f32,
                 w: 1.0_f32,
             },
         }

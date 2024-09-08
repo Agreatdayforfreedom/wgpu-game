@@ -52,7 +52,7 @@ pub struct State {
     audio: Audio,
     dt: instant::Duration,
     particle_system: ParticleSystem,
-    post_processing: PostProcessing,
+    // post_processing: PostProcessing,
     time: f64,
 }
 //todo
@@ -282,7 +282,7 @@ impl State {
         // });
         // let render_pipeline_particles =
         //     create_render_pipeline(&device, &shader_particles, &config, &pipeline_layout);
-        let post_processing = PostProcessing::new(&device, &config);
+        // let post_processing = PostProcessing::new(&device, &config);
 
         //audio
         let audio = Audio::new();
@@ -317,7 +317,7 @@ impl State {
             time: 0.0,
 
             particle_system,
-            post_processing, // offscreen_texture,
+            // post_processing, // offscreen_texture,
         }
     }
 
