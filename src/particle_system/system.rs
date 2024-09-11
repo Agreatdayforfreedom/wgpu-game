@@ -17,7 +17,7 @@ struct Particle {
 unsafe impl bytemuck::Pod for Particle {}
 unsafe impl bytemuck::Zeroable for Particle {}
 
-const NUM_PARTICLES: wgpu::BufferAddress = 50000;
+const NUM_PARTICLES: wgpu::BufferAddress = 1000;
 const PARTICLES_PER_GROUP: wgpu::BufferAddress = 64;
 const BYTES: u32 = 4 * 6;
 pub struct ParticleSystem {
@@ -33,6 +33,7 @@ pub struct ParticleSystem {
     frame_num: usize,
 }
 
+//todo
 const GRADIENT: [Vector4<f32>; 20] = [
     Vector4::new(0.0, 0.0, 1.0, 1.0),
     Vector4::new(0.05, 0.05, 1.0, 1.0),
@@ -74,11 +75,25 @@ fn create_particles() -> Vec<Particle> {
 }
 
 fn create_particles_bytes() -> Vec<f32> {
-    let mut particles = vec![0.0f32; (2 * NUM_PARTICLES) as usize];
-    for (i, chunk) in particles.chunks_mut(2).enumerate() {
-        chunk[0] = (rand::thread_rng().gen_range(-400..400)) as f32;
-        chunk[1] = (rand::thread_rng().gen_range(-400..400)) as f32;
+    let mut particles = vec![0.0f32; (6 * NUM_PARTICLES) as usize];
+    for chunk in particles.chunks_mut(6) {
+
+        //left position at x: 0.0, y: 0.0
+        // chunk[0] = (rand::thread_rng().gen_range(-100..100)) as f32;
+        // chunk[1] = (rand::thread_rng().gen_range(-100..100)) as f32;
+        
+        let dir = CompassDir::from_deg(rand::thread_rng().gen_range(0..360) as f32).dir;
+        chunk[2] = dir.x;
+        chunk[3] = dir.y;
+
+        
+        // velocity
+        chunk[4] = rand::thread_rng().gen_range(10..20) as f32;
+        // lifetime
+        chunk[5] = rand::thread_rng().gen_range(0..120) as f32;
     }
+
+    
     particles
 }
 
@@ -91,18 +106,27 @@ impl ParticleSystem {
         camera: &camera::Camera,
     ) -> Self {
         //buffers
-        let vertex_buffer_data = [-0.01f32, -0.02, 0.01, -0.02, 0.00, 0.02];
+        #[rustfmt::skip]
+        let vertex_buffer_data = [
+            0.0f32, 0.2, 
+            0.2, 0.0, 
+            0.0, 0.0,
+            0.0, 0.2, 
+            0.2, 0.2,
+            0.2, 0.0
+        ];
+        // let vertex_buffer_data = [-0.01f32, -0.02, 0.01, -0.02, 0.00, 0.02];
+
         let vertices_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Vertex Buffer"),
             contents: bytemuck::bytes_of(&vertex_buffer_data),
             usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
         });
 
-        // let particles_src = create_particles();
         let particles_src = create_particles_bytes();
 
         let mut particle_buffers = Vec::<wgpu::Buffer>::new();
-        for i in 0..2 {
+        for i in 0..1 {
             particle_buffers.push(
                 device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                     label: Some(&format!("Particle Buffer {i}")),
@@ -113,21 +137,7 @@ impl ParticleSystem {
                 }),
             );
         }
-        // let particles_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-        //     label: Some("Particles buffer"),
-        //     contents: bytemuck::cast_slice(&particles),
-        //     usage: wgpu::BufferUsages::VERTEX
-        //         | wgpu::BufferUsages::STORAGE
-        //         | wgpu::BufferUsages::COPY_DST,
-        // });
-
-        // let particles_buffer_dst = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-        //     label: Some("Particles buffer"),
-        //     contents: bytemuck::cast_slice(&particles),
-        //     usage: wgpu::BufferUsages::VERTEX
-        //         | wgpu::BufferUsages::STORAGE
-        //         | wgpu::BufferUsages::COPY_DST,
-        // });
+     
 
         let simulation_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Particles compute buffer"),
@@ -153,7 +163,7 @@ impl ParticleSystem {
                 compilation_options: Default::default(),
                 buffers: &[
                     wgpu::VertexBufferLayout {
-                        array_stride: 2 * 4,
+                        array_stride: 6 * 4,
                         step_mode: wgpu::VertexStepMode::Instance,
                         attributes: &wgpu::vertex_attr_array![0 => Float32x2],
                     },
@@ -204,26 +214,26 @@ impl ParticleSystem {
                         binding: 0,
                         visibility: wgpu::ShaderStages::COMPUTE,
                         ty: wgpu::BindingType::Buffer {
-                            ty: wgpu::BufferBindingType::Storage { read_only: true },
-                            has_dynamic_offset: false,
-                            min_binding_size: wgpu::BufferSize::new((NUM_PARTICLES * (4 * 2)) as _),
-                        },
-                        count: None,
-                    },
-                    wgpu::BindGroupLayoutEntry {
-                        binding: 1,
-                        visibility: wgpu::ShaderStages::COMPUTE,
-                        ty: wgpu::BindingType::Buffer {
                             ty: wgpu::BufferBindingType::Storage { read_only: false },
                             has_dynamic_offset: false,
-                            min_binding_size: wgpu::BufferSize::new((NUM_PARTICLES * (4 * 2)) as _),
+                            min_binding_size: None,
                         },
                         count: None,
                     },
+                    // wgpu::BindGroupLayoutEntry {
+                    //     binding: 1,
+                    //     visibility: wgpu::ShaderStages::COMPUTE,
+                    //     ty: wgpu::BindingType::Buffer {
+                    //         ty: wgpu::BufferBindingType::Storage { read_only: false },
+                    //         has_dynamic_offset: false,
+                    //         min_binding_size: wgpu::BufferSize::new((NUM_PARTICLES * (4 * 2)) as _),
+                    //     },
+                    //     count: None,
+                    // },
                 ],
             });
 
-        for i in 0..2 {
+        for i in 0..1 {
             particle_bind_groups.push(device.create_bind_group(&wgpu::BindGroupDescriptor {
                 layout: &compute_bind_group_layout,
                 entries: &[
@@ -235,10 +245,10 @@ impl ParticleSystem {
                         binding: 0,
                         resource: particle_buffers[i].as_entire_binding(),
                     },
-                    wgpu::BindGroupEntry {
-                        binding: 1,
-                        resource: particle_buffers[(i + 1) % 2].as_entire_binding(),
-                    },
+                    // wgpu::BindGroupEntry {
+                    //     binding: 1,
+                    //     resource: particle_buffers[(i + 1) % 2].as_entire_binding(),
+                    // },
                 ],
                 label: None,
             }));
@@ -344,7 +354,7 @@ impl ParticleSystem {
                 timestamp_writes: None,
             });
             rpass.set_pipeline(&self.compute_pipeline);
-            rpass.set_bind_group(0, &self.particle_bind_groups[self.frame_num % 2], &[]);
+            rpass.set_bind_group(0, &self.particle_bind_groups[0], &[]);
             rpass.dispatch_workgroups((NUM_PARTICLES as f32 / 64.0).ceil() as u32, 1, 1);
         }
         {
@@ -352,11 +362,11 @@ impl ParticleSystem {
             rpass.set_pipeline(&self.render_pipeline);
 
             rpass.set_bind_group(0, &camera.uniform.bind_group, &[]);
-            rpass.set_vertex_buffer(0, self.particle_buffers[(self.frame_num + 1) % 2].slice(..));
+            rpass.set_vertex_buffer(0, self.particle_buffers[0].slice(..));
             rpass.set_vertex_buffer(1, self.vertices_buffer.slice(..));
 
             // rpass.set_bind_group(0, &self.sprite.bind_group, &[]);
-            rpass.draw(0..3, 0..NUM_PARTICLES as u32);
+            rpass.draw(0..6, 0..NUM_PARTICLES as u32);
         }
 
         self.frame_num += 1;

@@ -23,9 +23,10 @@ fn vs_main(model: VertexInput) -> VertexOutput {
     
     
 
-    out.clip_position = camera.proj * vec4<f32>(((model.position * 250.0) + model.pos) , 0.0, 1.0);
+    out.clip_position = camera.proj * vec4<f32>(((model.position * 50) + model.pos) , 0.0, 1.0);
     out.tex_coords = model.position;
-    out.color = vec4<f32>(cos(model.pos.x), sin(model.pos.y), sin(model.pos.x), cos(model.pos.y));
+    // out.color = vec4<f32>(cos(model.pos.x), sin(model.pos.y), sin(model.pos.x), cos(model.pos.y));
+    out.color = vec4<f32>(0.372, 0.931, 0.4, 1.0);
     return out;
 }
 
@@ -50,19 +51,21 @@ fn rand() -> f32 {
 }
 
 
-struct SimulationParams {
-  delta_time: f32,
-  seed: f32,
-}
+// struct SimulationParams {
+//   delta_time: f32,
+//   seed: f32,
+// }
 
 struct Particle {
   position: vec2<f32>,
+  dir: vec2<f32>,
+  velocity: f32,
+  lifetime: f32
 }
 
   
 
-@binding(0) @group(0) var<storage, read> particles_src : array<Particle>;
-@binding(1) @group(0) var<storage, read_write> particles_dst : array<Particle>;
+@binding(0) @group(0) var<storage, read_write> particles_dst : array<Particle>;
 
 
 @compute @workgroup_size(64)
@@ -73,32 +76,15 @@ fn simulate(@builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
   if (idx >= total) {
     return;
   }
-    var particle: Particle = particles_src[idx];
-    if(particle.position.x <= 0.0) {
-      particle.position.x -= 0.05;
-    } else if(particle.position.x >= 0.0) {
-      particle.position.x += 0.05;
+    var particle: Particle = particles_dst[idx];
+    particle.lifetime -= 0.4;
+    if(particle.lifetime <= 0.0) {
+      particle.position.x =  0.0;
+      particle.position.y =  0.0;
+      particle.lifetime   = 120.0;
     }
-
-    if(particle.position.y >= 0.0) {
-      particle.position.y += 0.05;
-    }else if(particle.position.y <= 0.0) {
-      particle.position.y -= 0.05;
-    } 
-
-    if(particle.position.x > 400 && particle.position.y > 400 ) {
-      particle.position.x = 0.1;
-      particle.position.y = 0.1;
-    } else if (particle.position.x < -400 && particle.position.y > 400) {
-      particle.position.x = -0.1;
-      particle.position.y = 0.1;
-    } else if (particle.position.x > 400 && particle.position.y < -400) {
-      particle.position.x = 0.1;
-      particle.position.y = -0.1;
-    }  else if(particle.position.x < -400 && particle.position.y < -400 ) {
-      particle.position.x = -0.1;
-      particle.position.y = -0.1;
-    }
+    particle.position.x += particle.velocity * particle.dir.x * 0.04;
+    particle.position.y -= particle.velocity * particle.dir.y * 0.04;
 
     particles_dst[idx] = particle;
 }
