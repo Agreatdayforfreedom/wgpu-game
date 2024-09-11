@@ -109,8 +109,6 @@ impl State {
         surface.configure(&device, &config);
 
         let shader = device.create_shader_module(wgpu::include_wgsl!("shader.wgsl"));
-        let shader_particles =
-            device.create_shader_module(wgpu::include_wgsl!("./shaders/particles.wgsl"));
 
         let camera_uniform = Uniform::<CameraUniform>::new(&device);
         let camera = Camera::new(camera_uniform);
@@ -266,13 +264,8 @@ impl State {
         //     &pipeline_layout,
         // );
 
-        let particle_system = ParticleSystem::new(
-            &device,
-            particle_sprite,
-            config.format,
-            &camera,
-            &bind_group_layout, // render_pipeline,
-        );
+        let particle_system =
+            ParticleSystem::new(&device, &queue, particle_sprite, config.format, &camera);
 
         let render_pipeline = create_render_pipeline(&device, &shader, &config, &pipeline_layout);
         // let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
