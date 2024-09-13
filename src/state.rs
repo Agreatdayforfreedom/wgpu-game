@@ -635,6 +635,7 @@ impl State {
             &mut encoder,
             &frame.texture,
             &self.camera,
+            &self.player.position,
         );
         self.queue.submit(Some(encoder.finish()));
 

@@ -24,7 +24,7 @@ pub struct ParticleSystem {
     compute_pipeline: wgpu::ComputePipeline,
     render_pipeline: wgpu::RenderPipeline,
     particle_buffers: Vec<wgpu::Buffer>,
-    // simulation_buffer: wgpu::Buffer,
+    simulation_buffer: wgpu::Buffer,
     vertices_buffer: wgpu::Buffer,
     particle_bind_groups: Vec<wgpu::BindGroup>,
     sprite: rendering::Sprite,
@@ -78,23 +78,23 @@ fn create_particles_bytes() -> Vec<f32> {
     let mut particles = vec![0.0f32; (12 * NUM_PARTICLES) as usize];
     for chunk in particles.chunks_mut(12) {
         //left position at x: 0.0, y: 0.0
-        // chunk[0] = 0.0;
-        // chunk[1] = 0.0;
+        chunk[0] = rand::thread_rng().gen_range(-400..400) as f32;
+        chunk[1] = rand::thread_rng().gen_range(-400..400) as f32;
 
         let dir = CompassDir::from_deg(rand::thread_rng().gen_range(0..360) as f32).dir;
         chunk[2] = dir.x;
         chunk[3] = dir.y;
 
         //color
-        chunk[4] = 0.2;
-        chunk[5] = 1.0;
-        chunk[6] = 1.0;
+        chunk[4] = 0.4;
+        chunk[5] = 0.1;
+        chunk[6] = 0.9;
         chunk[7] = 1.0;
 
         // velocity
-        chunk[8] = rand::thread_rng().gen_range(10..100) as f32;
+        chunk[8] = rand::thread_rng().gen_range(5..35) as f32;
         // lifetime
-        chunk[9] = rand::thread_rng().gen_range(0..12) as f32;
+        chunk[9] = rand::thread_rng().gen_range(0..20) as f32;
 
         //padding
         // chunk[10] = 0.0;
@@ -122,7 +122,6 @@ impl ParticleSystem {
             1.0,  1.0,   
             1.0, -1.0
         ];
-        // let vertex_buffer_data = [-0.01f32, -0.02, 0.01, -0.02, 0.00, 0.02];
 
         let vertices_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Vertex Buffer"),
@@ -147,7 +146,7 @@ impl ParticleSystem {
 
         let simulation_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Particles compute buffer"),
-            contents: bytemuck::bytes_of(&[0.04]),
+            contents: bytemuck::bytes_of(&[0.04, 800.0, 600.0, 0.0]),
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
 
@@ -237,16 +236,16 @@ impl ParticleSystem {
                         },
                         count: None,
                     },
-                    // wgpu::BindGroupLayoutEntry {
-                    //     binding: 1,
-                    //     visibility: wgpu::ShaderStages::COMPUTE,
-                    //     ty: wgpu::BindingType::Buffer {
-                    //         ty: wgpu::BufferBindingType::Storage { read_only: false },
-                    //         has_dynamic_offset: false,
-                    //         min_binding_size: wgpu::BufferSize::new((NUM_PARTICLES * (4 * 2)) as _),
-                    //     },
-                    //     count: None,
-                    // },
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStages::COMPUTE,
+                        ty: wgpu::BindingType::Buffer {
+                            ty: wgpu::BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: None,
+                        },
+                        count: None,
+                    },
                 ],
             });
 
@@ -254,18 +253,14 @@ impl ParticleSystem {
             particle_bind_groups.push(device.create_bind_group(&wgpu::BindGroupDescriptor {
                 layout: &compute_bind_group_layout,
                 entries: &[
-                    // wgpu::BindGroupEntry {
-                    //     binding: 0,
-                    //     resource: sim_param_buffer.as_entire_binding(),
-                    // },
                     wgpu::BindGroupEntry {
                         binding: 0,
                         resource: particle_buffers[i].as_entire_binding(),
                     },
-                    // wgpu::BindGroupEntry {
-                    //     binding: 1,
-                    //     resource: particle_buffers[(i + 1) % 2].as_entire_binding(),
-                    // },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: simulation_buffer.as_entire_binding(),
+                    },
                 ],
                 label: None,
             }));
@@ -287,39 +282,12 @@ impl ParticleSystem {
             cache: None,
         });
 
-        // let compute_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-        //     label: Some("Particles compute bind group"),
-        //     layout: &bind_group_layout,
-        //     entries: &[
-        //         // wgpu::BindGroupEntry {
-        //         //     binding: 0,
-        //         //     resource: simulation_buffer.as_entire_binding(),
-        //         // },
-        //         wgpu::BindGroupEntry {
-        //             binding: 0,
-        //             resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
-        //                 buffer: &particles_buffer,
-        //                 offset: 0,
-        //                 size: wgpu::BufferSize::new(particles_buffer.size()),
-        //             }),
-        //         },
-        //         wgpu::BindGroupEntry {
-        //             binding: 1,
-        //             resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
-        //                 buffer: &particles_buffer_dst,
-        //                 offset: 0,
-        //                 size: wgpu::BufferSize::new(particles_buffer_dst.size()),
-        //             }),
-        //         },
-        //     ],
-        // });
-
         Self {
             particle_bind_groups,
             vertices_buffer,
             compute_pipeline,
             particle_buffers,
-            // simulation_buffer,
+            simulation_buffer,
             render_pipeline,
             sprite,
             frame_num: 0,
@@ -333,21 +301,19 @@ impl ParticleSystem {
         encoder: &mut wgpu::CommandEncoder,
         view: &wgpu::Texture,
         camera: &camera::Camera,
+        player_position: &Vector2<f32>,
     ) {
-        // queue.write_buffer(
-        //     &self.simulation_buffer,
-        //     0,
-        //     bytemuck::cast_slice(&[
-        //         0.04, //delta
-        //         0.0,
-        //         0.0,
-        //         0.0, // padding
-        //         rand::thread_rng().gen_range(0..=100) as f32,
-        //         rand::thread_rng().gen_range(0..=100) as f32,
-        //         1.0 + rand::thread_rng().gen_range(0..=1) as f32,
-        //         1.0 + rand::thread_rng().gen_range(0..=1) as f32,
-        //     ]),
-        // );
+        queue.write_buffer(
+            &self.simulation_buffer,
+            0,
+            bytemuck::cast_slice(&[
+                0.04, //delta
+                0.0, //padding
+                800.0, 600.0,
+                player_position.x, 
+                player_position.y
+            ]),
+        );
 
         let view = &view.create_view(&wgpu::TextureViewDescriptor::default());
         let rpass_layout = wgpu::RenderPassDescriptor {
