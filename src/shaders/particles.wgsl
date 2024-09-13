@@ -13,7 +13,8 @@ struct VertexOutput {
 
 struct VertexInput {
     @location(0) pos: vec2<f32>,
-    @location(1) position: vec2<f32>,
+    @location(1) color: vec4<f32>,
+    @location(2) position: vec2<f32>,
 }
 
 
@@ -21,20 +22,23 @@ struct VertexInput {
 fn vs_main(model: VertexInput) -> VertexOutput {
     var out: VertexOutput;
     
-    
-
-    out.clip_position = camera.proj * vec4<f32>(((model.position * 50) + model.pos) , 0.0, 1.0);
-    out.tex_coords = model.position;
-    // out.color = vec4<f32>(cos(model.pos.x), sin(model.pos.y), sin(model.pos.x), cos(model.pos.y));
-    out.color = vec4<f32>(0.372, 0.931, 0.4, 1.0);
+    out.clip_position = camera.proj * vec4<f32>(((model.position * 5.0) + model.pos) , 0.0, 1.0);
+    out.tex_coords = model.position ;
+    out.color = model.color;
     return out;
 }
 
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-  
-    return in.color;
+
+    let uv = in.tex_coords;
+    let d = sqrt(dot(uv,uv));
+    let radius = 1.0;
+    let bt = 0.0;
+    let t1 = 1.0 - smoothstep(radius - bt, radius, d);
+    let t2 = 1.0 - smoothstep(radius, radius + bt, d);
+    return vec4(mix(in.color.rgb, in.color.rgb, t1), t2);
 }
 var<private> rand_seed : vec2<f32>;
 
@@ -59,6 +63,7 @@ fn rand() -> f32 {
 struct Particle {
   position: vec2<f32>,
   dir: vec2<f32>,
+  color: vec4<f32>,
   velocity: f32,
   lifetime: f32
 }
@@ -77,11 +82,12 @@ fn simulate(@builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
     return;
   }
     var particle: Particle = particles_dst[idx];
-    particle.lifetime -= 0.4;
+    particle.color.w = smoothstep(0.0, 1.0, particle.lifetime); 
+    particle.lifetime -= 0.2;
     if(particle.lifetime <= 0.0) {
       particle.position.x =  0.0;
       particle.position.y =  0.0;
-      particle.lifetime   = 120.0;
+      particle.lifetime   = 12.0;
     }
     particle.position.x += particle.velocity * particle.dir.x * 0.04;
     particle.position.y -= particle.velocity * particle.dir.y * 0.04;

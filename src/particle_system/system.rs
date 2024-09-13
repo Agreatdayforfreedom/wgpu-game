@@ -75,25 +75,32 @@ fn create_particles() -> Vec<Particle> {
 }
 
 fn create_particles_bytes() -> Vec<f32> {
-    let mut particles = vec![0.0f32; (6 * NUM_PARTICLES) as usize];
-    for chunk in particles.chunks_mut(6) {
-
+    let mut particles = vec![0.0f32; (12 * NUM_PARTICLES) as usize];
+    for chunk in particles.chunks_mut(12) {
         //left position at x: 0.0, y: 0.0
-        // chunk[0] = (rand::thread_rng().gen_range(-100..100)) as f32;
-        // chunk[1] = (rand::thread_rng().gen_range(-100..100)) as f32;
-        
+        // chunk[0] = 0.0;
+        // chunk[1] = 0.0;
+
         let dir = CompassDir::from_deg(rand::thread_rng().gen_range(0..360) as f32).dir;
         chunk[2] = dir.x;
         chunk[3] = dir.y;
 
-        
+        //color
+        chunk[4] = 0.2;
+        chunk[5] = 1.0;
+        chunk[6] = 1.0;
+        chunk[7] = 1.0;
+
         // velocity
-        chunk[4] = rand::thread_rng().gen_range(10..20) as f32;
+        chunk[8] = rand::thread_rng().gen_range(10..100) as f32;
         // lifetime
-        chunk[5] = rand::thread_rng().gen_range(0..120) as f32;
+        chunk[9] = rand::thread_rng().gen_range(0..12) as f32;
+
+        //padding
+        // chunk[10] = 0.0;
+        // chunk[11] = 0.0;
     }
 
-    
     particles
 }
 
@@ -108,12 +115,12 @@ impl ParticleSystem {
         //buffers
         #[rustfmt::skip]
         let vertex_buffer_data = [
-            0.0f32, 0.2, 
-            0.2, 0.0, 
-            0.0, 0.0,
-            0.0, 0.2, 
-            0.2, 0.2,
-            0.2, 0.0
+            -1.0f32, -1.0,
+            1.0, -1.0,   
+           -1.0,  1.0,   
+           -1.0,  1.0,   
+            1.0,  1.0,   
+            1.0, -1.0
         ];
         // let vertex_buffer_data = [-0.01f32, -0.02, 0.01, -0.02, 0.00, 0.02];
 
@@ -137,7 +144,6 @@ impl ParticleSystem {
                 }),
             );
         }
-     
 
         let simulation_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Particles compute buffer"),
@@ -163,14 +169,25 @@ impl ParticleSystem {
                 compilation_options: Default::default(),
                 buffers: &[
                     wgpu::VertexBufferLayout {
-                        array_stride: 6 * 4,
+                        array_stride: 12 * 4,
                         step_mode: wgpu::VertexStepMode::Instance,
-                        attributes: &wgpu::vertex_attr_array![0 => Float32x2],
+                        attributes: &[
+                            wgpu::VertexAttribute {
+                                format: wgpu::VertexFormat::Float32x2,
+                                offset: 0,
+                                shader_location: 0,
+                            },
+                            wgpu::VertexAttribute {
+                                format: wgpu::VertexFormat::Float32x4,
+                                offset: 16,
+                                shader_location: 1,
+                            },
+                        ],
                     },
                     wgpu::VertexBufferLayout {
                         array_stride: 2 * 4,
                         step_mode: wgpu::VertexStepMode::Vertex,
-                        attributes: &wgpu::vertex_attr_array![1 => Float32x2],
+                        attributes: &wgpu::vertex_attr_array![2 => Float32x2],
                     },
                 ],
             },
@@ -182,12 +199,12 @@ impl ParticleSystem {
                     format,
                     blend: Some(wgpu::BlendState {
                         color: wgpu::BlendComponent {
-                            src_factor: wgpu::BlendFactor::One,
+                            src_factor: wgpu::BlendFactor::SrcAlpha,
                             dst_factor: wgpu::BlendFactor::One,
                             operation: wgpu::BlendOperation::Add,
                         },
                         alpha: wgpu::BlendComponent {
-                            src_factor: wgpu::BlendFactor::One,
+                            src_factor: wgpu::BlendFactor::Zero,
                             dst_factor: wgpu::BlendFactor::One,
                             operation: wgpu::BlendOperation::Add,
                         },
