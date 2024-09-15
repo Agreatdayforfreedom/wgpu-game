@@ -1,25 +1,11 @@
-use std::{borrow::Borrow, mem};
 
-use cgmath::{vec4, Vector2, Vector4};
+use cgmath::Vector2;
 use rand::Rng;
 use wgpu::util::DeviceExt;
 
-use crate::{camera, rendering, uniform::Uniform, util::CompassDir};
-
-#[repr(C)]
-#[derive(Copy, Clone)]
-#[allow(dead_code)]
-struct Particle {
-    position: Vector2<f32>,
-    color: Vector4<f32>,
-}
-
-unsafe impl bytemuck::Pod for Particle {}
-unsafe impl bytemuck::Zeroable for Particle {}
+use crate::{camera, util::CompassDir};
 
 const NUM_PARTICLES: wgpu::BufferAddress = 1000;
-const PARTICLES_PER_GROUP: wgpu::BufferAddress = 64;
-const BYTES: u32 = 4 * 6;
 pub struct ParticleSystem {
     compute_pipeline: wgpu::ComputePipeline,
     render_pipeline: wgpu::RenderPipeline,
@@ -27,57 +13,12 @@ pub struct ParticleSystem {
     simulation_buffer: wgpu::Buffer,
     vertices_buffer: wgpu::Buffer,
     particle_bind_groups: Vec<wgpu::BindGroup>,
-    sprite: rendering::Sprite,
-    // bind_group: wgpu::BindGroup,
-    // buffer: wgpu::Buffer,
-    frame_num: usize,
 }
 
-//todo
-const GRADIENT: [Vector4<f32>; 20] = [
-    Vector4::new(0.0, 0.0, 1.0, 1.0),
-    Vector4::new(0.05, 0.05, 1.0, 1.0),
-    Vector4::new(0.10, 0.10, 1.0, 1.0),
-    Vector4::new(0.15, 0.15, 1.0, 1.0),
-    Vector4::new(0.20, 0.20, 1.0, 1.0),
-    Vector4::new(0.25, 0.25, 1.0, 1.0),
-    Vector4::new(0.30, 0.30, 1.0, 1.0),
-    Vector4::new(0.35, 0.35, 1.0, 1.0),
-    Vector4::new(0.40, 0.40, 1.0, 1.0),
-    Vector4::new(0.45, 0.45, 1.0, 1.0),
-    Vector4::new(0.50, 0.50, 1.0, 1.0),
-    Vector4::new(0.55, 0.55, 1.0, 1.0),
-    Vector4::new(0.60, 0.60, 1.0, 1.0),
-    Vector4::new(0.65, 0.65, 1.0, 1.0),
-    Vector4::new(0.70, 0.70, 1.0, 1.0),
-    Vector4::new(0.75, 0.75, 1.0, 1.0),
-    Vector4::new(0.80, 0.80, 1.0, 1.0),
-    Vector4::new(0.85, 0.85, 1.0, 1.0),
-    Vector4::new(0.90, 0.90, 1.0, 1.0),
-    Vector4::new(1.0, 1.0, 1.0, 1.0),
-];
-
-fn create_particles() -> Vec<Particle> {
-    let mut particles = Vec::<Particle>::new();
-    let mut g = 0;
-    for i in 0..NUM_PARTICLES {
-        particles.push(Particle {
-            position: ((rand::thread_rng().gen_range(0..400)) as f32, 0.0).into(),
-            color: GRADIENT[g as usize],
-        });
-        if g == 19 {
-            g = 0;
-            continue;
-        }
-        g += 1;
-    }
-    particles
-}
 
 fn create_particles_bytes() -> Vec<f32> {
     let mut particles = vec![0.0f32; (12 * NUM_PARTICLES) as usize];
     for chunk in particles.chunks_mut(12) {
-        //left position at x: 0.0, y: 0.0
         chunk[0] = rand::thread_rng().gen_range(-400..400) as f32;
         chunk[1] = rand::thread_rng().gen_range(-400..400) as f32;
 
@@ -107,8 +48,6 @@ fn create_particles_bytes() -> Vec<f32> {
 impl ParticleSystem {
     pub fn new(
         device: &wgpu::Device,
-        queue: &wgpu::Queue,
-        sprite: rendering::Sprite,
         format: wgpu::TextureFormat,
         camera: &camera::Camera,
     ) -> Self {
@@ -289,14 +228,11 @@ impl ParticleSystem {
             particle_buffers,
             simulation_buffer,
             render_pipeline,
-            sprite,
-            frame_num: 0,
         }
     }
 
     pub fn render(
         &mut self,
-        device: &wgpu::Device,
         queue: &mut wgpu::Queue,
         encoder: &mut wgpu::CommandEncoder,
         view: &wgpu::Texture,
@@ -348,10 +284,8 @@ impl ParticleSystem {
             rpass.set_vertex_buffer(0, self.particle_buffers[0].slice(..));
             rpass.set_vertex_buffer(1, self.vertices_buffer.slice(..));
 
-            // rpass.set_bind_group(0, &self.sprite.bind_group, &[]);
             rpass.draw(0..6, 0..NUM_PARTICLES as u32);
         }
 
-        self.frame_num += 1;
     }
 }

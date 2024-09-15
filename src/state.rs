@@ -264,8 +264,7 @@ impl State {
         //     &pipeline_layout,
         // );
 
-        let particle_system =
-            ParticleSystem::new(&device, &queue, particle_sprite, config.format, &camera);
+        let particle_system = ParticleSystem::new(&device, config.format, &camera);
 
         let render_pipeline = create_render_pipeline(&device, &shader, &config, &pipeline_layout);
         // let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
@@ -630,7 +629,6 @@ impl State {
         }
 
         self.particle_system.render(
-            &self.device,
             &mut self.queue,
             &mut encoder,
             &frame.texture,
