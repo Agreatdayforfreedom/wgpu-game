@@ -169,6 +169,12 @@ impl Sprite {
             buffer,
         }
     }
+
+    pub fn bind<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
+        //todo, set binding to 2
+        rpass.set_vertex_buffer(0, self.buffer.slice(..));
+        rpass.set_bind_group(0, &self.bind_group, &[]);
+    }
 }
 
 pub fn create_bind_group_layout(device: &wgpu::Device) -> wgpu::BindGroupLayout {

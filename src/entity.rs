@@ -26,7 +26,7 @@ pub trait Entity {
 
     fn rotate(&mut self, rotation: Deg<f32>) {}
 
-    fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {}
+    fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>);
 }
 
 #[repr(C)]

@@ -583,14 +583,15 @@ impl State {
 
             // self.particle_system.draw(&mut rpass);
 
-            rpass.set_bind_group(0, &self.sprite.bind_group, &[]);
-            rpass.set_bind_group(2, &self.player.uniform.bind_group, &[]);
-            //buffers
+            // rpass.set_bind_group(0, &self.sprite.bind_group, &[]);
+            // rpass.set_bind_group(2, &self.player.uniform.bind_group, &[]);
+            // //buffers
 
-            rpass.set_vertex_buffer(0, self.sprite.buffer.slice(..));
-            rpass.set_vertex_buffer(2, self.player.uniform.buffer.slice(..));
+            // rpass.set_vertex_buffer(0, self.sprite.buffer.slice(..));
+            // rpass.set_vertex_buffer(2, self.player.uniform.buffer.slice(..));
 
-            rpass.draw(0..6, 0..1);
+            // rpass.draw(0..6, 0..1);
+            self.player.draw(&mut rpass);
 
             rpass.set_vertex_buffer(0, self.enemie_sprites[0].buffer.slice(..));
             rpass.set_bind_group(0, &self.enemie_sprites[0].bind_group, &[]);
@@ -624,8 +625,6 @@ impl State {
                 rpass.set_bind_group(0, &e.sprites.get(e.i as usize).unwrap().bind_group, &[]);
                 rpass.draw(0..6, 0..1);
             }
-
-            self.player.active_weapon.draw(&mut rpass);
         }
 
         self.particle_system.render(

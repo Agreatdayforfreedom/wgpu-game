@@ -1,5 +1,6 @@
 use crate::audio::Audio;
 use crate::entity::Entity;
+use crate::rendering::{create_bind_group_layout, Sprite};
 use crate::uniform::{self, Uniform};
 use crate::util::CompassDir;
 use crate::weapon::cannon::Cannon;
@@ -18,6 +19,7 @@ pub struct Player {
     pub alive: bool,
     pub rotation: cgmath::Deg<f32>,
     pub uniform: uniform::Uniform<EntityUniform>,
+    sprite: Sprite,
     pub active_weapon: Box<dyn Weapon>,
 }
 
@@ -84,6 +86,14 @@ impl Entity for Player {
     fn id(&self) -> u32 {
         self.id
     }
+
+    fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
+        self.active_weapon.draw(rpass);
+
+        rpass.set_bind_group(2, &self.uniform.bind_group, &[]);
+        self.sprite.bind(rpass);
+        rpass.draw(0..6, 0..1);
+    }
 }
 
 impl Player {
@@ -94,6 +104,15 @@ impl Player {
         device: &wgpu::Device,
         queue: &wgpu::Queue,
     ) -> Self {
+        let diffuse_bytes = include_bytes!("./assets/spaceship.png");
+        let sprite = Sprite::new(
+            &device,
+            &queue,
+            wgpu::AddressMode::ClampToEdge,
+            &create_bind_group_layout(&device),
+            diffuse_bytes,
+        );
+
         Self {
             id: 100,
             position,
@@ -101,6 +120,7 @@ impl Player {
             alive: true,
             rotation: cgmath::Deg(360.0),
             uniform,
+            sprite,
             active_weapon: RailGun::new(100, device, queue),
         }
     }
