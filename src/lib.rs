@@ -1,4 +1,5 @@
 mod audio;
+mod background;
 mod camera;
 mod collider;
 mod enemie;

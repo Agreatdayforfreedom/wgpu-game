@@ -98,4 +98,10 @@ impl Explosion {
             }
         }
     }
+
+    pub fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
+        rpass.set_bind_group(2, &self.uniform.bind_group, &[]);
+        self.sprites.get_mut(self.i as usize).unwrap().bind(rpass);
+        rpass.draw(0..6, 0..1);
+    }
 }

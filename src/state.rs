@@ -12,7 +12,7 @@ use crate::rendering::{create_bind_group_layout, create_render_pipeline};
 use crate::uniform::Uniform;
 use crate::util::CompassDir;
 use crate::weapon::projectile;
-use crate::{player, rendering, texture};
+use crate::{background, player, rendering, texture};
 use cgmath::{
     Angle, InnerSpace, Matrix3, Point2, Quaternion, Rad, Rotation3, Transform, Vector2, Vector3,
     Vector4,
@@ -34,15 +34,15 @@ pub struct State {
 
     render_pipeline: wgpu::RenderPipeline,
 
+    player: player::Player,
+    background: background::Background,
+
     sprite: rendering::Sprite,
     enemie_sprites: Vec<rendering::Sprite>,
     projectile_sprite: rendering::Sprite,
     enemy_projectile_sprite: rendering::Sprite, // the same for all
-    bg_sprite: rendering::Sprite,
 
-    bg_uniform: Uniform<EntityUniform>,
     enemies: Vec<Enemy>,
-    player: player::Player,
     projectile: Vec<projectile::Projectile>,
     explosions: Vec<explosion::Explosion>,
     entities: Vec<Box<dyn Entity>>,
@@ -114,21 +114,8 @@ impl State {
         let camera = Camera::new(camera_uniform);
         //BG
         let bind_group_layout = create_bind_group_layout(&device);
-        let diffuse_bytes = include_bytes!("./assets/bg.png");
-        let bg_sprite = rendering::Sprite::new(
-            &device,
-            &queue,
-            wgpu::AddressMode::ClampToEdge,
-            &bind_group_layout,
-            diffuse_bytes,
-        );
-        let mut bg_uniform = Uniform::<EntityUniform>::new(&device);
-        bg_uniform
-            .data
-            // .set_tex_scale((8.0, 8.0).into())
-            .set_scale((856.0 * 2.0, 375.0 * 2.0).into())
-            .exec();
 
+        let background = background::Background::new(&device, &queue);
         //PLAYER
 
         let diffuse_bytes = include_bytes!("./assets/spaceship.png");
@@ -292,10 +279,9 @@ impl State {
 
             sprite,
             camera,
-            player,
 
-            bg_sprite,
-            bg_uniform,
+            player,
+            background,
 
             projectile: vec![],
             explosions: vec![],
@@ -330,8 +316,8 @@ impl State {
             self.player.position.y,
             1.0,
         ));
-        self.bg_uniform.write(&mut self.queue);
 
+        self.background.uniform.write(&mut self.queue);
         self.player.uniform.write(&mut self.queue);
 
         let mut min_dist = f32::MAX;
@@ -562,46 +548,20 @@ impl State {
 
             //pipeline
             rpass.set_pipeline(&self.render_pipeline);
-            // self.set_dest_texture(
-            //     self.particle_system
-            //         .offscreen
-            //         .texture
-            //         .texture
-            //         .create_view(&wgpu::TextureViewDescriptor::default()),
-            // );
 
             rpass.set_bind_group(1, &self.camera.uniform.bind_group, &[]);
-            // rpass.set_vertex_buffer(1, self.camera.uniform.buffer.slice(..));
 
-            rpass.set_bind_group(0, &self.bg_sprite.bind_group, &[]);
-            rpass.set_bind_group(2, &self.bg_uniform.bind_group, &[]);
-
-            rpass.set_vertex_buffer(0, self.bg_sprite.buffer.slice(..));
-            rpass.set_vertex_buffer(2, self.bg_uniform.buffer.slice(..));
-
-            rpass.draw(0..6, 0..1);
-
-            // self.particle_system.draw(&mut rpass);
-
-            // rpass.set_bind_group(0, &self.sprite.bind_group, &[]);
-            // rpass.set_bind_group(2, &self.player.uniform.bind_group, &[]);
-            // //buffers
-
-            // rpass.set_vertex_buffer(0, self.sprite.buffer.slice(..));
-            // rpass.set_vertex_buffer(2, self.player.uniform.buffer.slice(..));
-
-            // rpass.draw(0..6, 0..1);
+            self.background.draw(&mut rpass);
             self.player.draw(&mut rpass);
 
+            //todo enemies
             rpass.set_vertex_buffer(0, self.enemie_sprites[0].buffer.slice(..));
             rpass.set_bind_group(0, &self.enemie_sprites[0].bind_group, &[]);
-            //bind_groups
             for e in &mut self.entities {
                 if e.alive() {
                     e.draw(&mut rpass);
                 }
             }
-
             //draw enemy projectiles
             rpass.set_vertex_buffer(0, self.enemy_projectile_sprite.buffer.slice(..));
             rpass.set_bind_group(0, &self.enemy_projectile_sprite.bind_group, &[]);
@@ -613,17 +573,8 @@ impl State {
                 }
             }
 
-            for e in &self.explosions {
-                //explosions
-                if e.end {
-                    continue;
-                }
-                rpass.set_vertex_buffer(2, e.uniform.buffer.slice(..));
-                rpass.set_bind_group(2, &e.uniform.bind_group, &[]);
-
-                rpass.set_vertex_buffer(0, e.sprites.get(e.i as usize).unwrap().buffer.slice(..));
-                rpass.set_bind_group(0, &e.sprites.get(e.i as usize).unwrap().bind_group, &[]);
-                rpass.draw(0..6, 0..1);
+            for e in &mut self.explosions {
+                e.draw(&mut rpass);
             }
         }
 

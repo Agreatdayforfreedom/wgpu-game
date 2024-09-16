@@ -88,6 +88,7 @@ impl Entity for Player {
     }
 
     fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
+        // also draw the weapon :P
         self.active_weapon.draw(rpass);
 
         rpass.set_bind_group(2, &self.uniform.bind_group, &[]);
