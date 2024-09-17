@@ -3,16 +3,18 @@ use cgmath::Vector2;
 use rand::Rng;
 use wgpu::util::DeviceExt;
 
-use crate::{camera, util::CompassDir};
+use crate::{camera, post_processing::{self, PostProcessing}, rendering::{create_bind_group_layout, Sprite}, util::CompassDir};
 
-const NUM_PARTICLES: wgpu::BufferAddress = 1000;
+const NUM_PARTICLES: wgpu::BufferAddress = 1500;
 pub struct ParticleSystem {
+    texture_view: Sprite,
     compute_pipeline: wgpu::ComputePipeline,
     render_pipeline: wgpu::RenderPipeline,
     particle_buffers: Vec<wgpu::Buffer>,
     simulation_buffer: wgpu::Buffer,
     vertices_buffer: wgpu::Buffer,
     particle_bind_groups: Vec<wgpu::BindGroup>,
+    bloom: PostProcessing,
 }
 
 
@@ -27,9 +29,9 @@ fn create_particles_bytes() -> Vec<f32> {
         chunk[3] = dir.y;
 
         //color
-        chunk[4] = 0.4;
-        chunk[5] = 0.1;
-        chunk[6] = 0.9;
+        chunk[4] = 0.2;
+        chunk[5] = 1.0;
+        chunk[6] = 1.0;
         chunk[7] = 1.0;
 
         // velocity
@@ -51,6 +53,11 @@ impl ParticleSystem {
         format: wgpu::TextureFormat,
         camera: &camera::Camera,
     ) -> Self {
+
+        let texture_view = Sprite::from_empty(device, (800, 600), wgpu::AddressMode::ClampToEdge, &create_bind_group_layout(device), "Particles_target_texture");
+
+        let bloom = PostProcessing::new(device, format);
+
         //buffers
         #[rustfmt::skip]
         let vertex_buffer_data = [
@@ -222,6 +229,8 @@ impl ParticleSystem {
         });
 
         Self {
+            texture_view,
+            bloom,
             particle_bind_groups,
             vertices_buffer,
             compute_pipeline,
@@ -251,14 +260,14 @@ impl ParticleSystem {
             ]),
         );
 
-        let view = &view.create_view(&wgpu::TextureViewDescriptor::default());
+        // let view = &view.create_view(&wgpu::TextureViewDescriptor::default());
         let rpass_layout = wgpu::RenderPassDescriptor {
             label: None,
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                view,
+                view: &self.texture_view.texture.view,
                 resolve_target: None,
                 ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Load,
+                    load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT),
                     store: wgpu::StoreOp::Store,
                 },
             })],
@@ -286,6 +295,8 @@ impl ParticleSystem {
 
             rpass.draw(0..6, 0..NUM_PARTICLES as u32);
         }
+        let v = view.create_view(&wgpu::TextureViewDescriptor::default());
+        self.bloom.render(encoder, &self.texture_view, &v);
 
     }
 }

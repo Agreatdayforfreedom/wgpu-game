@@ -22,7 +22,7 @@ struct VertexInput {
 fn vs_main(model: VertexInput) -> VertexOutput {
     var out: VertexOutput;
     
-    out.clip_position = camera.proj * vec4<f32>(((model.position * 0.8) + model.pos) , 0.0, 1.0);
+    out.clip_position = camera.proj * vec4<f32>(((model.position * 1.0) + model.pos) , 0.0, 1.0);
     out.tex_coords = model.position ;
     out.color = model.color;
     return out;
@@ -84,7 +84,7 @@ fn simulate(@builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
     return;
   }
     var particle: Particle = particles_dst[idx];
-    particle.color.w = smoothstep(0.0, 1.0, particle.lifetime); 
+    // particle.color.w = smoothstep(0.0, 1.0, particle.lifetime); 
     
     // i don't use lifetime here :P
     particle.lifetime -= 0.2;
@@ -110,6 +110,7 @@ fn simulate(@builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
     if(particle.position.y > sim_params.target_position.y - (bottom - screen_padding)) {
       particle.position.y = sim_params.target_position.y + (bottom - screen_padding);
     }
+
 
 
     particles_dst[idx] = particle;
