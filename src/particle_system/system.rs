@@ -299,4 +299,35 @@ impl ParticleSystem {
         self.bloom.render(encoder, &self.texture_view, &v);
 
     }
+
+    pub fn blend(
+        &self,
+        encoder: &mut wgpu::CommandEncoder,
+        extra_texture: &Sprite,
+        target_texture: &wgpu::TextureView, 
+        pipeline: &wgpu::RenderPipeline
+    ) {
+        // blend particles and normal pass
+        let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: None,
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                view: target_texture,
+                resolve_target: None,
+                ops: wgpu::Operations {
+                    load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT),
+                    store: wgpu::StoreOp::Store,
+                },
+            })],
+            depth_stencil_attachment: None,
+            timestamp_writes: None,
+            occlusion_query_set: None,
+        });
+
+        
+        rpass.set_pipeline(pipeline);
+
+        rpass.set_bind_group(0, &extra_texture.bind_group, &[]);
+        rpass.set_bind_group(1, &self.bloom.get_final_texture().bind_group, &[]);
+        rpass.draw(0..6, 0..1);
+    }
 }

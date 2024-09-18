@@ -1,13 +1,10 @@
 use crate::rendering::{self, create_bind_group_layout, create_render_pipeline, Sprite};
-const VERTEX_BUFFER_LAYOUT: wgpu::VertexBufferLayout<'_> = wgpu::VertexBufferLayout {
-    array_stride: 0, // No vertex buffer data needed
-    step_mode: wgpu::VertexStepMode::Vertex,
-    attributes: &[],
-};
+
 pub struct PostProcessing {
     brightness_target_texture: rendering::Sprite,
     horizontal_blur_target_texture: rendering::Sprite,
     vertical_blur_target_texture: rendering::Sprite,
+    final_target_texture: rendering::Sprite,
     brightness_pipeline: wgpu::RenderPipeline,
     horizontal_blur_pipeline: wgpu::RenderPipeline,
     vertical_blur_pipeline: wgpu::RenderPipeline,
@@ -42,6 +39,14 @@ impl PostProcessing {
             "offscreen",
         );
 
+        let final_target_texture = rendering::Sprite::from_empty(
+            &device,
+            (800, 600),
+            wgpu::AddressMode::ClampToEdge,
+            &bind_group_layout,
+            "offscreen",
+        );
+
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: None,
             bind_group_layouts: &[&bind_group_layout],
@@ -57,7 +62,8 @@ impl PostProcessing {
             .create_shader_module(wgpu::include_wgsl!("./shaders/fullscreen_quad_vertex.wgsl"));
         let shader_brightness =
             device.create_shader_module(wgpu::include_wgsl!("./shaders/brightness.wgsl"));
-        let shader_blend = device.create_shader_module(wgpu::include_wgsl!("./shaders/blend.wgsl"));
+        let shader_blend =
+            device.create_shader_module(wgpu::include_wgsl!("./shaders/bloom_blend.wgsl"));
         let shader_blur = device.create_shader_module(wgpu::include_wgsl!("./shaders/blur.wgsl"));
         let brightness_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("Brightness pipeline"),
@@ -174,7 +180,12 @@ impl PostProcessing {
             horizontal_blur_target_texture,
             vertical_blur_target_texture,
             brightness_target_texture,
+            final_target_texture,
         }
+    }
+
+    pub fn get_final_texture(&self) -> &Sprite {
+        &self.final_target_texture
     }
 
     pub fn render(
@@ -248,10 +259,10 @@ impl PostProcessing {
         let mut final_rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: None,
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                view: &context_view,
+                view: &self.final_target_texture.texture.view,
                 resolve_target: None,
                 ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT),
+                    load: wgpu::LoadOp::Load,
                     store: wgpu::StoreOp::Store,
                 },
             })],

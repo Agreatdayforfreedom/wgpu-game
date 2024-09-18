@@ -8,7 +8,7 @@ use crate::input::Input;
 use crate::particle_system::particle::Particle;
 use crate::particle_system::system::ParticleSystem;
 use crate::post_processing::{self, PostProcessing};
-use crate::rendering::{create_bind_group_layout, create_render_pipeline};
+use crate::rendering::{create_bind_group_layout, create_render_pipeline, Sprite};
 use crate::uniform::Uniform;
 use crate::util::CompassDir;
 use crate::weapon::projectile;
@@ -33,6 +33,7 @@ pub struct State {
     config: wgpu::SurfaceConfiguration,
 
     render_pipeline: wgpu::RenderPipeline,
+    final_pipeline: wgpu::RenderPipeline,
 
     player: player::Player,
     background: background::Background,
@@ -52,6 +53,7 @@ pub struct State {
     audio: Audio,
     dt: instant::Duration,
     particle_system: ParticleSystem,
+    render_target_texture: Sprite,
     // post_processing: PostProcessing,
     time: f64,
 }
@@ -254,15 +256,48 @@ impl State {
         let particle_system = ParticleSystem::new(&device, config.format, &camera);
 
         let render_pipeline = create_render_pipeline(&device, &shader, &config, &pipeline_layout);
-        // let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-        //     label: None,
-        //     bind_group_layouts: &[&bind_group_layout],
-        //     push_constant_ranges: &[],
-        // });
-        // let render_pipeline_particles =
-        //     create_render_pipeline(&device, &shader_particles, &config, &pipeline_layout);
-        // let post_processing = PostProcessing::new(&device, &config);
+        let render_target_texture = rendering::Sprite::from_empty(
+            &device,
+            (800, 600),
+            wgpu::AddressMode::ClampToEdge,
+            &bind_group_layout,
+            "offscreen",
+        );
+        let final_pipeline_layout =
+            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                label: None,
+                bind_group_layouts: &[&bind_group_layout, &bind_group_layout],
+                push_constant_ranges: &[],
+            });
+        let blend_shader = device.create_shader_module(wgpu::include_wgsl!("./shaders/blend.wgsl"));
+        let shader_fullscreen_quad = device
+            .create_shader_module(wgpu::include_wgsl!("./shaders/fullscreen_quad_vertex.wgsl"));
 
+        let final_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("Final pipeline"),
+            layout: Some(&final_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &shader_fullscreen_quad,
+                entry_point: "vs_main",
+                compilation_options: Default::default(),
+                buffers: &[],
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &blend_shader,
+                entry_point: "fs_main",
+                compilation_options: Default::default(),
+                targets: &[Some(wgpu::ColorTargetState {
+                    format: config.format,
+                    blend: None,
+                    write_mask: wgpu::ColorWrites::all(),
+                })],
+            }),
+            primitive: wgpu::PrimitiveState::default(),
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState::default(),
+            multiview: None,
+            cache: None,
+        });
         //audio
         let audio = Audio::new();
         audio.start_track(Sounds::MainTheme);
@@ -295,7 +330,8 @@ impl State {
             time: 0.0,
 
             particle_system,
-            // post_processing, // offscreen_texture,
+            render_target_texture,
+            final_pipeline,
         }
     }
 
@@ -534,7 +570,7 @@ impl State {
             let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: None,
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &context_view,
+                    view: &self.render_target_texture.texture.view,
                     resolve_target: None,
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT),
@@ -585,6 +621,14 @@ impl State {
             &self.camera,
             &self.player.position,
         );
+
+        self.particle_system.blend(
+            &mut encoder,
+            &self.render_target_texture,
+            &context_view,
+            &self.final_pipeline,
+        );
+
         self.queue.submit(Some(encoder.finish()));
 
         frame.present();
