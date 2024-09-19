@@ -1,51 +1,43 @@
-use crate::audio::{Audio, Sounds};
-use crate::camera::{Camera, CameraUniform};
-use crate::collider::{check_collision, Bounds};
-use crate::enemie::Enemy;
-use crate::entity::{self, Entity, EntityUniform};
-use crate::explosion::{self, Explosion};
-use crate::input::Input;
-use crate::particle_system::particle::Particle;
-use crate::particle_system::system::ParticleSystem;
-use crate::post_processing::{self, PostProcessing};
-use crate::rendering::{create_bind_group_layout, create_render_pipeline, Sprite};
-use crate::uniform::Uniform;
-use crate::util::CompassDir;
-use crate::weapon::projectile;
-use crate::{background, player, rendering, texture};
-use cgmath::{
-    Angle, InnerSpace, Matrix3, Point2, Quaternion, Rad, Rotation3, Transform, Vector2, Vector3,
-    Vector4,
-};
+use cgmath::{Angle, Point2, Vector2, Vector3};
 use rand::{self, Rng};
+use winit::{event::WindowEvent, keyboard::Key};
 
-use pollster::block_on;
-use std::borrow::{Borrow, BorrowMut};
-use std::collections::HashMap;
-use std::sync::Arc;
-use winit::{event::*, keyboard::Key, window::Window};
-
-#[allow(dead_code)]
-pub struct State {
-    surface: wgpu::Surface<'static>,
-    device: wgpu::Device,
-    queue: wgpu::Queue,
-    config: wgpu::SurfaceConfiguration,
-
+use crate::{
+    audio::{
+        Audio::{self},
+        Sounds,
+    },
+    background::Background,
+    camera::{Camera, CameraUniform},
+    collider::{check_collision, Bounds},
+    enemie::Enemy,
+    entity::{Entity, EntityUniform},
+    explosion::Explosion,
+    input::Input,
+    particle_system::system::ParticleSystem,
+    player::Player,
+    rendering::{create_bind_group_layout, create_render_pipeline, Sprite},
+    uniform::Uniform,
+    weapon::projectile::Projectile,
+};
+fn distance(a: cgmath::Vector2<f32>, b: cgmath::Vector2<f32>) -> f32 {
+    ((a.x - b.x).powi(2) + (a.y - b.y).powi(2)).sqrt()
+}
+pub struct GameState {
     render_pipeline: wgpu::RenderPipeline,
     final_pipeline: wgpu::RenderPipeline,
 
-    player: player::Player,
-    background: background::Background,
+    player: Player,
+    background: Background,
 
-    sprite: rendering::Sprite,
-    enemie_sprites: Vec<rendering::Sprite>,
-    projectile_sprite: rendering::Sprite,
-    enemy_projectile_sprite: rendering::Sprite, // the same for all
+    sprite: Sprite,
+    enemie_sprites: Vec<Sprite>,
+    projectile_sprite: Sprite,
+    enemy_projectile_sprite: Sprite, // the same for all
 
     enemies: Vec<Enemy>,
-    projectile: Vec<projectile::Projectile>,
-    explosions: Vec<explosion::Explosion>,
+    projectile: Vec<Projectile>,
+    explosions: Vec<Explosion>,
     entities: Vec<Box<dyn Entity>>,
 
     input_controller: Input,
@@ -57,71 +49,25 @@ pub struct State {
     // post_processing: PostProcessing,
     time: f64,
 }
-//todo
-fn distance(a: cgmath::Vector2<f32>, b: cgmath::Vector2<f32>) -> f32 {
-    ((a.x - b.x).powi(2) + (a.y - b.y).powi(2)).sqrt()
-}
-impl State {
-    pub fn new(window: Arc<Window>) -> Self {
-        let size = window.inner_size();
-        println!("w:{}, h: {}", size.width, size.height);
 
-        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
-            backends: wgpu::Backends::PRIMARY,
-            ..Default::default()
-        });
-
-        let surface = instance.create_surface(window).unwrap();
-
-        let adapter = block_on(instance.request_adapter(&wgpu::RequestAdapterOptions {
-            power_preference: wgpu::PowerPreference::default(),
-            force_fallback_adapter: false,
-            compatible_surface: Some(&surface),
-        }))
-        .unwrap();
-        println!("{:?}", adapter.features());
-        let (device, queue) = block_on(adapter.request_device(
-            &wgpu::DeviceDescriptor {
-                label: None,
-                memory_hints: wgpu::MemoryHints::default(),
-                required_features: wgpu::Features::empty(),
-                required_limits: wgpu::Limits::default(),
-            },
-            None,
-        ))
-        .unwrap();
-
-        let surface_caps = surface.get_capabilities(&adapter);
-        let surface_format = surface_caps
-            .formats
-            .iter()
-            .find(|f| f.is_srgb())
-            .copied()
-            .unwrap_or(surface_caps.formats[0]);
-        let config = wgpu::SurfaceConfiguration {
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: surface_format,
-            width: size.width,
-            height: size.height,
-            present_mode: surface_caps.present_modes[0],
-            alpha_mode: surface_caps.alpha_modes[0],
-            view_formats: vec![],
-            desired_maximum_frame_latency: 2,
-        };
-        surface.configure(&device, &config);
-
-        let shader = device.create_shader_module(wgpu::include_wgsl!("./shaders/sprite.wgsl"));
+impl GameState {
+    pub fn new(
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        config: &wgpu::SurfaceConfiguration,
+    ) -> Self {
+        let shader = device.create_shader_module(wgpu::include_wgsl!("../shaders/sprite.wgsl"));
 
         let camera_uniform = Uniform::<CameraUniform>::new(&device);
         let camera = Camera::new(camera_uniform);
         //BG
         let bind_group_layout = create_bind_group_layout(&device);
 
-        let background = background::Background::new(&device, &queue);
+        let background = Background::new(&device, &queue);
         //PLAYER
 
-        let diffuse_bytes = include_bytes!("./assets/spaceship.png");
-        let sprite = rendering::Sprite::new(
+        let diffuse_bytes = include_bytes!("../assets/spaceship.png");
+        let sprite = Sprite::new(
             &device,
             &queue,
             wgpu::AddressMode::ClampToEdge,
@@ -129,7 +75,7 @@ impl State {
             diffuse_bytes,
         );
         let player_uniform = Uniform::<EntityUniform>::new(&device);
-        let player = player::Player::new(
+        let player = Player::new(
             cgmath::Vector2::new(0.0, 0.0),
             (32.0, 32.0).into(),
             player_uniform,
@@ -138,11 +84,11 @@ impl State {
         );
         //ENEMIES
         let mut entities: Vec<Box<dyn Entity>> = vec![];
-        let mut enemie_sprites = Vec::<rendering::Sprite>::new();
+        let mut enemie_sprites = Vec::<Sprite>::new();
         let mut enemies = Vec::<Enemy>::new();
 
-        let enemie_bytes = include_bytes!("./assets/alien1.png");
-        let enemie_sprite = rendering::Sprite::new(
+        let enemie_bytes = include_bytes!("../assets/alien1.png");
+        let enemie_sprite = Sprite::new(
             &device,
             &queue,
             wgpu::AddressMode::ClampToEdge,
@@ -172,8 +118,8 @@ impl State {
         }
         //PROJECTILES
 
-        let diffuse_bytes = include_bytes!("./assets/bullet.png");
-        let projectile_sprite = rendering::Sprite::new(
+        let diffuse_bytes = include_bytes!("../assets/bullet.png");
+        let projectile_sprite = Sprite::new(
             &device,
             &queue,
             wgpu::AddressMode::ClampToEdge,
@@ -181,8 +127,8 @@ impl State {
             diffuse_bytes,
         );
 
-        let diffuse_bytes = include_bytes!("./assets/alien_bullet.png");
-        let enemy_projectile_sprite = rendering::Sprite::new(
+        let diffuse_bytes = include_bytes!("../assets/alien_bullet.png");
+        let enemy_projectile_sprite = Sprite::new(
             &device,
             &queue,
             wgpu::AddressMode::ClampToEdge,
@@ -203,8 +149,8 @@ impl State {
         });
 
         ////! PARTICLES
-        let particle_bytes = include_bytes!("./assets/spaceship.png");
-        let particle_sprite = rendering::Sprite::new(
+        let particle_bytes = include_bytes!("../assets/spaceship.png");
+        let particle_sprite = Sprite::new(
             &device,
             &queue,
             wgpu::AddressMode::ClampToEdge,
@@ -212,51 +158,18 @@ impl State {
             particle_bytes,
         );
 
-        // let mut particles: Vec<Particle> = vec![];
-        // let center = Vector2::new(
-        //     player.position.x + (player.scale.x / 2.0),
-        //     player.position.y + (player.scale.y / 2.0),
-        // );
-        // for n in 0..=100 {
-        //     let uniform = Uniform::<EntityUniform>::new(&device);
-        //     let particle = Particle::new(
-        //         center,
-        //         (8.0, 8.0).into(),
-        //         (0.0, 1.0, 1.0, 1.0).into(),
-        //         100.0,
-        //         1.0,
-        //         uniform,
-        //     );
-
-        //     particles.push(particle);
-        // }
-
-        let offscreen_texture = rendering::Sprite::from_empty(
+        let offscreen_texture = Sprite::from_empty(
             &device,
             (config.width, config.height),
             wgpu::AddressMode::ClampToEdge,
             &bind_group_layout,
             "offscreen",
         );
-        // let sprite = rendering::Sprite::new(
-        //     &device,
-        //     &queue,
-        //     wgpu::AddressMode::ClampToEdge,
-        //     &bind_group_layout,
-        //     diffuse_bytes,
-        // );
-
-        // let render_pipeline = create_render_pipeline(
-        //     &device,
-        //     &device.create_shader_module(wgpu::include_wgsl!("./shaders/particles.wgsl")),
-        //     &config,
-        //     &pipeline_layout,
-        // );
 
         let particle_system = ParticleSystem::new(&device, config.format, &camera);
 
         let render_pipeline = create_render_pipeline(&device, &shader, &config, &pipeline_layout);
-        let render_target_texture = rendering::Sprite::from_empty(
+        let render_target_texture = Sprite::from_empty(
             &device,
             (800, 600),
             wgpu::AddressMode::ClampToEdge,
@@ -269,9 +182,11 @@ impl State {
                 bind_group_layouts: &[&bind_group_layout, &bind_group_layout],
                 push_constant_ranges: &[],
             });
-        let blend_shader = device.create_shader_module(wgpu::include_wgsl!("./shaders/blend.wgsl"));
-        let shader_fullscreen_quad = device
-            .create_shader_module(wgpu::include_wgsl!("./shaders/fullscreen_quad_vertex.wgsl"));
+        let blend_shader =
+            device.create_shader_module(wgpu::include_wgsl!("../shaders/blend.wgsl"));
+        let shader_fullscreen_quad = device.create_shader_module(wgpu::include_wgsl!(
+            "../shaders/fullscreen_quad_vertex.wgsl"
+        ));
 
         let final_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("Final pipeline"),
@@ -303,10 +218,6 @@ impl State {
         audio.start_track(Sounds::MainTheme);
 
         Self {
-            surface,
-            device,
-            queue,
-            config,
             render_pipeline,
             enemie_sprites,
             enemies,
@@ -335,7 +246,12 @@ impl State {
         }
     }
 
-    pub fn update(&mut self, dt: instant::Duration) {
+    pub fn update(
+        &mut self,
+        queue: &mut wgpu::Queue,
+        device: &wgpu::Device,
+        dt: instant::Duration,
+    ) {
         self.dt = dt;
         self.time += dt.as_secs_f64();
 
@@ -353,8 +269,8 @@ impl State {
             1.0,
         ));
 
-        self.background.uniform.write(&mut self.queue);
-        self.player.uniform.write(&mut self.queue);
+        self.background.uniform.write(queue);
+        self.player.uniform.write(queue);
 
         let mut min_dist = f32::MAX;
         for e in &mut self.entities {
@@ -377,8 +293,8 @@ impl State {
                     &dt,
                     &self.input_controller,
                     &mut self.audio,
-                    &self.device,
-                    &mut self.queue,
+                    device,
+                    queue,
                     self.time,
                 );
             }
@@ -388,19 +304,19 @@ impl State {
             &dt,
             &self.input_controller,
             &mut self.audio,
-            &self.device,
-            &mut self.queue,
+            device,
+            queue,
             self.time,
         );
-        self.camera.uniform.write(&mut self.queue);
+        self.camera.uniform.write(queue);
         for e in &mut self.enemies {
             if rand::thread_rng().gen_range(0..10000) < 1 {
-                e.spawn_fire((40.0, 40.0).into(), &mut self.audio, &self.device);
+                e.spawn_fire((40.0, 40.0).into(), &mut self.audio, device);
             }
             for p in &mut e.projectiles {
                 if p.alive {
                     // p.update(&dt, 275.0, self.player.position, ":D");
-                    p.uniform.write(&mut self.queue);
+                    p.uniform.write(queue);
                 }
             }
 
@@ -462,7 +378,7 @@ impl State {
                     // let explosion = Explosion::new(
                     //     e.position.into(),
                     //     (40.0, 40.0).into(),
-                    //     &self.device,
+                    //     device,
                     //     &self.queue,
                     // );
                     // self.explosions.push(explosion);
@@ -476,7 +392,7 @@ impl State {
 
         for e in &mut self.explosions {
             e.update(&dt);
-            e.uniform.write(&mut self.queue);
+            e.uniform.write(queue);
         }
 
         for e in &mut self.enemies {
@@ -508,7 +424,7 @@ impl State {
         //     ),
         //     CompassDir::from_deg(self.player.rotation.opposite().0),
         //     &mut self.device,
-        //     &mut self.queue,
+        //     queue,
         //     &self.dt,
         // );
 
@@ -546,9 +462,13 @@ impl State {
     //     self.destination_texture = Some(texture);
     // }
 
-    pub fn render(&mut self) {
-        let frame = self
-            .surface
+    pub fn render(
+        &mut self,
+        surface: &wgpu::Surface,
+        device: &wgpu::Device,
+        queue: &mut wgpu::Queue,
+    ) {
+        let frame = surface
             .get_current_texture()
             .expect("Failed to acquire next swap chain texture");
         // let view = if let Some(texture) = &self.destination_texture {
@@ -559,9 +479,8 @@ impl State {
         //         .create_view(&wgpu::TextureViewDescriptor::default())
         // };
 
-        let mut encoder = self
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+        let mut encoder =
+            device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
         let context_view = frame
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
@@ -615,7 +534,7 @@ impl State {
         }
 
         self.particle_system.render(
-            &mut self.queue,
+            queue,
             &mut encoder,
             &frame.texture,
             &self.camera,
@@ -630,7 +549,7 @@ impl State {
             &self.final_pipeline,
         );
 
-        self.queue.submit(Some(encoder.finish()));
+        queue.submit(Some(encoder.finish()));
 
         frame.present();
     }

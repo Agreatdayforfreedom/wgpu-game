@@ -7,11 +7,11 @@ use winit::{
     window::{Window, WindowId},
 };
 
-use crate::state::State;
+use crate::state::gpu_state::GpuState;
 
 pub struct App {
     window: Option<Arc<Window>>,
-    state: Option<State>,
+    state: Option<GpuState>,
     time: instant::Instant,
 }
 
@@ -33,7 +33,7 @@ impl ApplicationHandler for App {
                 .unwrap(),
         );
         self.time = instant::Instant::now();
-        let state = State::new(Arc::clone(&window));
+        let state = GpuState::new(Arc::clone(&window));
 
         self.window = Some(window);
         self.state = Some(state);
