@@ -3,7 +3,7 @@ use cgmath::Vector2;
 use rand::Rng;
 use wgpu::util::DeviceExt;
 
-use crate::{camera, post_processing::{self, PostProcessing}, rendering::{create_bind_group_layout, Sprite}, util::CompassDir};
+use crate::{camera, post_processing::{PostProcessing}, rendering::{create_bind_group_layout, Sprite}, util::CompassDir};
 
 const NUM_PARTICLES: wgpu::BufferAddress = 1500;
 pub struct ParticleSystem {
@@ -29,13 +29,13 @@ fn create_particles_bytes() -> Vec<f32> {
         chunk[3] = dir.y;
 
         //color
-        chunk[4] = 0.2;
-        chunk[5] = 1.0;
-        chunk[6] = 1.0;
+        chunk[4] = 1.0;
+        chunk[5] = 0.9;
+        chunk[6] = 0.0;
         chunk[7] = 1.0;
 
         // velocity
-        chunk[8] = rand::thread_rng().gen_range(5..35) as f32;
+        chunk[8] =  100.0;
         // lifetime
         chunk[9] = rand::thread_rng().gen_range(0..20) as f32;
 
@@ -247,12 +247,13 @@ impl ParticleSystem {
         view: &wgpu::Texture,
         camera: &camera::Camera,
         player_position: &Vector2<f32>,
+        dt: &instant::Duration,
     ) {
         queue.write_buffer(
             &self.simulation_buffer,
             0,
             bytemuck::cast_slice(&[
-                0.04, //delta
+                dt.as_secs_f32(), //delta
                 0.0, //padding
                 800.0, 600.0,
                 player_position.x, 

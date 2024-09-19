@@ -620,6 +620,7 @@ impl State {
             &frame.texture,
             &self.camera,
             &self.player.position,
+            &self.dt,
         );
 
         self.particle_system.blend(

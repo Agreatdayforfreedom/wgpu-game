@@ -22,7 +22,7 @@ struct VertexInput {
 fn vs_main(model: VertexInput) -> VertexOutput {
     var out: VertexOutput;
     
-    out.clip_position = camera.proj * vec4<f32>(((model.position * 1.0) + model.pos) , 0.0, 1.0);
+    out.clip_position = camera.proj * vec4<f32>(((model.position * 0.5) + model.pos) , 0.0, 1.0);
     out.tex_coords = model.position ;
     out.color = model.color;
     return out;
@@ -31,15 +31,7 @@ fn vs_main(model: VertexInput) -> VertexOutput {
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-
-    let uv = in.tex_coords;
-    let d = sqrt(dot(uv,uv));
-    let radius = 1.0;
-    let bt = 0.0;
-    let t1 = 1.0 - smoothstep(radius - bt, radius, d);
-    let t2 = 1.0 - smoothstep(radius, radius  + bt, d);
-
-    return vec4(mix(in.color.rgb, in.color.rgb, t1), t2);
+    return in.color;
 }
 var<private> rand_seed : vec2<f32>;
 
@@ -89,8 +81,8 @@ fn simulate(@builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
     // i don't use lifetime here :P
     particle.lifetime -= 0.2;
     
-    particle.position.x += particle.velocity * particle.dir.x * 0.04;
-    particle.position.y += particle.velocity * particle.dir.y * 0.04;
+    particle.position.x += particle.velocity * particle.dir.x * sim_params.delta_time;
+    particle.position.y += particle.velocity * particle.dir.y * sim_params.delta_time;
     let screen_padding = 50.0;
     let top = 300.0;
     let bottom = -300.0;
