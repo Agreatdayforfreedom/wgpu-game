@@ -110,7 +110,7 @@ impl State {
         };
         surface.configure(&device, &config);
 
-        let shader = device.create_shader_module(wgpu::include_wgsl!("shader.wgsl"));
+        let shader = device.create_shader_module(wgpu::include_wgsl!("./shaders/sprite.wgsl"));
 
         let camera_uniform = Uniform::<CameraUniform>::new(&device);
         let camera = Camera::new(camera_uniform);
