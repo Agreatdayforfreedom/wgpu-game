@@ -32,7 +32,7 @@ impl GpuState {
         }))
         .unwrap();
         println!("{:?}", adapter.features());
-        let (device, queue) = block_on(adapter.request_device(
+        let (device, mut queue) = block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
                 label: None,
                 memory_hints: wgpu::MemoryHints::default(),
@@ -62,7 +62,7 @@ impl GpuState {
         };
         surface.configure(&device, &config);
 
-        let game_state = GameState::new(&device, &queue, &config);
+        let game_state = GameState::new(&device, &mut queue, &config);
 
         Self {
             surface,

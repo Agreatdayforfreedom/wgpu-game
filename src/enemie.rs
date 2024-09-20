@@ -24,7 +24,6 @@ impl Entity for Enemy {
         _audio: &mut Audio,
         _device: &wgpu::Device,
         _queue: &mut wgpu::Queue,
-        _time: f64,
     ) {
         self.uniform.write(_queue);
     }
@@ -33,18 +32,18 @@ impl Entity for Enemy {
         self.alive
     }
 
-    fn position(&self) -> Vector2<f32> {
-        self.position
-    }
-    fn scale(&self) -> Vector2<f32> {
-        self.scale
-    }
-    fn set_colors(&mut self, color: Vector4<f32>) {
-        self.uniform.data.set_color(color);
-    }
-    fn id(&self) -> u32 {
-        self.id
-    }
+    // fn position(&self) -> Vector2<f32> {
+    //     self.position
+    // }
+    // fn scale(&self) -> Vector2<f32> {
+    //     self.scale
+    // }
+    // fn set_colors(&mut self, color: Vector4<f32>) {
+    //     self.uniform.data.set_color(color);
+    // }
+    // fn id(&self) -> u32 {
+    //     self.id
+    // }
 
     fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
         rpass.set_vertex_buffer(2, self.uniform.buffer.slice(..));

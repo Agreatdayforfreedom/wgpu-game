@@ -73,7 +73,6 @@ impl Weapon for Laser {
         position: cgmath::Vector2<f32>,
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
-        time: f64,
     ) {
         for projectile in &mut self.projectiles {
             if projectile.alive {
@@ -83,15 +82,10 @@ impl Weapon for Laser {
                 //     origin: cgmath::Point2::new(projectile.position.x, projectile.position.y),
                 //     area: cgmath::Vector2::new(1000.0, 1000.0), //todo
                 // });
-                projectile.uniform.data.set_color(
-                    (
-                        time.cos() as f32 * 0.5 + 0.5,
-                        time.sin() as f32 * 0.5 + 0.5,
-                        0.0,
-                        1.0,
-                    )
-                        .into(),
-                );
+                projectile
+                    .uniform
+                    .data
+                    .set_color((1.0, 0.5, 0.0, 1.0).into());
                 projectile.uniform.data.tex_pos -= SPEED_LASER_MOVEMENT * dt.as_secs_f32();
                 projectile.uniform.write(queue);
             }

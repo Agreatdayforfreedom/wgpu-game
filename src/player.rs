@@ -10,7 +10,6 @@ use crate::weapon::weapon::Weapon;
 use crate::{entity::EntityUniform, input::Input};
 
 use cgmath::{Angle, Point2, Vector2, Vector4};
-//todo
 
 pub struct Player {
     id: u32,
@@ -33,7 +32,6 @@ impl Entity for Player {
         audio: &mut Audio,
         device: &wgpu::Device,
         queue: &mut wgpu::Queue,
-        time: f64,
     ) {
         if input.is_pressed("d") {
             self.movement("d", dt);
@@ -52,7 +50,7 @@ impl Entity for Player {
             self.position.x + (self.scale.x / 2.0) - 20.0,
             self.position.y + (self.scale.y / 2.0) - 20.0,
         );
-        self.active_weapon.update(self.position, queue, dt, time);
+        self.active_weapon.update(self.position, queue, dt);
         self.active_weapon.shoot(
             device,
             center,
@@ -73,19 +71,19 @@ impl Entity for Player {
     fn rotate(&mut self, rotation: cgmath::Deg<f32>) {
         self.rotation = rotation;
     }
-    fn position(&self) -> Vector2<f32> {
-        self.position
-    }
+    // fn position(&self) -> Vector2<f32> {
+    //     self.position
+    // }
 
-    fn scale(&self) -> Vector2<f32> {
-        self.scale
-    }
-    fn set_colors(&mut self, color: Vector4<f32>) {
-        self.uniform.data.set_color(color);
-    }
-    fn id(&self) -> u32 {
-        self.id
-    }
+    // fn scale(&self) -> Vector2<f32> {
+    //     self.scale
+    // }
+    // fn set_colors(&mut self, color: Vector4<f32>) {
+    //     self.uniform.data.set_color(color);
+    // }
+    // fn id(&self) -> u32 {
+    //     self.id
+    // }
 
     fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
         // also draw the weapon :P
@@ -98,13 +96,9 @@ impl Entity for Player {
 }
 
 impl Player {
-    pub fn new(
-        position: cgmath::Vector2<f32>,
-        scale: cgmath::Vector2<f32>,
-        uniform: uniform::Uniform<EntityUniform>,
-        device: &wgpu::Device,
-        queue: &wgpu::Queue,
-    ) -> Self {
+    pub fn new(device: &wgpu::Device, queue: &wgpu::Queue) -> Self {
+        let uniform = Uniform::<EntityUniform>::new(&device);
+
         let diffuse_bytes = include_bytes!("./assets/spaceship.png");
         let sprite = Sprite::new(
             &device,
@@ -113,6 +107,9 @@ impl Player {
             &create_bind_group_layout(&device),
             diffuse_bytes,
         );
+
+        let position = cgmath::Vector2::new(0.0, 0.0);
+        let scale = (32.0, 32.0).into();
 
         Self {
             id: 100,

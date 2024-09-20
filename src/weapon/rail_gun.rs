@@ -97,7 +97,6 @@ impl Weapon for RailGun {
         position: cgmath::Vector2<f32>,
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
-        time: f64,
     ) {
         println!("{}", self.projectiles.len());
 

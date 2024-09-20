@@ -33,3 +33,7 @@ impl CompassDir {
         Self { dir, angle }
     }
 }
+
+pub fn distance(a: cgmath::Vector2<f32>, b: cgmath::Vector2<f32>) -> f32 {
+    ((a.x - b.x).powi(2) + (a.y - b.y).powi(2)).sqrt()
+}

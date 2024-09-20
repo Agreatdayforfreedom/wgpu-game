@@ -3,6 +3,7 @@ mod background;
 mod camera;
 mod collider;
 mod enemie;
+mod entities;
 mod entity;
 mod explosion;
 mod input;

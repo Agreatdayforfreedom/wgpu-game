@@ -93,7 +93,6 @@ impl Weapon for Cannon {
         position: cgmath::Vector2<f32>,
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
-        time: f64,
     ) {
         for projectile in &mut self.projectiles {
             if projectile.alive {
