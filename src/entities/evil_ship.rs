@@ -1,5 +1,4 @@
-use rodio::queue;
-use wgpu::core::device;
+use cgmath::{Point2, Vector2};
 
 use crate::{
     audio::{Audio, Sounds},
@@ -17,6 +16,7 @@ pub struct EvilShip {
     pub alive: bool,
     pub uniform: Uniform<EntityUniform>,
     pub projectiles: (Sprite, Vec<Projectile>),
+    pub rotation: cgmath::Deg<f32>,
     pub interval: instant::Instant,
 }
 
@@ -27,7 +27,11 @@ impl EvilShip {
         position: cgmath::Vector2<f32>,
         scale: cgmath::Vector2<f32>,
     ) -> Self {
-        let uniform = Uniform::<EntityUniform>::new(&device);
+        let mut uniform = Uniform::<EntityUniform>::new(&device);
+        uniform
+            .data
+            .set_pivot(Point2::new(scale.x * 0.5, scale.y * 0.5))
+            .exec();
 
         let bytes = include_bytes!("../assets/bullet.png");
         let projectile_sprite = Sprite::new(
@@ -37,11 +41,13 @@ impl EvilShip {
             &create_bind_group_layout(device),
             bytes,
         );
+
         Self {
             position,
             scale,
             alive: true,
             uniform,
+            rotation: cgmath::Deg(0.0),
             projectiles: (projectile_sprite, vec![]),
             interval: instant::Instant::now(),
         }
@@ -72,7 +78,7 @@ impl EvilShip {
                         y: self.position.y,
                     },
                 },
-                CompassDir::from_deg(270.0),
+                CompassDir::from_deg(self.rotation.0),
                 projectile_uniform,
             ));
         }
@@ -80,20 +86,41 @@ impl EvilShip {
     }
 }
 
+impl EvilShip {
+    pub fn set_target_point(target: Vector2<f32>) {
+        // self.po
+    }
+}
+
 impl Entity for EvilShip {
     fn update(
         &mut self,
-        _dt: &instant::Duration,
+        dt: &instant::Duration,
         _input: &crate::input::Input,
         _audio: &mut Audio,
         _device: &wgpu::Device,
-        _queue: &mut wgpu::Queue,
+        queue: &mut wgpu::Queue,
     ) {
-        self.uniform.write(_queue);
+        let dt = dt.as_secs_f32();
+        // let dir = CompassDir::from_deg(self.rotation.0 + 180.0);
+        // self.position.x += 50.0 * dir.dir.x * dt;
+        // self.position.y -= 50.0 * dir.dir.y * dt;
+
+        self.uniform
+            .data
+            .set_position(self.position)
+            .set_scale(self.scale)
+            .set_rotation(self.rotation)
+            .exec();
+        self.uniform.write(queue);
     }
 
     fn alive(&self) -> bool {
         self.alive
+    }
+
+    fn position(&self) -> cgmath::Vector2<f32> {
+        self.position
     }
     fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
         rpass.set_bind_group(2, &self.uniform.bind_group, &[]);

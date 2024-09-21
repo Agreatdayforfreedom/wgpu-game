@@ -9,10 +9,10 @@ use crate::{
     player::Player,
     rendering::{create_bind_group_layout, Sprite},
     uniform::Uniform,
-    util::distance,
+    util::{distance, CompassDir},
     weapon::projectile::{self, Projectile},
 };
-use cgmath::{Angle, Deg, Point2, SquareMatrix, Vector2, Vector3, Vector4};
+use cgmath::{Angle, Deg, InnerSpace, Point2, SquareMatrix, Vector2, Vector3, Vector4};
 use rand::Rng;
 
 pub trait Entity {
@@ -140,14 +140,8 @@ impl EntityManager {
         );
         let position = (0.0 as f32, 300.0);
 
-        let mut enemy = EvilShip::new(device, queue, position.into(), (24.0, 24.0).into());
-        enemy
-            .uniform
-            .data
-            .set_position(position.into())
-            .set_scale((64.0, 64.0).into())
-            .set_color((1.0, 1.0, 0.0, 1.0).into())
-            .exec();
+        let enemy = EvilShip::new(device, queue, position.into(), (61.0, 19.0).into());
+
         Self {
             player,
             enemies: vec![enemy],
@@ -174,24 +168,31 @@ impl EntityManager {
         ));
         let mut min_dist = f32::MAX;
         for e in &mut self.enemies {
-            //todo:
             let dist = distance(self.player.position, e.position());
 
             if dist < min_dist {
-                let dx = e.position().x - self.player.position.x;
+                let dx = (e.position().x + e.scale.x * 0.5) - self.player.position.x;
                 //set the point in the head
-                let dy = e.position().y - (self.player.position.y - 0.5);
+                let dy = (e.position().y + e.scale.y * 0.5) - (self.player.position.y - 0.5);
+                let dir = e.position() - self.player.position;
 
+                e.position.x -= 100.0 * dir.normalize().x * dt.as_secs_f32();
+                e.position.y -= 100.0 * dir.normalize().y * dt.as_secs_f32();
                 let angle = dy.atan2(dx);
 
                 let angle = angle * 180.0 / std::f32::consts::PI;
+
                 self.player.rotation = cgmath::Deg(angle + 90.0); // adjust sprite rotation;
+                e.rotation = cgmath::Deg(angle + 180.0);
+                let dir = CompassDir::from_deg(angle + 180.0).dir;
 
                 min_dist = dist;
 
                 //todo
                 e.update(&dt, input_controller, audio, device, queue);
             }
+
+            // e.set_target_point(self.player.position);
         }
 
         self.player
@@ -261,7 +262,7 @@ impl EntityManager {
                     },
                 ) {
                     // p.alive = false;
-                    e.set_colors((1.0, 0.0, 0.0, 1.0).into());
+                    e.set_colors((1.0, 1.0, 1.0, 1.0).into());
                     // let explosion = Explosion::new(
                     //     e.position.into(),
                     //     (40.0, 40.0).into(),
@@ -272,7 +273,7 @@ impl EntityManager {
                     // self.audio.push(Sounds::Explosion);
                     // e.alive = false;
                 } else {
-                    e.set_colors((0.0, 1.0, 0.0, 1.0).into());
+                    e.set_colors((1.0, 1.0, 1.0, 1.0).into());
                 }
             }
         }

@@ -29,17 +29,6 @@ pub struct GameState {
 
     background: Box<Background>,
 
-    // sprite: Sprite,
-    enemie_sprites: Vec<Sprite>,
-    projectile_sprite: Sprite,
-    enemy_projectile_sprite: Sprite, // the same for all
-
-    player: Player,
-    enemies: Vec<Enemy>,
-    projectile: Vec<Projectile>,
-    explosions: Vec<Explosion>,
-    entities: Vec<Box<dyn Entity>>,
-
     input_controller: Input,
     camera: Camera,
     audio: Audio,
@@ -190,19 +179,8 @@ impl GameState {
             entity_manager,
 
             render_pipeline,
-            enemie_sprites,
-            enemies,
-            enemy_projectile_sprite,
             background,
             camera,
-
-            player,
-            // background,
-            projectile: vec![],
-            explosions: vec![],
-            entities,
-
-            projectile_sprite,
 
             input_controller,
             audio,
@@ -259,10 +237,6 @@ impl GameState {
         }
     }
 
-    // pub fn set_dest_texture(&mut self, texture: wgpu::TextureView) {
-    //     self.destination_texture = Some(texture);
-    // }
-
     pub fn render(
         &mut self,
         surface: &wgpu::Surface,
@@ -272,13 +246,6 @@ impl GameState {
         let frame = surface
             .get_current_texture()
             .expect("Failed to acquire next swap chain texture");
-        // let view = if let Some(texture) = &self.destination_texture {
-        //     texture
-        // } else {
-        //     &frame
-        //         .texture
-        //         .create_view(&wgpu::TextureViewDescriptor::default())
-        // };
 
         let mut encoder =
             device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
@@ -309,30 +276,6 @@ impl GameState {
 
             self.background.draw(&mut rpass);
             self.entity_manager.draw(&mut rpass);
-            // self.player.draw(&mut rpass);
-
-            // //todo enemies
-            // rpass.set_vertex_buffer(0, self.enemie_sprites[0].buffer.slice(..));
-            // rpass.set_bind_group(0, &self.enemie_sprites[0].bind_group, &[]);
-            // for e in &mut self.entities {
-            //     if e.alive() {
-            //         e.draw(&mut rpass);
-            //     }
-            // }
-            // //draw enemy projectiles
-            // rpass.set_vertex_buffer(0, self.enemy_projectile_sprite.buffer.slice(..));
-            // rpass.set_bind_group(0, &self.enemy_projectile_sprite.bind_group, &[]);
-            // for e in &self.enemies {
-            //     for p in &e.projectiles {
-            //         rpass.set_vertex_buffer(2, p.uniform.buffer.slice(..));
-            //         rpass.set_bind_group(2, &p.uniform.bind_group, &[]);
-            //         rpass.draw(0..6, 0..1);
-            //     }
-            // }
-
-            // for e in &mut self.explosions {
-            //     e.draw(&mut rpass);
-            // }
         }
 
         self.particle_system.render(
@@ -340,7 +283,7 @@ impl GameState {
             &mut encoder,
             &frame.texture,
             &self.camera,
-            &self.player.position,
+            &(0.0, 0.0).into(),
             &self.dt,
         );
 
