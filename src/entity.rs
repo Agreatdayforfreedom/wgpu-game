@@ -304,8 +304,6 @@ impl EntityManager {
             // }
         }
 
-        self.player.active_weapon.drain();
-
         self.enemies = self
             .enemies
             .drain(..)

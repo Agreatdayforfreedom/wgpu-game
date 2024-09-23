@@ -119,7 +119,7 @@ impl Player {
             rotation: cgmath::Deg(360.0),
             uniform,
             sprite,
-            active_weapon: RailGun::new(100, device, queue),
+            active_weapon: Cannon::new(100, false, device, queue),
         }
     }
 

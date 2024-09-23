@@ -76,6 +76,7 @@ impl Weapon for Laser {
     ) {
         for projectile in &mut self.projectiles {
             if projectile.alive {
+                //todo remove laser (swap_remove)
                 projectile.update(&dt, 0.0, position);
 
                 // projectile.set_bounds(Bounds {
@@ -98,14 +99,6 @@ impl Weapon for Laser {
 
     fn get_name(&self) -> &str {
         "laser"
-    }
-
-    fn drain(&mut self) {
-        self.projectiles = self
-            .projectiles
-            .drain(..)
-            .filter(|p| p.alive != false)
-            .collect();
     }
 
     fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {

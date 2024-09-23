@@ -103,8 +103,12 @@ impl Weapon for Cannon {
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
     ) {
-        for projectile in &mut self.projectiles {
-            if projectile.alive {
+        // for projectile in &mut self.projectiles {
+        let mut i = 0;
+        println!("{} <<", self.projectiles.len());
+        while i < self.projectiles.len() {
+            let projectile = self.projectiles.get_mut(i).unwrap();
+            if projectile.alive && projectile.lifetime.elapsed().as_millis() <= LIFETIME {
                 projectile.set_bounds(Bounds {
                     origin: cgmath::Point2::new(
                         projectile.position.x + projectile.scale.x / 2.0,
@@ -115,26 +119,16 @@ impl Weapon for Cannon {
                 projectile.update(&dt, 500.0, position);
 
                 projectile.set_direction(|this| {
-                    if this.alive {
-                        // let spaceship_displacement = position - this.initial_position;
-                        // println!("x: {}", );
-
-                        this.position.x += (500.0) * this.dir.dir.x * dt.as_secs_f32();
-                        this.position.y -= (500.0) * this.dir.dir.y * dt.as_secs_f32();
-                        this.initial_position = position;
-                    }
+                    this.position.x += (500.0) * this.dir.dir.x * dt.as_secs_f32();
+                    this.position.y -= (500.0) * this.dir.dir.y * dt.as_secs_f32();
+                    this.initial_position = position;
                 });
-                // projectile.update(&dt, 500.0, position);
                 projectile.uniform.write(queue);
+                i += 1;
+            } else {
+                self.projectiles.swap_remove(i);
             }
         }
-    }
-    fn drain(&mut self) {
-        self.projectiles = self
-            .projectiles
-            .drain(..)
-            .filter(|p| p.alive != false && p.lifetime.elapsed().as_millis() <= LIFETIME)
-            .collect();
     }
 
     fn get_projectiles(&mut self) -> IterMut<Projectile> {

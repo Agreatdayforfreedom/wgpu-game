@@ -29,8 +29,6 @@ pub trait Weapon {
     ) {
     }
 
-    fn drain(&mut self) {}
-
     fn get_projectiles(&mut self) -> IterMut<'_, Projectile>;
 
     fn get_name(&self) -> &str {

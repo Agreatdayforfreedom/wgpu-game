@@ -157,9 +157,5 @@ impl Entity for EvilShip {
         rpass.draw(0..6, 0..1);
 
         self.weapon.draw(rpass);
-        // self.projectiles.0.bind(rpass);
-        // for p in &mut self.projectiles.1 {
-        //     p.draw(rpass);
-        // }
     }
 }
