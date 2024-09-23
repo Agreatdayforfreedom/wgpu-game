@@ -1,8 +1,10 @@
+use std::{borrow::BorrowMut, ops::DerefMut};
+
 use crate::{
     audio::Audio,
     camera::{self, Camera},
     collider::{check_collision, Bounds},
-    enemie::Enemy,
+    enemie::{self, Enemy},
     entities::evil_ship::{self, EvilShip},
     explosion::Explosion,
     input::{self, Input},
@@ -41,6 +43,12 @@ pub trait Entity {
     fn set_colors(&mut self, color: Vector4<f32>) {}
 
     fn rotate(&mut self, rotation: Deg<f32>) {}
+    fn draw_with_sprite<'a, 'b>(
+        &'a mut self,
+        rpass: &'b mut wgpu::RenderPass<'a>,
+        sprite: &mut Sprite,
+    ) {
+    }
 
     fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>);
 }
@@ -121,7 +129,6 @@ pub struct EntityManager {
     // sprite_entities_group: Vec<(Option<Sprite>, Vec<Box<dyn Entity>>)>,
     player: Player,
     enemies: Vec<EvilShip>,
-    s: Sprite,
     // projectiles: Vec<Projectile>, // this refer to enemy projectiles,
     explosions: Vec<Explosion>,
 }
@@ -130,22 +137,20 @@ impl EntityManager {
     pub fn new(device: &wgpu::Device, queue: &wgpu::Queue) -> Self {
         let player = Player::new(&device, &queue);
 
-        let bytes = include_bytes!("./assets/evil_ship.png");
-        let evil_ship_sprite = Sprite::new(
-            device,
-            queue,
-            wgpu::AddressMode::ClampToBorder,
-            &create_bind_group_layout(device),
-            bytes,
-        );
-        let position = (0.0 as f32, 300.0);
+        let mut enemies: Vec<EvilShip> = vec![];
+        for _ in 0..5 {
+            let position = (
+                rand::thread_rng().gen_range(-400.0..400.0),
+                rand::thread_rng().gen_range(-400.0..400.0),
+            );
 
-        let enemy = EvilShip::new(device, queue, position.into(), (61.0, 19.0).into());
+            let enemy = EvilShip::new(device, queue, position.into(), (61.0, 19.0).into());
+            enemies.push(enemy);
+        }
 
         Self {
             player,
-            enemies: vec![enemy],
-            s: evil_ship_sprite,
+            enemies,
             // projectiles: vec![],
             explosions: vec![],
         }
@@ -169,28 +174,23 @@ impl EntityManager {
         let mut min_dist = f32::MAX;
         for e in &mut self.enemies {
             let dist = distance(self.player.position, e.position());
+            let dir = e.position() - self.player.position;
+            let dx = (e.position().x + e.scale.x * 0.5) - self.player.position.x;
+            //set the point in the head
+            let dy = (e.position().y + e.scale.y * 0.5) - (self.player.position.y - 0.5);
 
+            let angle = dy.atan2(dx);
+
+            let angle = angle * 180.0 / std::f32::consts::PI;
+
+            e.position.x -= 100.0 * dir.normalize().x * dt.as_secs_f32();
+            e.position.y -= 100.0 * dir.normalize().y * dt.as_secs_f32();
+            e.rotation = cgmath::Deg(angle + 180.0);
             if dist < min_dist {
-                let dx = (e.position().x + e.scale.x * 0.5) - self.player.position.x;
-                //set the point in the head
-                let dy = (e.position().y + e.scale.y * 0.5) - (self.player.position.y - 0.5);
-                let dir = e.position() - self.player.position;
-
-                e.position.x -= 100.0 * dir.normalize().x * dt.as_secs_f32();
-                e.position.y -= 100.0 * dir.normalize().y * dt.as_secs_f32();
-                let angle = dy.atan2(dx);
-
-                let angle = angle * 180.0 / std::f32::consts::PI;
-
                 self.player.rotation = cgmath::Deg(angle + 90.0); // adjust sprite rotation;
-                e.rotation = cgmath::Deg(angle + 180.0);
-                let dir = CompassDir::from_deg(angle + 180.0).dir;
-
                 min_dist = dist;
-
-                //todo
-                e.update(&dt, input_controller, audio, device, queue);
             }
+            e.update(&dt, input_controller, audio, device, queue);
 
             // e.set_target_point(self.player.position);
         }
@@ -322,12 +322,8 @@ impl EntityManager {
     pub fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
         self.player.draw(rpass);
 
-        self.s.bind(rpass);
         for e in &mut self.enemies {
-            e.draw(rpass)
+            e.draw(rpass);
         }
-        // for p in &mut self.projectiles {
-        //     p.draw(rpass);
-        // }
     }
 }

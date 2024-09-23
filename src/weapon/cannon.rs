@@ -22,10 +22,16 @@ pub struct Cannon {
     shooting_interval: u128, // milliseconds
     sprite: Sprite,
     velocity: f32,
+    auto: bool,
 }
 
 impl Cannon {
-    pub fn new(shooting_interval: u128, device: &wgpu::Device, queue: &wgpu::Queue) -> Box<Self> {
+    pub fn new(
+        shooting_interval: u128,
+        auto: bool,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+    ) -> Box<Self> {
         let diffuse_bytes = include_bytes!("./../assets/bullet.png");
         let bind_group_layout = create_bind_group_layout(device);
 
@@ -43,6 +49,7 @@ impl Cannon {
             shooting_interval,
             sprite,
             velocity: 500.0,
+            auto,
         })
     }
 }
@@ -57,7 +64,9 @@ impl Weapon for Cannon {
         input: &Input,
         audio: &mut Audio,
     ) {
-        if input.is_pressed("f") && self.time.elapsed().as_millis() >= self.shooting_interval {
+        if (input.is_pressed("f") || self.auto)
+            && self.time.elapsed().as_millis() >= self.shooting_interval
+        {
             self.time = instant::Instant::now();
             let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
             audio.push(Sounds::Shoot);
@@ -110,8 +119,8 @@ impl Weapon for Cannon {
                         // let spaceship_displacement = position - this.initial_position;
                         // println!("x: {}", );
 
-                        this.position.x += (500.0 + 500.0) * this.dir.dir.x * dt.as_secs_f32();
-                        this.position.y -= (500.0 + 500.0) * this.dir.dir.y * dt.as_secs_f32();
+                        this.position.x += (500.0) * this.dir.dir.x * dt.as_secs_f32();
+                        this.position.y -= (500.0) * this.dir.dir.y * dt.as_secs_f32();
                         this.initial_position = position;
                     }
                 });
