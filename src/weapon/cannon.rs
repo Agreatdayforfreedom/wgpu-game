@@ -103,12 +103,11 @@ impl Weapon for Cannon {
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
     ) {
-        // for projectile in &mut self.projectiles {
         let mut i = 0;
-        println!("{} <<", self.projectiles.len());
         while i < self.projectiles.len() {
             let projectile = self.projectiles.get_mut(i).unwrap();
             if projectile.alive && projectile.lifetime.elapsed().as_millis() <= LIFETIME {
+                projectile.update(&dt, 500.0, position);
                 projectile.set_bounds(Bounds {
                     origin: cgmath::Point2::new(
                         projectile.position.x + projectile.scale.x / 2.0,
@@ -116,8 +115,6 @@ impl Weapon for Cannon {
                     ),
                     area: cgmath::Vector2::new(2.5, 2.5),
                 });
-                projectile.update(&dt, 500.0, position);
-
                 projectile.set_direction(|this| {
                     this.position.x += (500.0) * this.dir.dir.x * dt.as_secs_f32();
                     this.position.y -= (500.0) * this.dir.dir.y * dt.as_secs_f32();

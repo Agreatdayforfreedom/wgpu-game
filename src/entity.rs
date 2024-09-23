@@ -43,12 +43,8 @@ pub trait Entity {
     fn set_colors(&mut self, color: Vector4<f32>) {}
 
     fn rotate(&mut self, rotation: Deg<f32>) {}
-    fn draw_with_sprite<'a, 'b>(
-        &'a mut self,
-        rpass: &'b mut wgpu::RenderPass<'a>,
-        sprite: &mut Sprite,
-    ) {
-    }
+
+    fn destroy(&mut self) {}
 
     fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>);
 }
@@ -173,47 +169,33 @@ impl EntityManager {
         ));
         let mut min_dist = f32::MAX;
         for e in &mut self.enemies {
-            let dist = distance(self.player.position, e.position());
-            let dir = e.position() - self.player.position;
-            let dx = (e.position().x + e.scale.x * 0.5) - self.player.position.x;
-            //set the point in the head
-            let dy = (e.position().y + e.scale.y * 0.5) - (self.player.position.y - 0.5);
+            if e.alive() {
+                //TODO: THE DIRECTION SHOULD BE POINTING TO THE MOUSE?
+                let dist = distance(self.player.position, e.position());
+                let dir = e.position() - self.player.position;
+                let dx = (e.position().x + e.scale.x * 0.5) - self.player.position.x;
+                //set the point in the head
+                let dy = (e.position().y + e.scale.y * 0.5) - (self.player.position.y - 0.5);
 
-            let angle = dy.atan2(dx);
+                let angle = dy.atan2(dx);
 
-            let angle = angle * 180.0 / std::f32::consts::PI;
+                let angle = angle * 180.0 / std::f32::consts::PI;
 
-            e.position.x -= 100.0 * dir.normalize().x * dt.as_secs_f32();
-            e.position.y -= 100.0 * dir.normalize().y * dt.as_secs_f32();
-            e.rotation = cgmath::Deg(angle + 180.0);
-            if dist < min_dist {
-                self.player.rotation = cgmath::Deg(angle + 90.0); // adjust sprite rotation;
-                min_dist = dist;
+                e.position.x -= 100.0 * dir.normalize().x * dt.as_secs_f32();
+                e.position.y -= 100.0 * dir.normalize().y * dt.as_secs_f32();
+                e.rotation = cgmath::Deg(angle + 180.0);
+                if dist < min_dist {
+                    self.player.rotation = cgmath::Deg(angle + 90.0); // adjust sprite rotation;
+                    min_dist = dist;
+                }
             }
-            e.update(&dt, input_controller, audio, device, queue);
 
-            // e.set_target_point(self.player.position);
+            e.update(&dt, input_controller, audio, device, queue);
         }
 
         self.player
             .update(dt, input_controller, audio, device, queue);
-        // for e in &mut self.enemies {
-        //     if rand::thread_rng().gen_range(0..10000) < 1 {
-        //         e.spawn_fire((40.0, 40.0).into(), audio, device);
-        //     }
-        // for p in &mut e.projectiles {
-        //     if p.alive {
-        //         // p.update(&dt, 275.0, self.player.position, ":D");
-        //         p.uniform.write(queue);
-        //     }
-        // }
 
-        // e.projectiles = e
-        //     .projectiles
-        //     .drain(..)
-        //     .filter(|p| p.alive != false)
-        //     .collect();
-        // }
         if self.player.active_weapon.get_name() == "laser" {
             for p in self.player.active_weapon.get_projectiles() {
                 let mut min_dist = f32::MAX;
@@ -247,13 +229,11 @@ impl EntityManager {
         }
         //check collsions
         for p in &mut self.player.active_weapon.get_projectiles() {
-            let mut min_dist = f32::MAX;
+            // let mut min_dist = f32::MAX;
             for e in &mut self.enemies {
-                let dist = distance(self.player.position, e.position());
-                if dist < min_dist {
-                    min_dist = dist;
+                if !e.alive() {
+                    continue;
                 }
-
                 if check_collision(
                     p.bounds,
                     Bounds {
@@ -261,54 +241,11 @@ impl EntityManager {
                         area: Vector2::new(e.scale().x, e.scale().y),
                     },
                 ) {
-                    // p.alive = false;
-                    e.set_colors((1.0, 1.0, 1.0, 1.0).into());
-                    // let explosion = Explosion::new(
-                    //     e.position.into(),
-                    //     (40.0, 40.0).into(),
-                    //     device,
-                    //     &self.queue,
-                    // );
-                    // self.explosions.push(explosion);
-                    // self.audio.push(Sounds::Explosion);
-                    // e.alive = false;
-                } else {
-                    e.set_colors((1.0, 1.0, 1.0, 1.0).into());
+                    p.alive = false;
+                    e.destroy();
                 }
             }
         }
-
-        for e in &mut self.explosions {
-            e.update(&dt);
-            e.uniform.write(queue);
-        }
-
-        for e in &mut self.enemies {
-            // for p in &mut e.projectiles {
-            //     if check_collision(
-            //         Bounds {
-            //             origin: Point2::new(
-            //                 p.position.x + p.scale.x / 2.0,
-            //                 p.position.y + p.scale.y / 2.0,
-            //             ),
-            //             area: Vector2::new(2.5, 2.5),
-            //         },
-            //         Bounds {
-            //             origin: Point2::new(self.player.position.x, self.player.position.y),
-            //             area: Vector2::new(self.player.scale.x, self.player.scale.y),
-            //         },
-            //     ) {
-            //         p.alive = false;
-            //         self.player.alive = false;
-            //     }
-            // }
-        }
-
-        self.enemies = self
-            .enemies
-            .drain(..)
-            .filter(|e| e.alive != false)
-            .collect();
 
         self.explosions = self
             .explosions
