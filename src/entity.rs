@@ -172,22 +172,20 @@ impl EntityManager {
             if e.alive() {
                 //TODO: THE DIRECTION SHOULD BE POINTING TO THE MOUSE?
                 let dist = distance(self.player.position, e.position());
-                let dir = e.position() - self.player.position;
+                // let dir = e.position() - self.player.position;
                 let dx = (e.position().x + e.scale.x * 0.5) - self.player.position.x;
-                //set the point in the head
+                // //set the point in the head
                 let dy = (e.position().y + e.scale.y * 0.5) - (self.player.position.y - 0.5);
 
                 let angle = dy.atan2(dx);
 
                 let angle = angle * 180.0 / std::f32::consts::PI;
 
-                e.position.x -= 100.0 * dir.normalize().x * dt.as_secs_f32();
-                e.position.y -= 100.0 * dir.normalize().y * dt.as_secs_f32();
-                e.rotation = cgmath::Deg(angle + 180.0);
                 if dist < min_dist {
                     self.player.rotation = cgmath::Deg(angle + 90.0); // adjust sprite rotation;
                     min_dist = dist;
                 }
+                e.set_target_point(self.player.position(), dt);
             }
 
             e.update(&dt, input_controller, audio, device, queue);

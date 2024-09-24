@@ -1,18 +1,18 @@
-use std::ops::DerefMut;
+use std::time::Duration;
 
 use cgmath::{Point2, Vector2};
 
 use crate::{
-    audio::{Audio, Sounds},
-    collider::Bounds,
+    audio::Audio,
     entity::{Entity, EntityUniform},
     explosion::Explosion,
     rendering::{create_bind_group_layout, Sprite},
     uniform::Uniform,
-    util::CompassDir,
-    weapon::{cannon::Cannon, projectile::Projectile, weapon::Weapon},
+    util::{distance, CompassDir},
+    weapon::{cannon::Cannon, weapon::Weapon},
 };
 
+const MIN_DISTANCE_TO_ATTACK: f32 = 250.0;
 pub struct EvilShip {
     pub position: cgmath::Vector2<f32>,
     pub scale: cgmath::Vector2<f32>,
@@ -22,8 +22,8 @@ pub struct EvilShip {
     explosion: Explosion,
     weapon: Box<dyn Weapon>,
     pub rotation: cgmath::Deg<f32>,
-    pub interval: instant::Instant,
     sprite: Sprite, //todo
+    targeting: bool,
 }
 
 impl EvilShip {
@@ -55,15 +55,35 @@ impl EvilShip {
             rotation: cgmath::Deg(0.0),
             explosion: Explosion::new((40.0, 40.0).into(), device, queue),
             weapon: Cannon::new(400, true, &device, &queue),
-            interval: instant::Instant::now(),
+            targeting: false,
             sprite,
         }
     }
 }
 
 impl EvilShip {
-    pub fn set_target_point(target: Vector2<f32>) {
-        // self.po
+    //
+    pub fn set_target_point(&mut self, target: Vector2<f32>, dt: &Duration) {
+        use cgmath::InnerSpace;
+        let dist = distance(target, self.position());
+        let dir = self.position() - target;
+        let dx = (self.position().x + self.scale.x * 0.5) - target.x;
+        //set the point in the head
+        let dy = (self.position().y + self.scale.y * 0.5) - (target.y - 0.5);
+
+        let angle = dy.atan2(dx);
+
+        let angle = angle * 180.0 / std::f32::consts::PI;
+
+        if dist < MIN_DISTANCE_TO_ATTACK {
+            self.targeting = true;
+
+            self.position.x -= 100.0 * dir.normalize().x * dt.as_secs_f32();
+            self.position.y -= 100.0 * dir.normalize().y * dt.as_secs_f32();
+            self.rotation = cgmath::Deg(angle + 180.0);
+        } else {
+            self.targeting = false;
+        }
     }
 }
 
@@ -76,21 +96,23 @@ impl Entity for EvilShip {
         device: &wgpu::Device,
         queue: &mut wgpu::Queue,
     ) {
-        // let delta_ = dt.as_secs_f32();
         self.weapon.update(self.position, queue, dt);
         if self.alive() {
             let center = Vector2::new(
                 self.position.x + (self.scale.x / 2.0),
                 self.position.y + (self.scale.y / 2.0),
             ); // todo fix center position
-            self.weapon.shoot(
-                device,
-                center,
-                (40.0, 40.0).into(),
-                CompassDir::from_deg(self.rotation.0 + 90.0),
-                input,
-                audio,
-            );
+
+            if self.targeting {
+                self.weapon.shoot(
+                    device,
+                    center,
+                    (40.0, 40.0).into(),
+                    CompassDir::from_deg(self.rotation.0 + 90.0),
+                    input,
+                    audio,
+                );
+            }
             self.uniform
                 .data
                 .set_position(self.position)
