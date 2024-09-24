@@ -96,7 +96,7 @@ impl Explosion {
 
         if self.start {
             self.start = false;
-            audio.push(Sounds::Explosion);
+            audio.push(Sounds::Explosion, 1.0);
         }
 
         if self.time_to_next_frame > TIME_TO_NEXT_FRAME {

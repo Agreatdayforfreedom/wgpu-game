@@ -70,10 +70,13 @@ impl Audio {
         self.tracks.append(source);
     }
 
-    pub fn push(&mut self, sound: Sounds) {
+    pub fn push(&mut self, sound: Sounds, volume: f32) {
         let sink = rodio::Sink::try_new(&self.stream_handle).unwrap();
         let source = rodio::Decoder::new(sound.bytes().clone()).unwrap();
-        sink.set_volume(sound.volume());
+
+        let volume = sound.volume() * volume;
+
+        sink.set_volume(volume);
         sink.append(source);
         self.sinks.push(sink);
     }

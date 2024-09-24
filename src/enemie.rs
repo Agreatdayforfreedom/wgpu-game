@@ -79,7 +79,7 @@ impl Enemy {
         if self.interval.elapsed().as_millis() >= 500 {
             self.interval = instant::Instant::now();
             let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
-            audio.push(Sounds::Shoot);
+            audio.push(Sounds::Shoot, 1.0);
             self.projectiles.push(Projectile::new(
                 (
                     self.position.x + (self.scale.x / 2.0) - (scale.x / 2.0),

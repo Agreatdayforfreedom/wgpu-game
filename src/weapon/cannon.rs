@@ -69,7 +69,7 @@ impl Weapon for Cannon {
         {
             self.time = instant::Instant::now();
             let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
-            audio.push(Sounds::Shoot);
+            audio.push(Sounds::Shoot, 0.5);
             let mut p = Projectile::new(
                 (
                     position.x + 15.0 * dir.angle.cos(),

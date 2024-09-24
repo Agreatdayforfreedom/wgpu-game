@@ -55,8 +55,8 @@ impl Weapon for RailGun {
     ) {
         if input.is_pressed("f") && self.time.elapsed().as_millis() >= self.shooting_interval {
             self.time = instant::Instant::now();
-            audio.push(Sounds::Shoot);
-            audio.push(Sounds::Shoot);
+            audio.push(Sounds::Shoot, 1.0);
+            audio.push(Sounds::Shoot, 1.0);
             //todo
             for i in -2..=2 {
                 let mut projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
