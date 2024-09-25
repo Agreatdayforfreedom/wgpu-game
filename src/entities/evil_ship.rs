@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use cgmath::{Point2, Vector2};
+use cgmath::{InnerSpace, Point2, Vector2};
 
 use crate::{
     ai::patrol_area::PatrolArea,
@@ -74,9 +74,8 @@ impl EvilShip {
 impl EvilShip {
     //
     pub fn set_target_point(&mut self, target: Vector2<f32>, dt: &Duration) {
-        use cgmath::InnerSpace;
         let dist = distance(target, self.position());
-        let dir = self.position() - target;
+        let dir = (self.position() - target).normalize();
         let dx = (self.position().x + self.scale.x * 0.5) - target.x;
         //set the point in the head
         let dy = (self.position().y + self.scale.y * 0.5) - (target.y - 0.5);
@@ -85,17 +84,26 @@ impl EvilShip {
 
         let angle = angle * 180.0 / std::f32::consts::PI;
 
-        // if dist < MIN_DISTANCE_TO_ATTACK {
-        //     self.targeting = true;
+        if dist < 100.0 {
+            //DECOUPLE FROM THE PATH
+            self.patrol.decouple();
+            self.targeting = true;
+            self.position.x -= 100.0 * dir.x * dt.as_secs_f32();
+            self.position.y -= 100.0 * dir.y * dt.as_secs_f32();
+            self.rotation = cgmath::Deg(angle + 180.0);
+        } else {
+            //COUPLE IT AGAIN
+            self.patrol.couple(self.position());
+            self.targeting = false;
+            self.position.x -= 100.0 * self.patrol.get_direction().x * dt.as_secs_f32();
+            self.position.y -= 100.0 * self.patrol.get_direction().y * dt.as_secs_f32();
+            let dx = self.patrol.get_direction().x;
+            let dy = self.patrol.get_direction().y;
+            let angle = dy.atan2(dx);
 
-        self.position.x -= 100.0 * self.patrol.get_direction(self.position()).x * dt.as_secs_f32();
-        self.position.y -= 100.0 * self.patrol.get_direction(self.position()).y * dt.as_secs_f32();
-        //     self.rotation = cgmath::Deg(angle + 180.0);
-        // } else {
-        // }
-        // self.patrol.active(self.position());
-
-        // self.patrol.deactive(self.position());
+            let angle = angle * 180.0 / std::f32::consts::PI;
+            self.rotation = cgmath::Deg(angle + 180.0);
+        }
     }
 }
 
@@ -111,7 +119,8 @@ impl Entity for EvilShip {
         self.weapon.update(self.position, queue, dt);
 
         if self.patrol.is_over(self.position()) {
-            self.patrol.next();
+            println!("OVER");
+            self.patrol.next(self.position());
         }
 
         if self.alive() {

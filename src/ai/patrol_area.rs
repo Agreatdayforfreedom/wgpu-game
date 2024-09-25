@@ -1,3 +1,5 @@
+use std::slice::SliceIndex;
+
 use cgmath::{InnerSpace, Vector2};
 
 use crate::util::distance;
@@ -14,48 +16,24 @@ impl PatrolArea {
         Self {
             points,
             current_point: 0,
-            direction: (0.0, 0.0).into(),
+            direction: Vector2::new(0.0, 0.0),
             active: false,
         }
     }
 
-    // pub fn active(&mut self, position: Vector2<f32>) {
-    //     // position starts in any position
-    //     if !self.active {
-    //         self.active = true;
+    pub fn get_direction(&mut self) -> Vector2<f32> {
+        self.direction
+    }
 
-    //         self.direction = self.get_direction_closer_point(position);
-    //     }
-    //     // get the closer point between all the point and position
+    pub fn decouple(&mut self) {
+        self.active = false;
+    }
 
-    //     // create a direction vector to the point
-
-    //     // check if position reach the point
-
-    //     // if reach the point update the direction vector to the next point
-
-    //     // if reach the last point, point to the first one
-    // }
-
-    // pub fn deactive(&mut self, position: Vector2<f32>) {
-    //     if self.active {
-    //         if self.is_over(position) {
-    //             self.direction = self.get_direction_closer_point(position);
-    //         }
-    //     }
-    // }
-
-    pub fn get_direction(&mut self, position: Vector2<f32>) -> Vector2<f32> {
-        let dir: Vector2<f32>;
+    pub fn couple(&mut self, position: Vector2<f32>) {
         if !self.active {
-            dir = self.get_direction_closer_point(position);
             self.active = true;
-        } else {
-            let point = self.points.get(self.current_point as usize).unwrap();
-            dir = (position - point).normalize();
+            self.direction = self.get_direction_closer_point(position);
         }
-
-        dir
     }
 
     fn get_direction_closer_point(&mut self, position: Vector2<f32>) -> Vector2<f32> {
@@ -80,12 +58,15 @@ impl PatrolArea {
         (position - to).normalize()
     }
 
-    pub fn next(&mut self) {
+    pub fn next(&mut self, position: Vector2<f32>) {
         if self.current_point == self.points.len() - 1 {
             self.current_point = 0;
         } else {
             self.current_point += 1;
         }
+
+        let point = self.points.get(self.current_point as usize).unwrap();
+        self.direction = (position - point).normalize();
     }
 
     pub fn is_over(&mut self, position: Vector2<f32>) -> bool {
@@ -94,7 +75,8 @@ impl PatrolArea {
         let x_overlap: bool = point.x + padding >= position.x && position.x + padding >= point.x;
 
         let y_overlap: bool = point.y + padding >= position.y && position.y + padding >= point.y;
+        let overlap: bool = y_overlap && x_overlap;
 
-        y_overlap && x_overlap
+        overlap
     }
 }
