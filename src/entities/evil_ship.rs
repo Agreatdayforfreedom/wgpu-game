@@ -3,6 +3,7 @@ use std::time::Duration;
 use cgmath::{Point2, Vector2};
 
 use crate::{
+    ai::patrol_area::PatrolArea,
     audio::Audio,
     entity::{Entity, EntityUniform},
     explosion::Explosion,
@@ -24,6 +25,7 @@ pub struct EvilShip {
     pub rotation: cgmath::Deg<f32>,
     sprite: Sprite, //todo
     targeting: bool,
+    patrol: PatrolArea,
 }
 
 impl EvilShip {
@@ -47,6 +49,13 @@ impl EvilShip {
             &create_bind_group_layout(device),
             bytes,
         );
+
+        let points = vec![
+            Vector2::new(100.0, 100.0),
+            Vector2::new(100.0, 200.0),
+            Vector2::new(200.0, 200.0),
+            Vector2::new(200.0, 100.0),
+        ];
         Self {
             position,
             scale,
@@ -57,6 +66,7 @@ impl EvilShip {
             weapon: Cannon::new(400, true, &device, &queue),
             targeting: false,
             sprite,
+            patrol: PatrolArea::new(points),
         }
     }
 }
@@ -75,15 +85,17 @@ impl EvilShip {
 
         let angle = angle * 180.0 / std::f32::consts::PI;
 
-        if dist < MIN_DISTANCE_TO_ATTACK {
-            self.targeting = true;
+        // if dist < MIN_DISTANCE_TO_ATTACK {
+        //     self.targeting = true;
 
-            self.position.x -= 100.0 * dir.normalize().x * dt.as_secs_f32();
-            self.position.y -= 100.0 * dir.normalize().y * dt.as_secs_f32();
-            self.rotation = cgmath::Deg(angle + 180.0);
-        } else {
-            self.targeting = false;
-        }
+        self.position.x -= 100.0 * self.patrol.get_direction(self.position()).x * dt.as_secs_f32();
+        self.position.y -= 100.0 * self.patrol.get_direction(self.position()).y * dt.as_secs_f32();
+        //     self.rotation = cgmath::Deg(angle + 180.0);
+        // } else {
+        // }
+        // self.patrol.active(self.position());
+
+        // self.patrol.deactive(self.position());
     }
 }
 
@@ -97,6 +109,11 @@ impl Entity for EvilShip {
         queue: &mut wgpu::Queue,
     ) {
         self.weapon.update(self.position, queue, dt);
+
+        if self.patrol.is_over(self.position()) {
+            self.patrol.next();
+        }
+
         if self.alive() {
             let center = Vector2::new(
                 self.position.x + (self.scale.x / 2.0),
