@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use cgmath::{InnerSpace, Point2, Vector2};
+use rand::Rng;
 
 use crate::{
     ai::patrol_area::PatrolArea,
@@ -19,7 +20,6 @@ pub struct EvilShip {
     pub scale: cgmath::Vector2<f32>,
     pub alive: bool,
     pub uniform: Uniform<EntityUniform>,
-    // pub projectiles: (Sprite, Vec<Projectile>),
     explosion: Explosion,
     weapon: Box<dyn Weapon>,
     pub rotation: cgmath::Deg<f32>,
@@ -51,10 +51,22 @@ impl EvilShip {
         );
 
         let points = vec![
-            Vector2::new(100.0, 100.0),
-            Vector2::new(100.0, 200.0),
-            Vector2::new(200.0, 200.0),
-            Vector2::new(200.0, 100.0),
+            Vector2::new(
+                rand::thread_rng().gen_range(800.0..1600.0),
+                rand::thread_rng().gen_range(800.0..1600.0),
+            ),
+            Vector2::new(
+                rand::thread_rng().gen_range(800.0..1600.0),
+                rand::thread_rng().gen_range(800.0..1600.0),
+            ),
+            Vector2::new(
+                rand::thread_rng().gen_range(800.0..1600.0),
+                rand::thread_rng().gen_range(800.0..1600.0),
+            ),
+            Vector2::new(
+                rand::thread_rng().gen_range(800.0..1600.0),
+                rand::thread_rng().gen_range(800.0..1600.0),
+            ),
         ];
         Self {
             position,
@@ -84,7 +96,7 @@ impl EvilShip {
 
         let angle = angle * 180.0 / std::f32::consts::PI;
 
-        if dist < 100.0 {
+        if dist < MIN_DISTANCE_TO_ATTACK {
             //DECOUPLE FROM THE PATH
             self.patrol.decouple();
             self.targeting = true;
