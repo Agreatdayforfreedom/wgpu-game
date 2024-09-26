@@ -1,5 +1,3 @@
-use std::slice::SliceIndex;
-
 use cgmath::{InnerSpace, Vector2};
 
 use crate::util::distance;
