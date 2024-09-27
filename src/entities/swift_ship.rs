@@ -161,15 +161,15 @@ impl Entity for SwiftShip {
             //DECOUPLE FROM THE PATH
             self.patrol.decouple();
             self.targeting = true;
-            // self.position.x -= 200.0 * dir.x * dt.as_secs_f32();
-            // self.position.y -= 200.0 * dir.y * dt.as_secs_f32();
+            self.position.x -= 200.0 * dir.x * dt.as_secs_f32();
+            self.position.y -= 200.0 * dir.y * dt.as_secs_f32();
             self.rotation = cgmath::Deg(angle + 90.0);
         } else {
             //COUPLE IT AGAIN
             self.patrol.couple(self.position());
             self.targeting = false;
-            // self.position.x -= 450.0 * self.patrol.get_direction().x * dt.as_secs_f32();
-            // self.position.y -= 450.0 * self.patrol.get_direction().y * dt.as_secs_f32();
+            self.position.x -= 450.0 * self.patrol.get_direction().x * dt.as_secs_f32();
+            self.position.y -= 450.0 * self.patrol.get_direction().y * dt.as_secs_f32();
             let dx = self.patrol.get_direction().x;
             let dy = self.patrol.get_direction().y;
             let angle = dy.atan2(dx);

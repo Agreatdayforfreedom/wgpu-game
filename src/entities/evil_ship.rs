@@ -92,7 +92,8 @@ impl Entity for EvilShip {
         device: &wgpu::Device,
         queue: &mut wgpu::Queue,
     ) {
-        self.weapon.update(self.position, queue, dt);
+        let pos = self.get_orientation_point((self.top_right().x, -1.0).into());
+        self.weapon.update(pos, queue, dt);
 
         if self.patrol.is_over(self.position()) {
             println!("OVER");
@@ -100,15 +101,10 @@ impl Entity for EvilShip {
         }
 
         if self.alive() {
-            let center = Vector2::new(
-                self.position.x + (self.scale.x / 2.0),
-                self.position.y + (self.scale.y / 2.0),
-            ); // todo fix center position
-
             if self.targeting {
                 self.weapon.shoot(
                     device,
-                    center,
+                    pos,
                     (40.0, 40.0).into(),
                     CompassDir::from_deg(self.rotation.0 + 90.0),
                     input,
@@ -130,6 +126,10 @@ impl Entity for EvilShip {
 
     fn alive(&self) -> bool {
         self.alive
+    }
+
+    fn rotation(&self) -> cgmath::Deg<f32> {
+        self.rotation
     }
 
     fn scale(&self) -> Vector2<f32> {

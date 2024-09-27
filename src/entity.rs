@@ -188,25 +188,24 @@ impl EntityManager {
         let mut enemies: Vec<Box<dyn Entity>> = vec![];
 
         //evil_ships
-        // for _ in 0..5 {
-        //     let position = (
-        //         rand::thread_rng().gen_range(-400.0..400.0),
-        //         rand::thread_rng().gen_range(-400.0..400.0),
-        //     );
-
-        //     let enemy = EvilShip::new(device, queue, position.into(), (61.0, 19.0).into());
-        //     enemies.push(enemy);
-        // }
-
-        //shifr_ships
-        for _ in 0..1 {
+        for _ in 0..5 {
             let position = (
                 rand::thread_rng().gen_range(-400.0..400.0),
                 rand::thread_rng().gen_range(-400.0..400.0),
             );
 
-            // let enemy = SwiftShip::new(device, queue, position.into(), (17.5, 20.0).into());
-            let enemy = SwiftShip::new(device, queue, position.into(), (100.0, 100.0).into());
+            let enemy = EvilShip::new(device, queue, position.into(), (61.0, 19.0).into());
+            enemies.push(enemy);
+        }
+
+        //swift_ships
+        for _ in 0..5 {
+            let position = (
+                rand::thread_rng().gen_range(-400.0..400.0),
+                rand::thread_rng().gen_range(-400.0..400.0),
+            );
+
+            let enemy = SwiftShip::new(device, queue, position.into(), (17.5, 20.0).into());
             enemies.push(enemy);
         }
 
