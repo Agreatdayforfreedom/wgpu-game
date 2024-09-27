@@ -274,7 +274,7 @@ impl GameState {
 
             rpass.set_bind_group(1, &self.camera.uniform.bind_group, &[]);
 
-            self.background.draw(&mut rpass);
+            // self.background.draw(&mut rpass);
             self.entity_manager.draw(&mut rpass);
         }
 

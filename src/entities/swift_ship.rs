@@ -91,20 +91,8 @@ impl Entity for SwiftShip {
         device: &wgpu::Device,
         queue: &mut wgpu::Queue,
     ) {
-        let center = Vector2::new(
-            self.position.x + (self.scale.x / 2.0),
-            self.position.y + (self.scale.y / 2.0),
-        );
-        println!("{:?}", self.rotation.0.cos());
+        let pos = self.get_orientation_point(self.bottom_right());
 
-        let corner_x = 1.0;
-        let corner_y = self.scale.y;
-
-        let rotation = self.rotation.0.to_radians();
-        let corner_rotated_x = corner_x * rotation.cos() - corner_y * rotation.sin();
-        let corner_rotated_y = corner_x * rotation.sin() + corner_y * rotation.cos();
-
-        let pos: Vector2<f32> = (center.x + corner_rotated_x, center.y + corner_rotated_y).into();
         self.weapon.update(pos, queue, dt);
 
         if self.patrol.is_over(self.position()) {
@@ -143,6 +131,10 @@ impl Entity for SwiftShip {
         self.position
     }
 
+    fn rotation(&self) -> cgmath::Deg<f32> {
+        self.rotation
+    }
+
     fn alive(&self) -> bool {
         self.alive
     }
@@ -169,8 +161,8 @@ impl Entity for SwiftShip {
             //DECOUPLE FROM THE PATH
             self.patrol.decouple();
             self.targeting = true;
-            self.position.x -= 200.0 * dir.x * dt.as_secs_f32();
-            self.position.y -= 200.0 * dir.y * dt.as_secs_f32();
+            // self.position.x -= 200.0 * dir.x * dt.as_secs_f32();
+            // self.position.y -= 200.0 * dir.y * dt.as_secs_f32();
             self.rotation = cgmath::Deg(angle + 90.0);
         } else {
             //COUPLE IT AGAIN

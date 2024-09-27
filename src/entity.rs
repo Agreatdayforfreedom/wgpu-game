@@ -35,15 +35,55 @@ pub trait Entity {
         true
     }
 
+    //todo: required
     fn position(&self) -> Vector2<f32> {
         Vector2::new(0.0, 0.0)
     }
+
+    //todo: required
+    fn rotation(&self) -> cgmath::Deg<f32> {
+        cgmath::Deg(0.0)
+    }
+
+    fn center(&self) -> Vector2<f32> {
+        Vector2::new(
+            self.position().x + (self.scale().x / 2.0),
+            self.position().y + (self.scale().y / 2.0),
+        )
+    }
+
+    fn top_right(&self) -> Vector2<f32> {
+        self.scale() / 2.0
+    }
+    fn top_left(&self) -> Vector2<f32> {
+        Vector2::new(-self.scale().x, self.scale().y) / 2.0
+    }
+    fn bottom_right(&self) -> Vector2<f32> {
+        Vector2::new(self.scale().x, -self.scale().y) / 2.0
+    }
+    fn bottom_left(&self) -> Vector2<f32> {
+        -self.scale() / 2.0
+    }
+
+    /// get the position of any point from its own center, regardless of its orientation
+    fn get_orientation_point(&self, point: Vector2<f32>) -> Vector2<f32> {
+        let rotation = self.rotation().0.to_radians();
+        let point_oriented_x = point.x * rotation.cos() - point.y * rotation.sin();
+        let point_oriented_y = point.x * rotation.sin() + point.y * rotation.cos();
+
+        (
+            self.center().x + point_oriented_x,
+            self.center().y + point_oriented_y,
+        )
+            .into()
+    }
+
+    //todo: required
     fn scale(&self) -> Vector2<f32> {
         Vector2::new(0.0, 0.0)
     }
-    fn set_colors(&mut self, color: Vector4<f32>) {}
 
-    fn rotate(&mut self, rotation: Deg<f32>) {}
+    fn set_colors(&mut self, color: Vector4<f32>) {}
 
     fn destroy(&mut self) {}
 
@@ -157,8 +197,8 @@ impl EntityManager {
                 rand::thread_rng().gen_range(-400.0..400.0),
             );
 
-            let enemy = SwiftShip::new(device, queue, position.into(), (17.5, 20.0).into());
-            // let enemy = SwiftShip::new(device, queue, position.into(), (100.0, 100.0).into());
+            // let enemy = SwiftShip::new(device, queue, position.into(), (17.5, 20.0).into());
+            let enemy = SwiftShip::new(device, queue, position.into(), (100.0, 100.0).into());
             enemies.push(enemy);
         }
 
