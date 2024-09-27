@@ -95,7 +95,7 @@ impl Weapon for DoubleCannon {
             }
         };
     }
-
+    //TODO ULTRA: FIX THE NUMBER OF POSITIONS THAT CAN BE SENT.
     fn update(
         &mut self,
         positions: &Vec<cgmath::Vector2<f32>>,
