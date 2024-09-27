@@ -91,9 +91,9 @@ impl Entity for SwiftShip {
         device: &wgpu::Device,
         queue: &mut wgpu::Queue,
     ) {
-        let pos = self.get_orientation_point((1.0, self.top_left().y).into());
+        let pos = vec![self.get_orientation_point((1.0, self.top_left().y).into())];
 
-        self.weapon.update(pos, queue, dt);
+        self.weapon.update(&pos, queue, dt);
 
         if self.patrol.is_over(self.position()) {
             println!("OVER");
@@ -104,7 +104,7 @@ impl Entity for SwiftShip {
             if self.targeting {
                 self.weapon.shoot(
                     device,
-                    pos,
+                    &pos,
                     (40.0, 40.0).into(),
                     CompassDir::from_deg(self.rotation.0 + 180.0),
                     input,

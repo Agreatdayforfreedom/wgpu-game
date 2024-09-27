@@ -1,4 +1,5 @@
 pub mod cannon;
+pub mod double_connon;
 pub mod laser;
 pub mod projectile;
 pub mod rail_gun;

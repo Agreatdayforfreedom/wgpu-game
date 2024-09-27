@@ -4,6 +4,7 @@ use crate::rendering::{create_bind_group_layout, Sprite};
 use crate::uniform::{self, Uniform};
 use crate::util::CompassDir;
 use crate::weapon::cannon::Cannon;
+use crate::weapon::double_connon::DoubleCannon;
 use crate::weapon::laser::Laser;
 use crate::weapon::rail_gun::RailGun;
 use crate::weapon::weapon::Weapon;
@@ -42,18 +43,16 @@ impl Entity for Player {
         } else if input.is_pressed("w") {
             self.movement("w", dt);
         }
-        self.uniform
-            .data
-            .set_pivot(Point2::new(self.scale.x * 0.5, self.scale.y * 0.5));
 
-        let center = Vector2::new(
-            self.position.x + (self.scale.x / 2.0) - 20.0,
-            self.position.y + (self.scale.y / 2.0) - 20.0,
-        );
-        self.active_weapon.update(self.position, queue, dt);
+        let positions = vec![
+            self.get_orientation_point((8.0, self.bottom_left().y).into()),
+            self.get_orientation_point((-10.0, self.bottom_right().y).into()),
+        ];
+
+        self.active_weapon.update(&positions, queue, dt);
         self.active_weapon.shoot(
             device,
-            center,
+            &positions,
             (40.0, 40.0).into(),
             CompassDir::from_deg(self.rotation.0),
             input,
@@ -91,7 +90,7 @@ impl Entity for Player {
 
 impl Player {
     pub fn new(device: &wgpu::Device, queue: &wgpu::Queue) -> Self {
-        let uniform = Uniform::<EntityUniform>::new(&device);
+        let mut uniform = Uniform::<EntityUniform>::new(&device);
 
         let diffuse_bytes = include_bytes!("./assets/spaceship.png");
         let sprite = Sprite::new(
@@ -102,9 +101,11 @@ impl Player {
             diffuse_bytes,
         );
 
+        let scale: cgmath::Vector2<f32> = (44.0, 33.0).into();
         let position = cgmath::Vector2::new(0.0, 0.0);
-        let scale = (44.0, 33.0).into();
-
+        uniform
+            .data
+            .set_pivot(Point2::new(scale.x * 0.5, scale.y * 0.5));
         Self {
             id: 100,
             position,
@@ -113,7 +114,7 @@ impl Player {
             rotation: cgmath::Deg(360.0),
             uniform,
             sprite,
-            active_weapon: Cannon::new(100, false, device, queue),
+            active_weapon: DoubleCannon::new(100, false, device, queue),
         }
     }
 

@@ -13,7 +13,7 @@ pub trait Weapon {
     fn shoot(
         &mut self,
         device: &wgpu::Device,
-        position: cgmath::Vector2<f32>,
+        position: &Vec<cgmath::Vector2<f32>>,
         scale: cgmath::Vector2<f32>,
         dir: CompassDir,
         input: &Input,
@@ -23,7 +23,7 @@ pub trait Weapon {
 
     fn update(
         &mut self,
-        position: cgmath::Vector2<f32>,
+        position: &Vec<cgmath::Vector2<f32>>,
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
     ) {

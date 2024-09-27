@@ -42,7 +42,7 @@ impl Weapon for Laser {
     fn shoot(
         &mut self,
         device: &wgpu::Device,
-        position: cgmath::Vector2<f32>,
+        positions: &Vec<cgmath::Vector2<f32>>,
         scale: cgmath::Vector2<f32>,
         dir: CompassDir,
         input: &Input,
@@ -50,6 +50,7 @@ impl Weapon for Laser {
     ) {
         if input.is_pressed("f") && self.projectiles.len() < 1 {
             let mut uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
+            let position = *positions.get(0).unwrap();
             uniform.data.set_tex_scale((-1.0, -3.0).into()).exec();
             self.projectiles.push(Projectile::new(
                 position,
@@ -70,11 +71,12 @@ impl Weapon for Laser {
 
     fn update(
         &mut self,
-        position: cgmath::Vector2<f32>,
+        positions: &Vec<cgmath::Vector2<f32>>,
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
     ) {
         for projectile in &mut self.projectiles {
+            let position = *positions.get(0).unwrap();
             if projectile.alive {
                 //todo remove laser (swap_remove)
                 projectile.update(&dt, 0.0, position);

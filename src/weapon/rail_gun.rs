@@ -47,7 +47,7 @@ impl Weapon for RailGun {
     fn shoot(
         &mut self,
         device: &wgpu::Device,
-        position: cgmath::Vector2<f32>,
+        positions: &Vec<cgmath::Vector2<f32>>,
         scale: cgmath::Vector2<f32>,
         dir: CompassDir,
         input: &Input,
@@ -58,8 +58,9 @@ impl Weapon for RailGun {
             audio.push(Sounds::Shoot, 1.0);
             audio.push(Sounds::Shoot, 1.0);
             //todo
-            for i in -2..=2 {
+            for i in 0..=5 {
                 let mut projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
+                let position = *positions.get(i).unwrap(); //todo this fix direction vectors
                 projectile_uniform
                     .data
                     .set_pivot((0.5 * scale.x, 0.5 * scale.y).into())
@@ -75,17 +76,17 @@ impl Weapon for RailGun {
                             y: position.y,
                         },
                     },
-                    if i == -2 {
-                        dir.rotate(0.0)
-                    } else if i == -1 {
-                        dir.rotate(10.0)
-                    } else if i == 0 {
-                        dir.rotate(20.0)
-                    } else if i == 1 {
-                        dir.rotate(-10.0)
-                    } else {
-                        dir.rotate(-20.0)
-                    },
+                    // if i == -2 {
+                    //     dir.rotate(0.0)
+                    // } else if i == -1 {
+                    //     dir.rotate(10.0)
+                    // } else if i == 0 {
+                    //     dir.rotate(20.0)
+                    // } else if i == 1 {
+                    //     dir.rotate(-10.0)
+                    // } else {
+                    dir.rotate(-20.0), //TODO
+                    // },
                     projectile_uniform,
                 ));
             }
@@ -94,13 +95,14 @@ impl Weapon for RailGun {
 
     fn update(
         &mut self,
-        position: cgmath::Vector2<f32>,
+        positions: &Vec<cgmath::Vector2<f32>>,
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
     ) {
         let mut i = 0;
         while i < self.projectiles.len() {
             let projectile = self.projectiles.get_mut(i).unwrap();
+            let position = *positions.get(i).unwrap();
             if projectile.alive && projectile.lifetime.elapsed().as_millis() <= LIFETIME {
                 projectile.set_bounds(Bounds {
                     origin: cgmath::Point2::new(
