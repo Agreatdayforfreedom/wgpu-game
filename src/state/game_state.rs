@@ -10,7 +10,6 @@ use crate::{
     background::Background,
     camera::{Camera, CameraUniform},
     collider::{check_collision, Bounds},
-    enemie::Enemy,
     entity::{Entity, EntityManager, EntityUniform},
     explosion::Explosion,
     input::Input,
@@ -62,36 +61,7 @@ impl GameState {
         //ENEMIES
         let mut entities: Vec<Box<dyn Entity>> = vec![];
         let mut enemie_sprites = Vec::<Sprite>::new();
-        let mut enemies = Vec::<Enemy>::new();
 
-        let enemie_bytes = include_bytes!("../assets/evil_ship.png");
-        let enemie_sprite = Sprite::new(
-            &device,
-            &queue,
-            wgpu::AddressMode::ClampToEdge,
-            &bind_group_layout,
-            enemie_bytes,
-        );
-        enemie_sprites.push(enemie_sprite);
-        for i in 0..2 {
-            let position = (0.0 * 0 as f32, 300.0 * i as f32);
-            let uniform = Uniform::<EntityUniform>::new(&device);
-
-            let mut enemy = Box::new(Enemy::new(
-                position.into(),
-                (24.0, 24.0).into(),
-                uniform,
-                100 + i + 1,
-            ));
-            enemy
-                .uniform
-                .data
-                .set_position(position.into())
-                .set_scale((24.0, 24.0).into())
-                .set_color((0.0, 1.0, 0.0, 1.0).into())
-                .exec();
-            entities.push(enemy);
-        }
         //PROJECTILES
 
         let diffuse_bytes = include_bytes!("../assets/bullet.png");

@@ -1,3 +1,5 @@
+use cgmath::Vector2;
+
 use crate::{
     entity::{Entity, EntityUniform},
     rendering::{create_bind_group_layout, Sprite},
@@ -5,11 +7,26 @@ use crate::{
 };
 
 pub struct Background {
+    position: Vector2<f32>,
+    scale: Vector2<f32>,
+    rotation: cgmath::Deg<f32>,
     sprite: Sprite,
     pub uniform: Uniform<EntityUniform>,
 }
 
 impl Entity for Background {
+    fn position(&self) -> Vector2<f32> {
+        self.position
+    }
+
+    fn scale(&self) -> cgmath::Vector2<f32> {
+        self.scale
+    }
+
+    fn rotation(&self) -> cgmath::Deg<f32> {
+        self.rotation
+    }
+
     fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
         self.sprite.bind(rpass);
         rpass.set_bind_group(2, &self.uniform.bind_group, &[]);
@@ -34,6 +51,12 @@ impl Background {
             .set_scale((856.0 * 2.0, 375.0 * 2.0).into())
             .exec();
 
-        Box::new(Self { sprite, uniform })
+        Box::new(Self {
+            sprite,
+            uniform,
+            scale: (856.0 * 2.0, 375.0 * 2.0).into(),
+            position: (0.0, 0.0).into(),
+            rotation: cgmath::Deg(0.0),
+        })
     }
 }

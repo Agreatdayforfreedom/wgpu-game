@@ -72,15 +72,12 @@ impl Entity for Player {
         self.position
     }
 
-    // fn scale(&self) -> Vector2<f32> {
-    //     self.scale
-    // }
-    // fn set_colors(&mut self, color: Vector4<f32>) {
-    //     self.uniform.data.set_color(color);
-    // }
-    // fn id(&self) -> u32 {
-    //     self.id
-    // }
+    fn scale(&self) -> Vector2<f32> {
+        self.scale
+    }
+    fn rotation(&self) -> cgmath::Deg<f32> {
+        self.rotation
+    }
 
     fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
         // also draw the weapon :P

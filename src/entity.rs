@@ -4,7 +4,6 @@ use crate::{
     audio::Audio,
     camera::{self, Camera},
     collider::{check_collision, Bounds},
-    enemie::{self, Enemy},
     entities::{
         evil_ship::{self, EvilShip},
         swift_ship::SwiftShip,
@@ -35,15 +34,11 @@ pub trait Entity {
         true
     }
 
-    //todo: required
-    fn position(&self) -> Vector2<f32> {
-        Vector2::new(0.0, 0.0)
-    }
+    fn position(&self) -> Vector2<f32>;
 
-    //todo: required
-    fn rotation(&self) -> cgmath::Deg<f32> {
-        cgmath::Deg(0.0)
-    }
+    fn rotation(&self) -> cgmath::Deg<f32>;
+
+    fn scale(&self) -> Vector2<f32>;
 
     fn center(&self) -> Vector2<f32> {
         Vector2::new(
@@ -84,11 +79,6 @@ pub trait Entity {
             self.center().y + point_oriented_y,
         )
             .into()
-    }
-
-    //todo: required
-    fn scale(&self) -> Vector2<f32> {
-        Vector2::new(0.0, 0.0)
     }
 
     fn set_colors(&mut self, color: Vector4<f32>) {}
