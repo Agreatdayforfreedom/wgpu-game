@@ -71,11 +71,7 @@ impl Weapon for Cannon {
             let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
             audio.push(Sounds::Shoot, 0.5);
             let mut p = Projectile::new(
-                (
-                    position.x + 15.0 * dir.angle.cos(),
-                    position.y - 15.0 * dir.angle.sin(),
-                )
-                    .into(),
+                (position.x - scale.x / 2.0, position.y - scale.y / 2.0).into(),
                 scale,
                 dir.angle.opposite(),
                 Bounds {
@@ -118,9 +114,12 @@ impl Weapon for Cannon {
                 projectile.set_direction(|this| {
                     this.position.x += (500.0) * this.dir.dir.x * dt.as_secs_f32();
                     this.position.y -= (500.0) * this.dir.dir.y * dt.as_secs_f32();
+                    // this.position.x = position.x - this.scale.x / 2.0;
+                    // this.position.y = position.y - this.scale.y / 2.0;
                     this.initial_position = position;
                 });
                 projectile.uniform.write(queue);
+                println!("{}", i);
                 i += 1;
             } else {
                 self.projectiles.swap_remove(i);

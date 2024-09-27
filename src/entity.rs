@@ -5,7 +5,10 @@ use crate::{
     camera::{self, Camera},
     collider::{check_collision, Bounds},
     enemie::{self, Enemy},
-    entities::evil_ship::{self, EvilShip},
+    entities::{
+        evil_ship::{self, EvilShip},
+        swift_ship::SwiftShip,
+    },
     explosion::Explosion,
     input::{self, Input},
     player::Player,
@@ -32,8 +35,6 @@ pub trait Entity {
         true
     }
 
-    // fn id(&self) -> u32;
-
     fn position(&self) -> Vector2<f32> {
         Vector2::new(0.0, 0.0)
     }
@@ -45,6 +46,9 @@ pub trait Entity {
     fn rotate(&mut self, rotation: Deg<f32>) {}
 
     fn destroy(&mut self) {}
+
+    /// this method is used to set a target entity, move forward, shoot it, etc.
+    fn set_target_point(&mut self, target: Vector2<f32>, dt: &instant::Duration) {}
 
     fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>);
 }
@@ -124,7 +128,7 @@ impl EntityUniform {
 pub struct EntityManager {
     // sprite_entities_group: Vec<(Option<Sprite>, Vec<Box<dyn Entity>>)>,
     player: Player,
-    enemies: Vec<EvilShip>,
+    enemies: Vec<Box<dyn Entity>>,
     // projectiles: Vec<Projectile>, // this refer to enemy projectiles,
     explosions: Vec<Explosion>,
 }
@@ -133,14 +137,28 @@ impl EntityManager {
     pub fn new(device: &wgpu::Device, queue: &wgpu::Queue) -> Self {
         let player = Player::new(&device, &queue);
 
-        let mut enemies: Vec<EvilShip> = vec![];
-        for _ in 0..5 {
+        let mut enemies: Vec<Box<dyn Entity>> = vec![];
+
+        //evil_ships
+        // for _ in 0..5 {
+        //     let position = (
+        //         rand::thread_rng().gen_range(-400.0..400.0),
+        //         rand::thread_rng().gen_range(-400.0..400.0),
+        //     );
+
+        //     let enemy = EvilShip::new(device, queue, position.into(), (61.0, 19.0).into());
+        //     enemies.push(enemy);
+        // }
+
+        //shifr_ships
+        for _ in 0..1 {
             let position = (
                 rand::thread_rng().gen_range(-400.0..400.0),
                 rand::thread_rng().gen_range(-400.0..400.0),
             );
 
-            let enemy = EvilShip::new(device, queue, position.into(), (61.0, 19.0).into());
+            let enemy = SwiftShip::new(device, queue, position.into(), (17.5, 20.0).into());
+            // let enemy = SwiftShip::new(device, queue, position.into(), (100.0, 100.0).into());
             enemies.push(enemy);
         }
 
@@ -173,9 +191,9 @@ impl EntityManager {
                 //TODO: THE DIRECTION SHOULD BE POINTING TO THE MOUSE?
                 let dist = distance(self.player.position, e.position());
                 // let dir = e.position() - self.player.position;
-                let dx = (e.position().x + e.scale.x * 0.5) - self.player.position.x;
+                let dx = (e.position().x + e.scale().x * 0.5) - self.player.position.x;
                 // //set the point in the head
-                let dy = (e.position().y + e.scale.y * 0.5) - (self.player.position.y - 0.5);
+                let dy = (e.position().y + e.scale().y * 0.5) - (self.player.position.y - 0.5);
 
                 let angle = dy.atan2(dx);
 
