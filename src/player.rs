@@ -68,9 +68,6 @@ impl Entity for Player {
             .exec();
     }
 
-    fn rotate(&mut self, rotation: cgmath::Deg<f32>) {
-        self.rotation = rotation;
-    }
     fn position(&self) -> Vector2<f32> {
         self.position
     }
