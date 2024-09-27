@@ -106,7 +106,7 @@ impl Player {
         );
 
         let position = cgmath::Vector2::new(0.0, 0.0);
-        let scale = (32.0, 32.0).into();
+        let scale = (44.0, 33.0).into();
 
         Self {
             id: 100,
