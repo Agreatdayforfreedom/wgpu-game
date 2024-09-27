@@ -91,7 +91,7 @@ impl Entity for SwiftShip {
         device: &wgpu::Device,
         queue: &mut wgpu::Queue,
     ) {
-        let pos = self.get_orientation_point(self.bottom_right());
+        let pos = self.get_orientation_point((1.0, self.top_left().y).into());
 
         self.weapon.update(pos, queue, dt);
 

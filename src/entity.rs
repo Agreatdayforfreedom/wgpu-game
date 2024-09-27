@@ -65,7 +65,15 @@ pub trait Entity {
         -self.scale() / 2.0
     }
 
-    /// get the position of any point from its own center, regardless of its orientation
+    /// Get the position of any point from its own center, regardless of its orientation.
+    /// You can get the [point] parameter from the corner methods already implemented.
+    /// To get the center between two corners, or the center of the entity itself, set an axis to 1.0 (or two to get the center).
+    /// ### Example
+    /// ```
+    /// let top_left_corner = entity.get_orientation_point(entity.top_left());
+    ///
+    /// let entity_center = self.get_orientation_point((1.0, 1.0).into());
+    /// ```
     fn get_orientation_point(&self, point: Vector2<f32>) -> Vector2<f32> {
         let rotation = self.rotation().0.to_radians();
         let point_oriented_x = point.x * rotation.cos() - point.y * rotation.sin();
