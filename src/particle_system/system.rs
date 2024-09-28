@@ -1,11 +1,11 @@
 
-use cgmath::Vector2;
+use cgmath::{Angle, Vector2, Vector4};
 use rand::Rng;
 use wgpu::util::DeviceExt;
 
 use crate::{camera, post_processing::{PostProcessing}, rendering::{create_bind_group_layout, Sprite}, util::CompassDir};
 
-const NUM_PARTICLES: wgpu::BufferAddress = 1500;
+const NUM_PARTICLES: wgpu::BufferAddress = 1000;
 pub struct ParticleSystem {
     texture_view: Sprite,
     compute_pipeline: wgpu::ComputePipeline,
@@ -18,34 +18,7 @@ pub struct ParticleSystem {
 }
 
 
-fn create_particles_bytes() -> Vec<f32> {
-    let mut particles = vec![0.0f32; (12 * NUM_PARTICLES) as usize];
-    for chunk in particles.chunks_mut(12) {
-        chunk[0] = rand::thread_rng().gen_range(-400..400) as f32;
-        chunk[1] = rand::thread_rng().gen_range(-400..400) as f32;
 
-        let dir = CompassDir::from_deg(rand::thread_rng().gen_range(0..360) as f32).dir;
-        chunk[2] = dir.x;
-        chunk[3] = dir.y;
-
-        //color
-        chunk[4] = 1.0;
-        chunk[5] = 0.9;
-        chunk[6] = 0.0;
-        chunk[7] = 1.0;
-
-        // velocity
-        chunk[8] =  100.0;
-        // lifetime
-        chunk[9] = rand::thread_rng().gen_range(0..20) as f32;
-
-        //padding
-        // chunk[10] = 0.0;
-        // chunk[11] = 0.0;
-    }
-
-    particles
-}
 
 impl ParticleSystem {
     pub fn new(
@@ -75,7 +48,8 @@ impl ParticleSystem {
             usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
         });
 
-        let particles_src = create_particles_bytes();
+        let particles_src = ParticleSystem::push_group(NUM_PARTICLES);
+        let sim_params = ParticleSystem::push_sim(NUM_PARTICLES, (0.0, 0.0).into(), (1.0, 0.0, 0.0, 1.0).into());
 
         let mut particle_buffers = Vec::<wgpu::Buffer>::new();
         for i in 0..1 {
@@ -92,9 +66,11 @@ impl ParticleSystem {
 
         let simulation_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Particles compute buffer"),
-            contents: bytemuck::bytes_of(&[0.04, 800.0, 600.0, 0.0]),
+            contents: bytemuck::cast_slice(&sim_params),
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
+
+       
 
         //pipelines
         let shader = device.create_shader_module(wgpu::include_wgsl!("../shaders/particles.wgsl"));
@@ -191,7 +167,7 @@ impl ParticleSystem {
                             min_binding_size: None,
                         },
                         count: None,
-                    },
+                    }
                 ],
             });
 
@@ -240,6 +216,63 @@ impl ParticleSystem {
         }
     }
 
+    pub fn push_sim(total: wgpu::BufferAddress, position: Vector2<f32>, color: Vector4<f32>) -> Vec<f32> {
+        let chunk: &mut [f32] = &mut [0.0f32; 32 as usize];
+
+        //delta time
+        chunk[1] = 0.04;
+
+        //num of particles
+        chunk[0] = total as f32;
+
+        //position
+        chunk[2] = position.x;
+        chunk[3] = position.y;
+
+        //color
+        chunk[4] =  color.x;
+        chunk[5] =  color.y;
+        chunk[6] =  color.z;
+        chunk[7] =  color.w;
+
+        chunk[8] =  0.0;
+        chunk[9] =  0.0;
+
+        chunk[10] =  0.0; // padding
+        chunk[11] =  0.0; //padding
+
+        chunk.to_vec()
+    }
+
+    pub fn push_group(num: wgpu::BufferAddress) -> Vec<f32> {
+        let mut particles = vec![0.0f32; (12 * num) as usize];
+        for chunk in particles.chunks_mut(12) {
+            chunk[0] = rand::thread_rng().gen_range(-400..400) as f32;
+            chunk[1] = rand::thread_rng().gen_range(-400..400) as f32;
+    
+            chunk[2] = 0.0;
+            chunk[3] = 0.0;
+    
+            //color
+            chunk[4] = 1.0;
+            chunk[5] = 0.9;
+            chunk[6] = 0.0;
+            chunk[7] = 1.0;
+    
+            // velocity
+            chunk[8] =  100.0;
+            // chunk[8] =  rand::thread_rng().gen_range(100.0..500.0);
+            // lifetime
+            chunk[9] = 0.0 as f32;
+    
+            //padding
+            // chunk[10] = rand::thread_rng().gen_range(0.0..30.0);
+            // chunk[11] = 0.0;
+        }
+        
+        particles
+    }
+
     pub fn render(
         &mut self,
         queue: &mut wgpu::Queue,
@@ -247,19 +280,26 @@ impl ParticleSystem {
         view: &wgpu::Texture,
         camera: &camera::Camera,
         player_position: &Vector2<f32>,
+        dir: cgmath::Deg<f32>,
         dt: &instant::Duration,
     ) {
+        let dir = CompassDir::from_deg(dir.opposite().0 );
         queue.write_buffer(
             &self.simulation_buffer,
             0,
             bytemuck::cast_slice(&[
                 dt.as_secs_f32(), //delta
-                0.0, //padding
-                800.0, 600.0,
+                NUM_PARTICLES as f32,
                 player_position.x, 
-                player_position.y
+                player_position.y,
+                1.0, 0.0, 0.0, 1.0, //color
+                dir.dir.x,
+                dir.dir.y,
+                0.0, //padding            
+                0.0 //padding            
             ]),
         );
+
 
         // let view = &view.create_view(&wgpu::TextureViewDescriptor::default());
         let rpass_layout = wgpu::RenderPassDescriptor {
@@ -277,15 +317,7 @@ impl ParticleSystem {
             occlusion_query_set: None,
         };
 
-        {
-            let mut rpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-                label: None,
-                timestamp_writes: None,
-            });
-            rpass.set_pipeline(&self.compute_pipeline);
-            rpass.set_bind_group(0, &self.particle_bind_groups[0], &[]);
-            rpass.dispatch_workgroups((NUM_PARTICLES as f32 / 64.0).ceil() as u32, 1, 1);
-        }
+        
         {
             let mut rpass = encoder.begin_render_pass(&rpass_layout);
             rpass.set_pipeline(&self.render_pipeline);
@@ -295,6 +327,15 @@ impl ParticleSystem {
             rpass.set_vertex_buffer(1, self.vertices_buffer.slice(..));
 
             rpass.draw(0..6, 0..NUM_PARTICLES as u32);
+        }
+        {
+            let mut rpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+                label: None,
+                timestamp_writes: None,
+            });
+            rpass.set_pipeline(&self.compute_pipeline);
+            rpass.set_bind_group(0, &self.particle_bind_groups[0], &[]);
+            rpass.dispatch_workgroups((NUM_PARTICLES as f32 / 64.0).ceil() as u32, 1, 1);
         }
         let v = view.create_view(&wgpu::TextureViewDescriptor::default());
         self.bloom.render(encoder, &self.texture_view, &v);

@@ -253,7 +253,11 @@ impl GameState {
             &mut encoder,
             &frame.texture,
             &self.camera,
-            &(0.0, 0.0).into(),
+            &self
+                .entity_manager
+                .player
+                .get_orientation_point((0.0, self.entity_manager.player.top_right().y).into()),
+            self.entity_manager.player.rotation(),
             &self.dt,
         );
 

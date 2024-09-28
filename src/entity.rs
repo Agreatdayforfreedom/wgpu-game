@@ -165,7 +165,7 @@ impl EntityUniform {
 //we do this for simplicity
 pub struct EntityManager {
     // sprite_entities_group: Vec<(Option<Sprite>, Vec<Box<dyn Entity>>)>,
-    player: Player,
+    pub player: Player,
     enemies: Vec<Box<dyn Entity>>,
     // projectiles: Vec<Projectile>, // this refer to enemy projectiles,
     explosions: Vec<Explosion>,

@@ -50,8 +50,10 @@ fn rand() -> f32 {
 
 struct SimulationParams {
   delta_time: f32,
-  screen_dimensions: vec2<f32>,
-  target_position: vec2<f32>
+  total: f32,
+  position: vec2<f32>,
+  color: vec4<f32>,
+  dir: vec2<f32>
 }
 
 struct Particle {
@@ -59,7 +61,7 @@ struct Particle {
   dir: vec2<f32>,
   color: vec4<f32>,
   velocity: f32,
-  lifetime: f32
+  lifetime: f32,
 }
 
   
@@ -76,33 +78,21 @@ fn simulate(@builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
     return;
   }
     var particle: Particle = particles_dst[idx];
-    // particle.color.w = smoothstep(0.0, 1.0, particle.lifetime); 
-    
-    // i don't use lifetime here :P
-    particle.lifetime -= 0.2;
-    
+    init_rand(idx, vec4f(particle.lifetime, sim_params.delta_time, sim_params.position.x, sim_params.position.y));
+    particle.lifetime -= sim_params.delta_time;
+   
+    if (particle.lifetime < 0.0) {
+      particle.position.x = sim_params.position.x;
+      particle.position.y = sim_params.position.y;
+      particle.dir.x = sim_params.dir.x + rand();
+      particle.dir.y = sim_params.dir.y + rand();
+      particle.lifetime = rand();
+    }
+    particle.color = sim_params.color;
+
     particle.position.x += particle.velocity * particle.dir.x * sim_params.delta_time;
-    particle.position.y += particle.velocity * particle.dir.y * sim_params.delta_time;
-    let screen_padding = 50.0;
-    let top = 300.0;
-    let bottom = -300.0;
-    let left = -400.0;
-    let right = 400.0;
-
-    if(particle.position.x > sim_params.target_position.x - (left - screen_padding)) {
-      particle.position.x = sim_params.target_position.x + (left - screen_padding);
-    }
-    if(particle.position.x < sim_params.target_position.x - (right + screen_padding)) {
-      particle.position.x = sim_params.target_position.x + (right + screen_padding);
-    }
-    if(particle.position.y < sim_params.target_position.y - (top + screen_padding)) {
-      particle.position.y = sim_params.target_position.y + (top + screen_padding);
-    }
-
-    if(particle.position.y > sim_params.target_position.y - (bottom - screen_padding)) {
-      particle.position.y = sim_params.target_position.y + (bottom - screen_padding);
-    }
-
+    particle.position.y -= particle.velocity * particle.dir.y * sim_params.delta_time;
+    
 
 
     particles_dst[idx] = particle;
