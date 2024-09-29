@@ -37,3 +37,21 @@ impl CompassDir {
 pub fn distance(a: cgmath::Vector2<f32>, b: cgmath::Vector2<f32>) -> f32 {
     ((a.x - b.x).powi(2) + (a.y - b.y).powi(2)).sqrt()
 }
+
+pub struct IdVendor {
+    id: u32,
+}
+
+impl Default for IdVendor {
+    fn default() -> Self {
+        Self { id: 0u32 }
+    }
+}
+
+impl IdVendor {
+    pub fn next_id(&mut self) -> u32 {
+        let c = self.id;
+        self.id += 1;
+        c
+    }
+}

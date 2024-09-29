@@ -123,7 +123,6 @@ impl Weapon for DoubleCannon {
                     this.initial_position = *position;
                 });
                 projectile.uniform.write(queue);
-                println!("{}", i);
                 i += 1;
             } else {
                 self.projectiles.swap_remove(i);

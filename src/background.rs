@@ -7,6 +7,7 @@ use crate::{
 };
 
 pub struct Background {
+    id: u32,
     position: Vector2<f32>,
     scale: Vector2<f32>,
     rotation: cgmath::Deg<f32>,
@@ -15,6 +16,10 @@ pub struct Background {
 }
 
 impl Entity for Background {
+    fn id(&self) -> u32 {
+        self.id
+    }
+
     fn position(&self) -> Vector2<f32> {
         self.position
     }
@@ -52,6 +57,7 @@ impl Background {
             .exec();
 
         Box::new(Self {
+            id: 10000, //TODO
             sprite,
             uniform,
             scale: (856.0 * 2.0, 375.0 * 2.0).into(),

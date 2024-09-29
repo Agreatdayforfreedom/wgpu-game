@@ -13,7 +13,7 @@ use crate::{
     player::Player,
     rendering::{create_bind_group_layout, Sprite},
     uniform::Uniform,
-    util::{distance, CompassDir},
+    util::{distance, CompassDir, IdVendor},
     weapon::projectile::{self, Projectile},
 };
 use cgmath::{Angle, Deg, InnerSpace, Point2, SquareMatrix, Vector2, Vector3, Vector4};
@@ -39,6 +39,8 @@ pub trait Entity {
     fn rotation(&self) -> cgmath::Deg<f32>;
 
     fn scale(&self) -> Vector2<f32>;
+
+    fn id(&self) -> u32;
 
     fn center(&self) -> Vector2<f32> {
         Vector2::new(
@@ -162,18 +164,17 @@ impl EntityUniform {
     }
 }
 
-//we do this for simplicity
 pub struct EntityManager {
-    // sprite_entities_group: Vec<(Option<Sprite>, Vec<Box<dyn Entity>>)>,
+    id_vendor: IdVendor,
     pub player: Player,
     enemies: Vec<Box<dyn Entity>>,
-    // projectiles: Vec<Projectile>, // this refer to enemy projectiles,
     explosions: Vec<Explosion>,
 }
 
 impl EntityManager {
     pub fn new(device: &wgpu::Device, queue: &wgpu::Queue) -> Self {
-        let player = Player::new(&device, &queue);
+        let mut id_vendor = IdVendor::default();
+        let player = Player::new(&device, &queue, id_vendor.next_id());
 
         let mut enemies: Vec<Box<dyn Entity>> = vec![];
 
@@ -184,7 +185,14 @@ impl EntityManager {
                 rand::thread_rng().gen_range(-400.0..400.0),
             );
 
-            let enemy = EvilShip::new(device, queue, position.into(), (61.0, 19.0).into());
+            let enemy = EvilShip::new(
+                device,
+                queue,
+                id_vendor.next_id(),
+                position.into(),
+                (61.0, 19.0).into(),
+            );
+
             enemies.push(enemy);
         }
 
@@ -195,14 +203,20 @@ impl EntityManager {
                 rand::thread_rng().gen_range(-400.0..400.0),
             );
 
-            let enemy = SwiftShip::new(device, queue, position.into(), (17.5, 20.0).into());
+            let enemy = SwiftShip::new(
+                device,
+                queue,
+                id_vendor.next_id(),
+                position.into(),
+                (17.5, 20.0).into(),
+            );
             enemies.push(enemy);
         }
 
         Self {
+            id_vendor,
             player,
             enemies,
-            // projectiles: vec![],
             explosions: vec![],
         }
     }

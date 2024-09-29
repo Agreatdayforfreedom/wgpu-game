@@ -54,7 +54,7 @@ impl GameState {
         let bind_group_layout = create_bind_group_layout(&device);
 
         let background = Background::new(&device, &queue);
-        let player = Player::new(&device, &queue);
+        let player = Player::new(&device, &queue, 0);
         background.uniform.write(queue);
 
         // entity_manager.add(None, vec![background]);

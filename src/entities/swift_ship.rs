@@ -15,13 +15,14 @@ use rand::Rng;
 const MIN_DISTANCE_TO_ATTACK: f32 = 500.0;
 
 pub struct SwiftShip {
-    pub position: cgmath::Vector2<f32>,
-    pub scale: cgmath::Vector2<f32>,
-    pub alive: bool,
+    id: u32,
+    position: cgmath::Vector2<f32>,
+    scale: cgmath::Vector2<f32>,
+    alive: bool,
     pub uniform: Uniform<EntityUniform>,
     explosion: Explosion,
     weapon: Box<dyn Weapon>,
-    pub rotation: cgmath::Deg<f32>,
+    rotation: cgmath::Deg<f32>,
     sprite: Sprite, //todo
     targeting: bool,
     patrol: PatrolArea,
@@ -31,6 +32,7 @@ impl SwiftShip {
     pub fn new(
         device: &wgpu::Device,
         queue: &wgpu::Queue,
+        id: u32,
         position: cgmath::Vector2<f32>,
         scale: cgmath::Vector2<f32>,
     ) -> Box<Self> {
@@ -68,6 +70,7 @@ impl SwiftShip {
             ),
         ];
         Box::new(Self {
+            id,
             position,
             scale,
             alive: true,
@@ -121,6 +124,10 @@ impl Entity for SwiftShip {
         } else {
             self.explosion.update(audio, queue, dt);
         }
+    }
+
+    fn id(&self) -> u32 {
+        self.id
     }
 
     fn scale(&self) -> Vector2<f32> {

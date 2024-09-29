@@ -67,6 +67,10 @@ impl Entity for Player {
             .exec();
     }
 
+    fn id(&self) -> u32 {
+        self.id
+    }
+
     fn position(&self) -> Vector2<f32> {
         self.position
     }
@@ -89,7 +93,7 @@ impl Entity for Player {
 }
 
 impl Player {
-    pub fn new(device: &wgpu::Device, queue: &wgpu::Queue) -> Self {
+    pub fn new(device: &wgpu::Device, queue: &wgpu::Queue, id: u32) -> Self {
         let mut uniform = Uniform::<EntityUniform>::new(&device);
 
         let diffuse_bytes = include_bytes!("./assets/spaceship.png");
@@ -107,7 +111,7 @@ impl Player {
             .data
             .set_pivot(Point2::new(scale.x * 0.5, scale.y * 0.5));
         Self {
-            id: 100,
+            id,
             position,
             scale,
             alive: true,
