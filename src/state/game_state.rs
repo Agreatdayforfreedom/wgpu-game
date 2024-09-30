@@ -44,8 +44,6 @@ impl GameState {
         queue: &mut wgpu::Queue,
         config: &wgpu::SurfaceConfiguration,
     ) -> Self {
-        let entity_manager = EntityManager::new(&device, &queue);
-
         let shader = device.create_shader_module(wgpu::include_wgsl!("../shaders/sprite.wgsl"));
 
         let camera_uniform = Uniform::<CameraUniform>::new(&device);
@@ -94,8 +92,10 @@ impl GameState {
             push_constant_ranges: &[],
         });
 
-        let particle_system = ParticleSystem::new(&device, config.format, &camera);
+        let mut particle_system = ParticleSystem::new(&device, config.format, &camera);
+        let entity_manager = EntityManager::new(&device, &queue, &mut particle_system);
 
+        // particle_system.init(&device);
         let render_pipeline = create_render_pipeline(&device, &shader, &config, &pipeline_layout);
         let render_target_texture = Sprite::from_empty(
             &device,
@@ -186,6 +186,7 @@ impl GameState {
             &self.input_controller,
             &mut self.camera,
             &dt,
+            &mut self.particle_system,
         );
         self.camera.uniform.write(queue);
     }

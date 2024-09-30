@@ -10,6 +10,7 @@ use crate::{
     },
     explosion::Explosion,
     input::{self, Input},
+    particle_system::system::ParticleSystem,
     player::Player,
     rendering::{create_bind_group_layout, Sprite},
     uniform::Uniform,
@@ -172,10 +173,20 @@ pub struct EntityManager {
 }
 
 impl EntityManager {
-    pub fn new(device: &wgpu::Device, queue: &wgpu::Queue) -> Self {
+    pub fn new(
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        particle_system: &mut ParticleSystem,
+    ) -> Self {
         let mut id_vendor = IdVendor::default();
         let player = Player::new(&device, &queue, id_vendor.next_id());
-
+        particle_system.push_group(
+            player.id(),
+            device,
+            1000,
+            (0.0, 0.0).into(),
+            (1.0, 1.0, 1.0, 1.0).into(),
+        );
         let mut enemies: Vec<Box<dyn Entity>> = vec![];
 
         //evil_ships
@@ -191,6 +202,14 @@ impl EntityManager {
                 id_vendor.next_id(),
                 position.into(),
                 (61.0, 19.0).into(),
+            );
+
+            particle_system.push_group(
+                enemy.id(),
+                device,
+                1000,
+                (0.0, 0.0).into(),
+                (0.0, 1.0, 0.5, 1.0).into(),
             );
 
             enemies.push(enemy);
@@ -209,6 +228,13 @@ impl EntityManager {
                 id_vendor.next_id(),
                 position.into(),
                 (17.5, 20.0).into(),
+            );
+            particle_system.push_group(
+                enemy.id(),
+                device,
+                1000,
+                (0.0, 0.0).into(),
+                (1.0, 0.5, 0.0, 1.0).into(),
             );
             enemies.push(enemy);
         }
@@ -229,6 +255,7 @@ impl EntityManager {
         input_controller: &input::Input,
         camera: &mut Camera,
         dt: &instant::Duration,
+        particle_system: &mut ParticleSystem,
     ) {
         self.player.uniform.write(queue);
         camera.update(Vector3::new(
@@ -258,6 +285,14 @@ impl EntityManager {
             }
 
             e.update(&dt, input_controller, audio, device, queue);
+            particle_system.update_sim_params(
+                queue,
+                e.id(),
+                &e.get_orientation_point((0.0, e.top_right().y).into()),
+                e.rotation(),
+                (0.0, 1.0, 0.0, 1.0).into(),
+                dt,
+            );
         }
 
         self.player
@@ -313,6 +348,17 @@ impl EntityManager {
                 }
             }
         }
+
+        particle_system.update_sim_params(
+            queue,
+            self.player.id(),
+            &self
+                .player
+                .get_orientation_point((0.0, self.player.top_right().y).into()),
+            self.player.rotation(),
+            (1.0, 0.0, 0.0, 1.0).into(),
+            dt,
+        );
 
         self.explosions = self
             .explosions

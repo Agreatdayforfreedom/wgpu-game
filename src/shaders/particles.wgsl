@@ -64,36 +64,50 @@ struct Particle {
   lifetime: f32,
 }
 
-  
+var<private> sim_group_index: u32 = 0; 
+var<private> idx_count: u32 = 0; 
 
 @binding(0) @group(0) var<storage, read_write> particles_dst : array<Particle>;
-@binding(1) @group(0) var<uniform> sim_params: SimulationParams;
+@binding(1) @group(0) var<storage> sim_params_groups: array<SimulationParams>;
 
 @compute @workgroup_size(64)
 fn simulate(@builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
   let total = arrayLength(&particles_dst);
-  
   let idx = global_invocation_id.x;
+
+
+  let object_id = idx /  1000;
+  let sim_params = sim_params_groups[object_id]; 
+
   if (idx >= total) {
     return;
   }
-    var particle: Particle = particles_dst[idx];
-    init_rand(idx, vec4f(particle.lifetime, sim_params.delta_time, sim_params.position.x, sim_params.position.y));
-    particle.lifetime -= sim_params.delta_time;
-   
-    if (particle.lifetime < 0.0) {
-      particle.position.x = sim_params.position.x;
-      particle.position.y = sim_params.position.y;
-      particle.dir.x = sim_params.dir.x + rand();
-      particle.dir.y = sim_params.dir.y + rand();
-      particle.lifetime = rand();
-    }
-    particle.color = sim_params.color;
 
-    particle.position.x += particle.velocity * particle.dir.x * sim_params.delta_time;
-    particle.position.y -= particle.velocity * particle.dir.y * sim_params.delta_time;
-    
+  if (f32(idx_count) == sim_params.total) {
+    sim_group_index += u32(1);
+    idx_count = u32(0);
+  }
 
+  var particle: Particle = particles_dst[idx];
 
-    particles_dst[idx] = particle;
+  init_rand(idx, vec4f(particle.lifetime, sim_params.delta_time, sim_params.position.x, sim_params.position.y));
+
+  particle.lifetime -= sim_params.delta_time;
+  
+  if (particle.lifetime < 0.0) {
+    particle.position.x = sim_params.position.x;
+    particle.position.y = sim_params.position.y;
+    particle.dir.x = sim_params.dir.x + rand();
+    particle.dir.y = sim_params.dir.y + rand();
+    particle.lifetime = rand();
+  }
+  particle.color = sim_params.color;
+
+  particle.position.x += particle.velocity * particle.dir.x * sim_params.delta_time;
+  particle.position.y -= particle.velocity * particle.dir.y * sim_params.delta_time;
+  
+
+  idx_count += u32(1);
+
+  particles_dst[idx] = particle;
 }
