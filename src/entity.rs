@@ -356,7 +356,7 @@ impl EntityManager {
                 .player
                 .get_orientation_point((0.0, self.player.top_right().y).into()),
             self.player.rotation(),
-            (1.0, 0.0, 0.0, 1.0).into(),
+            (52.0 / 255.0, 76.0 / 255.0, 235.0 / 255.0, 1.0).into(),
             dt,
         );
 

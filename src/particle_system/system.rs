@@ -363,7 +363,6 @@ impl ParticleSystem {
         dt: &instant::Duration,
     ) {
         let dir = CompassDir::from_deg(dir.opposite().0 );
-        println!("{:#?}", self.sim_params);
         queue.write_buffer(
             &self.simulation_buffer,
             0,
