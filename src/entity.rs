@@ -70,13 +70,12 @@ pub trait Entity {
     /// ```
     /// let top_left_corner = entity.get_orientation_point(entity.top_left());
     ///
-    /// let entity_center = self.get_orientation_point((1.0, 1.0).into());
+    /// let entity_center = self.get_orientation_point((0.0, 0.0).into());
     /// ```
     fn get_orientation_point(&self, point: Vector2<f32>) -> Vector2<f32> {
         let rotation = self.rotation().0.to_radians();
         let point_oriented_x = point.x * rotation.cos() - point.y * rotation.sin();
         let point_oriented_y = point.x * rotation.sin() + point.y * rotation.cos();
-
         (
             self.center().x + point_oriented_x,
             self.center().y + point_oriented_y,
@@ -204,13 +203,13 @@ impl EntityManager {
                 (61.0, 19.0).into(),
             );
 
-            particle_system.push_group(
-                enemy.id(),
-                device,
-                1000,
-                (0.0, 0.0).into(),
-                (0.0, 1.0, 0.5, 1.0).into(),
-            );
+            // particle_system.push_group(
+            //     enemy.id(),
+            //     device,
+            //     1000,
+            //     (0.0, 0.0).into(),
+            //     (0.0, 1.0, 0.5, 1.0).into(),
+            // );
 
             enemies.push(enemy);
         }
@@ -229,13 +228,13 @@ impl EntityManager {
                 position.into(),
                 (17.5, 20.0).into(),
             );
-            particle_system.push_group(
-                enemy.id(),
-                device,
-                1000,
-                (0.0, 0.0).into(),
-                (1.0, 0.5, 0.0, 1.0).into(),
-            );
+            // particle_system.push_group(
+            //     enemy.id(),
+            //     device,
+            //     1000,
+            //     (0.0, 0.0).into(),
+            //     (1.0, 0.5, 0.0, 1.0).into(),
+            // );
             enemies.push(enemy);
         }
 
@@ -285,14 +284,14 @@ impl EntityManager {
             }
 
             e.update(&dt, input_controller, audio, device, queue);
-            particle_system.update_sim_params(
-                queue,
-                e.id(),
-                &e.get_orientation_point((0.0, e.top_right().y).into()),
-                e.rotation(),
-                (0.0, 1.0, 0.0, 1.0).into(),
-                dt,
-            );
+            // particle_system.update_sim_params(
+            //     queue,
+            //     e.id(),
+            //     &e.get_orientation_point((0.0, e.top_right().y).into()),
+            //     e.rotation(),
+            //     (0.0, 1.0, 0.0, 1.0).into(),
+            //     dt,
+            // );
         }
 
         self.player
@@ -349,12 +348,27 @@ impl EntityManager {
             }
         }
 
+        //todo check the -90 degrees from compass dir
+        let dir = cgmath::Vector2 {
+            x: self.player.rotation.cos(),
+            y: self.player.rotation.sin(),
+        }
+        .normalize();
+
+        let cdir = CompassDir::from_deg(self.player.rotation.0);
+
+        let angle = dir.y.atan2(dir.x);
+
+        let px = -20.0 * angle.cos();
+        let py = -20.0 * angle.sin();
+
+        let pos_x = self.player.get_orientation_point(self.player.top_right()).x;
+        let pos_y = self.player.get_orientation_point(self.player.top_right()).y;
+
         particle_system.update_sim_params(
             queue,
             self.player.id(),
-            &self
-                .player
-                .get_orientation_point((0.0, self.player.top_right().y).into()),
+            &(pos_x, pos_y).into(),
             self.player.rotation(),
             (52.0 / 255.0, 76.0 / 255.0, 235.0 / 255.0, 1.0).into(),
             dt,

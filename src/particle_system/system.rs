@@ -227,8 +227,8 @@ impl ParticleSystem {
         color: Vector4<f32>,
         dt: &instant::Duration,
     ) {
-        let dir = CompassDir::from_deg(dir.opposite().0 );
-        // let mut copied_uniform = self.sim_params.clone();
+        let dir = CompassDir::from_deg(dir.opposite().0).dir;
+
 
         let data = vec![
             dt.as_secs_f32(), //delta
@@ -236,8 +236,8 @@ impl ParticleSystem {
             position.x, 
             position.y,
             color.x, color.y, color.z, color.w, //color
-            dir.dir.x,
-            dir.dir.y,
+            dir.x,
+            dir.y,
             0.0, //padding            
             0.0 //padding            
         ];
@@ -282,6 +282,7 @@ impl ParticleSystem {
         self.total_particles += num_particles;
         
         let mut particles = vec![0.0f32; (12 * num_particles) as usize];
+        println!("particles size: {}", std::mem::size_of::<f32>() * (12 * num_particles) as usize);
         for chunk in particles.chunks_mut(12) {
             chunk[0] = rand::thread_rng().gen_range(-400..400) as f32;
             chunk[1] = rand::thread_rng().gen_range(-400..400) as f32;
@@ -296,7 +297,7 @@ impl ParticleSystem {
             chunk[7] = 1.0;
     
             // velocity
-            chunk[8] =  100.0;
+            chunk[8] =  rand::thread_rng().gen_range(10.0..200.0);
             // chunk[8] =  rand::thread_rng().gen_range(100.0..500.0);
             // lifetime
             chunk[9] = 0.0 as f32;
@@ -331,6 +332,7 @@ impl ParticleSystem {
         self.simulation_buffer.destroy();
 
         // replace the bind group with the new buffers
+        println!("MAX BUFFER SIZE: {}", device.limits().max_buffer_size);
         self.particle_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             layout: &create_compute_bind_group_layout(device),
             entries: &[

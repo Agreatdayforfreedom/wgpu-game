@@ -75,7 +75,7 @@ impl Weapon for DoubleCannon {
                 let mut p = Projectile::new(
                     ((position.x - scale.x / 2.0), (position.y - scale.y / 2.0)).into(),
                     scale,
-                    dir.angle.opposite(),
+                    dir.angle,
                     Bounds {
                         area: scale,
                         origin: cgmath::Point2 {
