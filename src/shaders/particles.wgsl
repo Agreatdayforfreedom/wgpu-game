@@ -20,25 +20,6 @@ fn opposite(degrees: f32) -> f32 {
   return (degrees + 180) % 360; 
 }
 
-fn get_area(dir: vec2f, padding: vec2f) -> vec2f {
-  // rest 90 degrees so that the compass point to the north
-  let angle = radians(90.0 - degrees(atan2(dir.y, dir.x)));
-  var px: f32 = gen_range(padding.x, padding.y) * cos(angle);
-  var py: f32 = gen_range(padding.x, padding.y) * sin(angle);
-  // if (padding.x == 0.0) {
-  //   px = padding.y * cos(angle);
-  // } else {
-  //   px = gen_range(0.0, padding.x) * cos(angle);
-  // }
-
-  // if(padding.y == 0.0) {
-  //   py = padding.x * sin(angle);
-  // } else {
-  //   py = gen_range(0.0, padding.y) * sin(angle);
-  // }
-
-  return vec2f(px, py);
-} 
 
 //generate a cone from a direction vector
 fn cone(dir: vec2f, theta: f32) -> vec2f {
@@ -80,7 +61,7 @@ struct VertexInput {
 fn vs_main(model: VertexInput) -> VertexOutput {
     var out: VertexOutput;
     
-    out.clip_position = camera.proj * vec4<f32>(((model.position * 2.0) + model.pos) , 0.0, 1.0);
+    out.clip_position = camera.proj * vec4<f32>(((model.position * 1.0) + model.pos) , 0.0, 1.0);
     out.tex_coords = model.position ;
     out.color = model.color;
     return out;
@@ -97,7 +78,9 @@ struct SimulationParams {
   total: f32,
   position: vec2<f32>,
   color: vec4<f32>,
-  dir: vec2<f32>
+  dir: vec2<f32>,
+  color_over_lifetime: f32,
+  arc: f32,
 }
 
 struct Particle {
@@ -120,32 +103,29 @@ fn simulate(@builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
     return;
   }
   // 2796202
-  let object_id = idx /  1000;
+  let object_id = idx /  100;
   let sim_params = sim_params_groups[object_id]; 
   var particle: Particle = particles_dst[idx];
 
-  let odd = idx & 1;
-
   init_rand(idx, vec4f(f32(idx), sim_params.delta_time, particle.position.x, particle.position.y));
 
-  let dir: vec2f = normalize(cone(sim_params.dir, 0.0)); 
-  var padding: vec2f;
-  if (odd == 1) {
-    padding = get_area(dir, vec2f(14.0, 16));
-  } else {
-    padding = get_area(sim_params.dir, vec2f(29.0, 31.0));
-  }
+  let dir: vec2f = normalize(cone(sim_params.dir, sim_params.arc)); 
+  
   particle.lifetime -= sim_params.delta_time;
+
   
   if (particle.lifetime < 0.0) {
-    particle.position.x = sim_params.position.x + padding.x;
-    particle.position.y = sim_params.position.y + padding.y;
+    particle.position.x = sim_params.position.x;
+    particle.position.y = sim_params.position.y;
     particle.dir.x = dir.x;
     particle.dir.y = dir.y;
     particle.lifetime = rand();
+    particle.color = sim_params.color;
   }
-  particle.color = sim_params.color;
-
+  // particle.color.a = 0.0;
+  if(sim_params.color_over_lifetime == 1.0) {
+    particle.color.a = smoothstep(0.0, 0.5, particle.lifetime);
+  } 
   particle.position.x += particle.velocity * particle.dir.x * sim_params.delta_time;
   particle.position.y -= particle.velocity * particle.dir.y * sim_params.delta_time;
   

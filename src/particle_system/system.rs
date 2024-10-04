@@ -23,6 +23,18 @@ pub struct ParticleSystem {
     bloom: PostProcessing,
 }
 
+//sim_param layout
+const sim_param_layout: u32 = 
+4 + //dy
+4 + // num particles
+4 + 4 + // pos
+4 + 4 + 4 + 4 + //color
+4 + 4 + //dir
+4 + 4 + 0; //padding
+
+
+
+
 fn create_compute_bind_group_layout(device: &wgpu::Device) -> wgpu::BindGroupLayout {
     device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
         label: Some("Particle Bind Group Layout"),
@@ -238,8 +250,8 @@ impl ParticleSystem {
             color.x, color.y, color.z, color.w, //color
             dir.x,
             dir.y,
-            0.0, //padding            
-            0.0 //padding            
+            1.0, //color over lifetime            
+            15.0 //arc            
         ];
         for t in &mut self.sim_params {
             if t.0 == id {
@@ -254,6 +266,7 @@ impl ParticleSystem {
 
         //delta time
         chunk[1] = 0.04;
+        
 
         //num of particles
         chunk[0] = total as f32;
@@ -271,8 +284,8 @@ impl ParticleSystem {
         chunk[8] =  0.0;
         chunk[9] =  0.0;
 
-        chunk[10] =  0.0; // padding
-        chunk[11] =  0.0; //padding
+        chunk[10] =  1.0; // color_over_lifetime
+        chunk[11] =  15.0; // arc
 
         chunk.to_vec()
     }
@@ -297,7 +310,7 @@ impl ParticleSystem {
             chunk[7] = 1.0;
     
             // velocity
-            chunk[8] =  rand::thread_rng().gen_range(10.0..200.0);
+            chunk[8] =  rand::thread_rng().gen_range(10.0..50.0);
             // chunk[8] =  rand::thread_rng().gen_range(100.0..500.0);
             // lifetime
             chunk[9] = 0.0 as f32;
@@ -364,27 +377,12 @@ impl ParticleSystem {
         dir: cgmath::Deg<f32>,
         dt: &instant::Duration,
     ) {
-        let dir = CompassDir::from_deg(dir.opposite().0 );
         queue.write_buffer(
             &self.simulation_buffer,
             0,
             bytemuck::cast_slice(&self.sim_params.iter().flat_map(|t| { t.1.clone() }).collect::<Vec<f32>>()),
         );
-        // queue.write_buffer(
-        //     &self.simulation_buffer,
-        //     0,
-        //     bytemuck::cast_slice(&[
-        //         dt.as_secs_f32(), //delta
-        //         NUM_PARTICLES as f32,
-        //         player_position.x, 
-        //         player_position.y,
-        //         1.0, 0.0, 0.0, 1.0, //color
-        //         dir.dir.x,
-        //         dir.dir.y,
-        //         0.0, //padding            
-        //         0.0 //padding            
-        //     ]),
-        // );
+        
 
 
         // let view = &view.create_view(&wgpu::TextureViewDescriptor::default());

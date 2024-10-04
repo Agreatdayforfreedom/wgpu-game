@@ -182,7 +182,14 @@ impl EntityManager {
         particle_system.push_group(
             player.id(),
             device,
-            1000,
+            100,
+            (0.0, 0.0).into(),
+            (1.0, 1.0, 1.0, 1.0).into(),
+        );
+        particle_system.push_group(
+            player.id() + 1,
+            device,
+            100,
             (0.0, 0.0).into(),
             (1.0, 1.0, 1.0, 1.0).into(),
         );
@@ -362,18 +369,37 @@ impl EntityManager {
         let px = -20.0 * angle.cos();
         let py = -20.0 * angle.sin();
 
-        let pos_x = self.player.get_orientation_point(self.player.top_right()).x;
-        let pos_y = self.player.get_orientation_point(self.player.top_right()).y;
+        let pos = self.player.get_orientation_point(
+            (
+                self.player.top_right().x - 12.0,
+                self.player.top_right().y - 15.0,
+            )
+                .into(),
+        );
 
         particle_system.update_sim_params(
             queue,
             self.player.id(),
-            &(pos_x, pos_y).into(),
+            &pos,
             self.player.rotation(),
             (52.0 / 255.0, 76.0 / 255.0, 235.0 / 255.0, 1.0).into(),
             dt,
         );
-
+        let pos = self.player.get_orientation_point(
+            (
+                self.player.top_left().x + 12.0,
+                self.player.top_left().y - 15.0,
+            )
+                .into(),
+        );
+        particle_system.update_sim_params(
+            queue,
+            self.player.id() + 1,
+            &pos,
+            self.player.rotation(),
+            (52.0 / 255.0, 76.0 / 255.0, 235.0 / 255.0, 1.0).into(),
+            dt,
+        );
         self.explosions = self
             .explosions
             .drain(..)
