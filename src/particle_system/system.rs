@@ -247,35 +247,17 @@ impl ParticleSystem {
         self.push_group(0, device, 1000, (0.0, 0.0).into(), (1.0, 1.0, 1.0, 1.0).into());
     }
 
-    pub fn update_sim_params(&mut self, 
-        queue: &mut wgpu::Queue,
+    pub fn update_sim_params(&mut self,
         id: u32,
-        total: f32,
-        position: &Vector2<f32>,
-        dir: cgmath::Deg<f32>,
-        color: Vector4<f32>,
-        dt: &instant::Duration,
+        data: SimulationParams 
+      
     ) {
-        let dir = CompassDir::from_deg(dir.opposite().0).dir;
-
-
-        let mut data = SimulationParams::new(
-            dt.as_secs_f32(), 
-            total, 
-            *position, 
-            color, 
-            dir, 
-            1.0, 
-            15.0, 
-            7.0,
-            0.0
-        );
-
-
+        
+        let mut data = data; 
 
         for t in &mut self.sim_params {
             if t.0 == id {
-                let dist = distance(t.1.position(), *position);
+                let dist = distance(t.1.position(), data.position);
                 data.set_distance_traveled(dist);
                 t.1 = data;
                 break;
@@ -314,17 +296,7 @@ impl ParticleSystem {
             // chunk[11] = 0.0;
         }
 
-        let sim_params = SimulationParams::new(
-            0.0, 
-            num_particles as f32, 
-            position, 
-            color, 
-            (0.0, 0.0).into(), 
-            0.0, 
-            0.0, 
-            0.0, 
-            0.0,
-        );
+        let sim_params = SimulationParams::default();
 
         //extend the previous particles
         self.particles.insert(id, particles);
@@ -389,9 +361,6 @@ impl ParticleSystem {
         encoder: &mut wgpu::CommandEncoder,
         view: &wgpu::Texture,
         camera: &camera::Camera,
-        player_position: &Vector2<f32>,
-        dir: cgmath::Deg<f32>,
-        dt: &instant::Duration,
     ) {
         queue.write_buffer(
             self.simulation_buffer.buffer(),

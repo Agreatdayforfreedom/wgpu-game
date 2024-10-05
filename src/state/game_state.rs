@@ -249,18 +249,8 @@ impl GameState {
             self.entity_manager.draw(&mut rpass);
         }
 
-        self.particle_system.render(
-            queue,
-            &mut encoder,
-            &frame.texture,
-            &self.camera,
-            &self
-                .entity_manager
-                .player
-                .get_orientation_point((0.0, self.entity_manager.player.top_right().y).into()),
-            self.entity_manager.player.rotation(),
-            &self.dt,
-        );
+        self.particle_system
+            .render(queue, &mut encoder, &frame.texture, &self.camera);
 
         self.particle_system.blend(
             &mut encoder,

@@ -49,17 +49,17 @@ impl SimulationBuffer {
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct SimulationParams {
-    delta_time: f32,
-    total: f32,
-    position: Vector2<f32>,
-    color: Vector4<f32>,
-    dir: Vector2<f32>,
-    color_over_lifetime: f32,
-    arc: f32,
-    rate_over_distance: f32,
-    distance_traveled: f32,
-    _pad: f32,
-    __pad: f32,
+    pub delta_time: f32,
+    pub total: f32,
+    pub position: Vector2<f32>,
+    pub color: Vector4<f32>,
+    pub dir: Vector2<f32>,
+    pub color_over_lifetime: f32,
+    pub arc: f32,
+    pub rate_over_distance: f32,
+    pub distance_traveled: f32,
+    pub _pad: f32,
+    pub __pad: f32,
     //updated in the shader
 }
 
@@ -93,6 +93,24 @@ impl SimulationParams {
 
 unsafe impl bytemuck::Pod for SimulationParams {}
 unsafe impl bytemuck::Zeroable for SimulationParams {}
+
+impl Default for SimulationParams {
+    fn default() -> Self {
+        Self {
+            delta_time: 0.0,
+            total: 1000.0,
+            position: (0.0, 0.0).into(),
+            dir: (0.0, 0.0).into(),
+            color: (1.0, 1.0, 1.0, 1.0).into(),
+            arc: 0.0,
+            color_over_lifetime: 1.0,
+            distance_traveled: 0.0,
+            rate_over_distance: 0.0,
+            _pad: 0.0,
+            __pad: 0.0,
+        }
+    }
+}
 
 impl SimulationParams {
     pub fn position(&self) -> Vector2<f32> {

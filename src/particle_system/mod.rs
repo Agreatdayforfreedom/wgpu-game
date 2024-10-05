@@ -1,2 +1,2 @@
-mod simulation_params;
+pub mod simulation_params;
 pub mod system;

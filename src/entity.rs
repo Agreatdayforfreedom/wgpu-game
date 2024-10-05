@@ -1,25 +1,16 @@
-use std::{borrow::BorrowMut, ops::DerefMut};
-
 use crate::{
     audio::Audio,
-    camera::{self, Camera},
+    camera::Camera,
     collider::{check_collision, Bounds},
-    entities::{
-        evil_ship::{self, EvilShip},
-        swift_ship::SwiftShip,
-    },
+    entities::{evil_ship::EvilShip, swift_ship::SwiftShip},
     explosion::Explosion,
     input::{self, Input},
-    particle_system::system::ParticleSystem,
+    particle_system::{simulation_params::SimulationParams, system::ParticleSystem},
     player::Player,
-    rendering::{create_bind_group_layout, Sprite},
-    uniform::Uniform,
     util::{distance, CompassDir, IdVendor},
-    weapon::projectile::{self, Projectile},
 };
-use cgmath::{Angle, Deg, InnerSpace, Point2, SquareMatrix, Vector2, Vector3, Vector4};
+use cgmath::{Angle, Deg, Point2, SquareMatrix, Vector2, Vector3, Vector4};
 use rand::Rng;
-
 pub trait Entity {
     fn update(
         &mut self,
@@ -164,6 +155,7 @@ impl EntityUniform {
     }
 }
 
+#[allow(dead_code)]
 pub struct EntityManager {
     id_vendor: IdVendor,
     pub player: Player,
@@ -355,20 +347,6 @@ impl EntityManager {
             }
         }
 
-        //todo check the -90 degrees from compass dir
-        let dir = cgmath::Vector2 {
-            x: self.player.rotation.cos(),
-            y: self.player.rotation.sin(),
-        }
-        .normalize();
-
-        let cdir = CompassDir::from_deg(self.player.rotation.0);
-
-        let angle = dir.y.atan2(dir.x);
-
-        let px = -20.0 * angle.cos();
-        let py = -20.0 * angle.sin();
-
         let pos = self.player.get_orientation_point(
             (
                 self.player.top_right().x - 12.0,
@@ -378,13 +356,18 @@ impl EntityManager {
         );
 
         particle_system.update_sim_params(
-            queue,
             self.player.id(),
-            100.0,
-            &pos,
-            self.player.rotation(),
-            (52.0 / 255.0, 76.0 / 255.0, 235.0 / 255.0, 1.0).into(),
-            dt,
+            SimulationParams {
+                total: 100.0,
+                position: pos,
+                dir: CompassDir::from_deg(self.player.rotation().opposite().0).dir,
+                color: (52.0 / 255.0, 76.0 / 255.0, 235.0 / 255.0, 1.0).into(),
+                rate_over_distance: 7.0,
+                color_over_lifetime: 1.0,
+                arc: 15.0,
+                delta_time: dt.as_secs_f32(),
+                ..Default::default()
+            },
         );
         let pos = self.player.get_orientation_point(
             (
@@ -394,13 +377,18 @@ impl EntityManager {
                 .into(),
         );
         particle_system.update_sim_params(
-            queue,
             self.player.id() + 1,
-            100.0,
-            &pos,
-            self.player.rotation(),
-            (52.0 / 255.0, 76.0 / 255.0, 235.0 / 255.0, 1.0).into(),
-            dt,
+            SimulationParams {
+                total: 100.0,
+                position: pos,
+                dir: CompassDir::from_deg(self.player.rotation().opposite().0).dir,
+                color: (52.0 / 255.0, 76.0 / 255.0, 235.0 / 255.0, 1.0).into(),
+                rate_over_distance: 7.0,
+                color_over_lifetime: 1.0,
+                arc: 15.0,
+                delta_time: dt.as_secs_f32(),
+                ..Default::default()
+            },
         );
         self.explosions = self
             .explosions
