@@ -16,21 +16,14 @@ pub struct ParticleSystem {
     total_particles: u64,
     particles: HashMap<u32, Vec<f32>>,
     sim_params: Vec<(u32, SimulationParams)>,
-    // distance_traveled: Vec<f32>,
-    emitter_data: Vec<f32>,
     compute_pipeline: wgpu::ComputePipeline,
     render_pipeline: wgpu::RenderPipeline,
     particle_buffer: wgpu::Buffer,
-    emitter_buffer: wgpu::Buffer,
     simulation_buffer: SimulationBuffer,
     vertices_buffer: wgpu::Buffer,
     particle_bind_group: wgpu::BindGroup,
     bloom: PostProcessing,
 }
-
-
-
-
 
 fn create_compute_bind_group_layout(device: &wgpu::Device) -> wgpu::BindGroupLayout {
     device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -56,16 +49,6 @@ fn create_compute_bind_group_layout(device: &wgpu::Device) -> wgpu::BindGroupLay
                 },
                 count: None,
             },
-            // wgpu::BindGroupLayoutEntry {
-            //     binding: 2,
-            //     visibility: wgpu::ShaderStages::COMPUTE,
-            //     ty: wgpu::BindingType::Buffer {
-            //         ty: wgpu::BufferBindingType::Storage { read_only: false },
-            //         has_dynamic_offset: false,
-            //         min_binding_size: None,
-            //     },
-            //     count: None,
-            // }
         ],
     })
 }
@@ -109,15 +92,6 @@ impl ParticleSystem {
 
         let simulation_buffer = SimulationBuffer::new(&device);
         
-        let emitter_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("Emitter Buffer"),
-            size: 8,
-            usage: wgpu::BufferUsages::STORAGE
-            | wgpu::BufferUsages::COPY_DST,
-            mapped_at_creation:false,
-            
-        });
-
         //pipelines
         let shader = device.create_shader_module(wgpu::include_wgsl!("../shaders/particles.wgsl"));
 
@@ -202,10 +176,7 @@ impl ParticleSystem {
                     binding: 1,
                     resource: simulation_buffer.as_entire_binding(),
                 },
-                // wgpu::BindGroupEntry {
-                //     binding: 2,
-                //     resource: emitter_buffer.as_entire_binding(),
-                // }
+                
             ],
             label: None,
         });
@@ -233,18 +204,12 @@ impl ParticleSystem {
             particle_bind_group,
             particles: HashMap::with_capacity(0),
             sim_params: vec![],
-            emitter_data: vec![],
             vertices_buffer,
             compute_pipeline,
             particle_buffer,
-            emitter_buffer,
             simulation_buffer,
             render_pipeline,
         }
-    }
-
-    pub fn init(&mut self, device: &wgpu::Device) {
-        self.push_group(0, device, 1000, (0.0, 0.0).into(), (1.0, 1.0, 1.0, 1.0).into());
     }
 
     pub fn update_sim_params(&mut self,
@@ -312,19 +277,10 @@ impl ParticleSystem {
                 | wgpu::BufferUsages::COPY_DST,
         });
 
-        // self.emitter_data.push(position.x);
-        // self.emitter_data.push(position.y);
-        // let emitter_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-        //     label: Some(&format!("Particle Buffer")),
-        //     contents: bytemuck::cast_slice(&self.emitter_data),
-        //     usage: wgpu::BufferUsages::STORAGE
-        //         | wgpu::BufferUsages::COPY_DST,
-        // });
-        
+    
         //destroy previous buffers
         self.particle_buffer.destroy();
         self.simulation_buffer.destroy();
-        // self.emitter_buffer.destroy();
 
         let simulation_buffer = self.simulation_buffer.with_contents(&device, bytemuck::cast_slice(&self.sim_params.iter().map(|t| { t.1 }).collect::<Vec<SimulationParams>>()));
         
@@ -341,17 +297,12 @@ impl ParticleSystem {
                     binding: 1,
                     resource: simulation_buffer.as_entire_binding(),
                 },
-                // wgpu::BindGroupEntry {
-                //     binding: 2,
-                //     resource: emitter_buffer.as_entire_binding(),
-                // }
             ],
             label: None,
         });
 
         //save the new buffers
         self.particle_buffer = particle_buffer;
-        // self.emitter_buffer = emitter_buffer;
 
     }
 
@@ -367,8 +318,6 @@ impl ParticleSystem {
             0,
             bytemuck::cast_slice(&self.sim_params.iter().map(|t| { t.1 }).collect::<Vec<SimulationParams>>()),
         );
-        
-
 
         // let view = &view.create_view(&wgpu::TextureViewDescriptor::default());
         let rpass_layout = wgpu::RenderPassDescriptor {

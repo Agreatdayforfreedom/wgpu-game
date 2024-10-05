@@ -98,15 +98,6 @@ struct SimulationParams {
   start_speed: f32,
 }
 
-// todo
-// lifetime factor
-// circle radius 
-// start-speed
-
-// struct EmitterData {
-//   prev_position: vec2<f32>,
-// }
-
 struct Particle {
   position: vec2<f32>,
   dir: vec2<f32>,
@@ -118,7 +109,6 @@ struct Particle {
 
 @binding(0) @group(0) var<storage, read_write> particles_dst : array<Particle>;
 @binding(1) @group(0) var<storage> sim_params_groups: array<SimulationParams>;
-// @binding(2) @group(0) var<storage, read_write> emitter_data_groups: array<EmitterData>;
 
 @compute @workgroup_size(64)
 fn simulate(@builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
@@ -144,7 +134,6 @@ fn simulate(@builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
   }
   
   var sim_params = sim_params_groups[group_id]; 
-  // var emitter_data = emitter_data_groups[group_id];
   
   var particle: Particle = particles_dst[idx];
   init_rand(idx, vec4f(f32(idx), sim_params.delta_time, particle.position.x, particle.position.y));
@@ -178,6 +167,5 @@ fn simulate(@builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
   particle.position.x += particle.velocity * particle.dir.x * sim_params.delta_time;
   particle.position.y -= particle.velocity * particle.dir.y * sim_params.delta_time;
   
-  // emitter_data.prev_position = sim_params.position;
   particles_dst[idx] = particle;
 }
