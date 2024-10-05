@@ -1,7 +1,8 @@
 use std::borrow::Borrow;
 
 use bytemuck::AnyBitPattern;
-use cgmath::{Vector2, Vector3, Vector4};
+use cgmath::{Array, Vector2, Vector3, Vector4};
+use rodio::cpal::FromSample;
 
 pub struct SimulationBuffer {
     buffer: wgpu::Buffer,
@@ -58,37 +59,38 @@ pub struct SimulationParams {
     pub arc: f32,
     pub rate_over_distance: f32,
     pub distance_traveled: f32,
-    pub _pad: f32,
-    pub __pad: f32,
-    //updated in the shader
+    pub lifetime_factor: f32,
+    pub circle_radius: f32,
+    pub start_speed: f32,
+    pub _pad: Vector3<f32>,
 }
 
 impl SimulationParams {
-    pub fn new(
-        delta_time: f32,
-        total: f32,
-        position: Vector2<f32>,
-        color: Vector4<f32>,
-        dir: Vector2<f32>,
-        color_over_lifetime: f32,
-        arc: f32,
-        rate_over_distance: f32,
-        distance_traveled: f32,
-    ) -> Self {
-        Self {
-            delta_time,
-            total,
-            position,
-            color,
-            dir,
-            color_over_lifetime,
-            arc,
-            rate_over_distance,
-            distance_traveled,
-            _pad: 0.0,
-            __pad: 0.0,
-        }
-    }
+    // pub fn new(
+    //     delta_time: f32,
+    //     total: f32,
+    //     position: Vector2<f32>,
+    //     color: Vector4<f32>,
+    //     dir: Vector2<f32>,
+    //     color_over_lifetime: f32,
+    //     arc: f32,
+    //     rate_over_distance: f32,
+    //     distance_traveled: f32,
+    // ) -> Self {
+    //     Self {
+    //         delta_time,
+    //         total,
+    //         position,
+    //         color,
+    //         dir,
+    //         color_over_lifetime,
+    //         arc,
+    //         rate_over_distance,
+    //         distance_traveled,
+    //         _pad: 0.0,
+    //         __pad: 0.0,
+    //     }
+    // }
 }
 
 unsafe impl bytemuck::Pod for SimulationParams {}
@@ -106,8 +108,10 @@ impl Default for SimulationParams {
             color_over_lifetime: 1.0,
             distance_traveled: 0.0,
             rate_over_distance: 0.0,
-            _pad: 0.0,
-            __pad: 0.0,
+            circle_radius: 5.0,
+            lifetime_factor: 1.0,
+            start_speed: 1.0,
+            _pad: Vector3::from_value(0.0),
         }
     }
 }

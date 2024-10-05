@@ -93,8 +93,15 @@ struct SimulationParams {
   arc: f32,
   rate_over_distance: f32,
   distance_traveled: f32,
-
+  lifetime_factor: f32,
+  circle_radius: f32,
+  start_speed: f32,
 }
+
+// todo
+// lifetime factor
+// circle radius 
+// start-speed
 
 // struct EmitterData {
 //   prev_position: vec2<f32>,
@@ -149,13 +156,13 @@ fn simulate(@builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
 
 
   if (particle.lifetime < 0.0) {
-      let p = circle(2.0, sim_params.position.x, sim_params.position.y);
+      let p = circle(sim_params.circle_radius, sim_params.position.x, sim_params.position.y);
       particle.position.x =  p.x;
       particle.position.y = p.y ;
       particle.dir.x = dir.x;
       particle.dir.y = dir.y;
-      particle.lifetime = rand() * 0.5;
-      particle.velocity = 0.0;
+      particle.lifetime = rand() * sim_params.lifetime_factor;
+      particle.velocity = particle.velocity * sim_params.start_speed;
     if(sim_params.distance_traveled > sim_params.rate_over_distance) {
       particle.color = sim_params.color;
     } else {
@@ -170,10 +177,6 @@ fn simulate(@builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
 
   particle.position.x += particle.velocity * particle.dir.x * sim_params.delta_time;
   particle.position.y -= particle.velocity * particle.dir.y * sim_params.delta_time;
-
-  let dist = distance(particle.position, sim_params.position);
-  particle.color.a -= dist * 0.01;
-
   
   // emitter_data.prev_position = sim_params.position;
   particles_dst[idx] = particle;

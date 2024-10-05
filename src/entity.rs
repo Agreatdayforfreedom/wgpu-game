@@ -366,6 +366,9 @@ impl EntityManager {
                 color_over_lifetime: 1.0,
                 arc: 15.0,
                 delta_time: dt.as_secs_f32(),
+                circle_radius: 1.5,
+                lifetime_factor: 0.25,
+                start_speed: 0.0,
                 ..Default::default()
             },
         );
@@ -387,6 +390,9 @@ impl EntityManager {
                 color_over_lifetime: 1.0,
                 arc: 15.0,
                 delta_time: dt.as_secs_f32(),
+                circle_radius: 1.5,
+                lifetime_factor: 0.25,
+                start_speed: 0.0,
                 ..Default::default()
             },
         );
