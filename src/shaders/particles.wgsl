@@ -1,3 +1,5 @@
+const PI: f32 = 3.14159265358;
+
 var<private> rand_seed : vec2<f32>;
 
 fn init_rand(invocation_id : u32, seed : vec4<f32>) {
@@ -35,6 +37,14 @@ fn cone(dir: vec2f, theta: f32) -> vec2f {
     )));
 }
 
+fn circle(radius: f32, x: f32, y: f32) -> vec2f {
+  let length = length(gen_range(0.0, exp2(radius)));
+  let degree = gen_range(0.0, 1.0) * 2.0 * PI;
+  let dx = x + length * cos(degree);
+  let dy = y + length * sin(degree);
+
+  return vec2f(dx, dy);
+}
 
 struct Camera {
   proj: mat4x4<f32>,
@@ -81,7 +91,14 @@ struct SimulationParams {
   dir: vec2<f32>,
   color_over_lifetime: f32,
   arc: f32,
+  rate_over_distance: f32,
+  distance_traveled: f32,
+
 }
+
+// struct EmitterData {
+//   prev_position: vec2<f32>,
+// }
 
 struct Particle {
   position: vec2<f32>,
@@ -94,40 +111,70 @@ struct Particle {
 
 @binding(0) @group(0) var<storage, read_write> particles_dst : array<Particle>;
 @binding(1) @group(0) var<storage> sim_params_groups: array<SimulationParams>;
+// @binding(2) @group(0) var<storage, read_write> emitter_data_groups: array<EmitterData>;
 
 @compute @workgroup_size(64)
 fn simulate(@builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
   let total = arrayLength(&particles_dst);
+  let total_sim_params = arrayLength(&sim_params_groups);
+  
   let idx = global_invocation_id.x;
+  
   if (idx >= total) {
     return;
   }
-  // 2796202
-  let object_id = idx /  100;
-  let sim_params = sim_params_groups[object_id]; 
-  var particle: Particle = particles_dst[idx];
+  // 2796202 
 
+  var group_id = 0u;
+  var cumulative_total = 0u;
+
+  for (var i = 0u; i < arrayLength(&sim_params_groups); i++) {
+      cumulative_total += u32(sim_params_groups[i].total);
+      if (idx < cumulative_total) {
+          group_id = i;
+          break;
+      }
+  }
+  
+  var sim_params = sim_params_groups[group_id]; 
+  // var emitter_data = emitter_data_groups[group_id];
+  
+  var particle: Particle = particles_dst[idx];
   init_rand(idx, vec4f(f32(idx), sim_params.delta_time, particle.position.x, particle.position.y));
+
 
   let dir: vec2f = normalize(cone(sim_params.dir, sim_params.arc)); 
   
-  particle.lifetime -= sim_params.delta_time;
+  particle.lifetime -=  sim_params.delta_time;
 
-  
+
   if (particle.lifetime < 0.0) {
-    particle.position.x = sim_params.position.x;
-    particle.position.y = sim_params.position.y;
-    particle.dir.x = dir.x;
-    particle.dir.y = dir.y;
-    particle.lifetime = rand();
-    particle.color = sim_params.color;
+      let p = circle(2.0, sim_params.position.x, sim_params.position.y);
+      particle.position.x =  p.x;
+      particle.position.y = p.y ;
+      particle.dir.x = dir.x;
+      particle.dir.y = dir.y;
+      particle.lifetime = rand() * 0.5;
+      particle.velocity = 0.0;
+    if(sim_params.distance_traveled > sim_params.rate_over_distance) {
+      particle.color = sim_params.color;
+    } else {
+      particle.color = vec4f(0.0, 0.0, 0.0, 0.0);
+    }
   }
-  // particle.color.a = 0.0;
+
+
   if(sim_params.color_over_lifetime == 1.0) {
     particle.color.a = smoothstep(0.0, 0.5, particle.lifetime);
   } 
+
   particle.position.x += particle.velocity * particle.dir.x * sim_params.delta_time;
   particle.position.y -= particle.velocity * particle.dir.y * sim_params.delta_time;
+
+  let dist = distance(particle.position, sim_params.position);
+  particle.color.a -= dist * 0.01;
+
   
+  // emitter_data.prev_position = sim_params.position;
   particles_dst[idx] = particle;
 }

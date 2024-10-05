@@ -380,6 +380,7 @@ impl EntityManager {
         particle_system.update_sim_params(
             queue,
             self.player.id(),
+            100.0,
             &pos,
             self.player.rotation(),
             (52.0 / 255.0, 76.0 / 255.0, 235.0 / 255.0, 1.0).into(),
@@ -395,6 +396,7 @@ impl EntityManager {
         particle_system.update_sim_params(
             queue,
             self.player.id() + 1,
+            100.0,
             &pos,
             self.player.rotation(),
             (52.0 / 255.0, 76.0 / 255.0, 235.0 / 255.0, 1.0).into(),
