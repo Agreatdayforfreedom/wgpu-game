@@ -5,7 +5,10 @@ use crate::{
     entities::{evil_ship::EvilShip, swift_ship::SwiftShip},
     explosion::Explosion,
     input::{self, Input},
-    particle_system::{simulation_params::SimulationParams, system::ParticleSystem},
+    particle_system::{
+        simulation_params::{Circle, SimulationParams},
+        system::ParticleSystem,
+    },
     player::Player,
     util::{distance, CompassDir, IdVendor},
 };
@@ -213,6 +216,14 @@ impl EntityManager {
             enemies.push(enemy);
         }
 
+        particle_system.push_group(
+            10,
+            device,
+            1000,
+            (-200.0, -200.0).into(),
+            (1.0, 1.0, 1.0, 1.0).into(),
+        );
+
         //swift_ships
         for _ in 0..5 {
             let position = (
@@ -364,11 +375,14 @@ impl EntityManager {
                 color: (52.0 / 255.0, 76.0 / 255.0, 235.0 / 255.0, 1.0).into(),
                 rate_over_distance: 7.0,
                 color_over_lifetime: 1.0,
-                arc: 15.0,
                 delta_time: dt.as_secs_f32(),
-                circle_radius: 1.5,
                 lifetime_factor: 0.25,
                 start_speed: 0.0,
+                shape_selected: 0,
+                circle: Circle {
+                    radius: 1.5,
+                    emit_from_edge: 0,
+                },
                 ..Default::default()
             },
         );
@@ -388,11 +402,35 @@ impl EntityManager {
                 color: (52.0 / 255.0, 76.0 / 255.0, 235.0 / 255.0, 1.0).into(),
                 rate_over_distance: 7.0,
                 color_over_lifetime: 1.0,
-                arc: 15.0,
                 delta_time: dt.as_secs_f32(),
-                circle_radius: 1.5,
                 lifetime_factor: 0.25,
                 start_speed: 0.0,
+                shape_selected: 0,
+                circle: Circle {
+                    radius: 1.5,
+                    emit_from_edge: 0,
+                },
+                ..Default::default()
+            },
+        );
+
+        particle_system.update_sim_params(
+            10,
+            SimulationParams {
+                total: 1000.0,
+                position: (-200.0, -200.0).into(),
+                dir: (0.0, 1.0).into(),
+                color: (225.0 / 255.0, 69.0 / 255.0, 0.0 / 255.0, 1.0).into(),
+                rate_over_distance: 0.0,
+                color_over_lifetime: 1.0,
+                delta_time: dt.as_secs_f32(),
+                lifetime_factor: 100.0,
+                start_speed: 0.0,
+                shape_selected: 0,
+                circle: Circle {
+                    radius: 9.0,
+                    emit_from_edge: 1,
+                },
                 ..Default::default()
             },
         );

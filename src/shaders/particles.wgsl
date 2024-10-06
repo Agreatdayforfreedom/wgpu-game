@@ -1,5 +1,9 @@
 const PI: f32 = 3.14159265358;
 
+// the circle shape modifies the 
+const CIRCLE_SHAPE: u32 = 0;
+const CONE_SHAPE: u32 = 1;
+
 var<private> rand_seed : vec2<f32>;
 
 fn init_rand(invocation_id : u32, seed : vec4<f32>) {
@@ -22,28 +26,39 @@ fn opposite(degrees: f32) -> f32 {
   return (degrees + 180) % 360; 
 }
 
+fn direction_vector(angle: f32) -> vec2f {
+  let x = cos(angle);
+  let y = sin(angle);
 
-//generate a cone from a direction vector
-fn cone(dir: vec2f, theta: f32) -> vec2f {
-  let angle = atan2(dir.y, dir.x);
-  
-  return vec2f(
-    cos(gen_range(
-      radians(degrees(angle) - theta / 2.0), 
-      radians(degrees(angle) + theta / 2.0))), 
-    sin(gen_range(
-      radians(degrees(angle) - theta / 2.0),  
-      radians(degrees(angle) + theta / 2.0)
-    )));
+  return normalize(vec2f(x, y));
 }
 
-fn circle(radius: f32, x: f32, y: f32) -> vec2f {
-  let length = length(gen_range(0.0, exp2(radius)));
-  let degree = gen_range(0.0, 1.0) * 2.0 * PI;
-  let dx = x + length * cos(degree);
-  let dy = y + length * sin(degree);
+// cone just emits the paricles from the base. 
+fn cone(angle: f32, arc: f32, x: f32, y: f32) -> vec4f {  
+  let cone = vec2f(
+    cos(gen_range(
+      radians(degrees(angle) - arc / 2.0), 
+      radians(degrees(angle) + arc / 2.0))), 
+    sin(gen_range(
+      radians(degrees(angle) - arc / 2.0),  
+      radians(degrees(angle) + arc / 2.0)
+    )));
+  
+  return vec4f(x, y, cone);
+}
 
-  return vec2f(dx, dy);
+fn circle(radius: f32, x: f32, y: f32, emit_from_edge: u32) -> vec4f {
+  var length = length(gen_range(0.0, exp2(radius))); // this indeed emit from any position in the circle.
+  if (emit_from_edge == 1) {
+    length = length(exp2(radius));
+  }
+
+  let degree = gen_range(0.0, 1.0) * 2.0 * PI;
+  let dir = direction_vector(degree);
+  let dx = x + length * dir.x;
+  let dy = y + length * dir.y;
+
+  return vec4f(dx, dy, dir.x, dir.y);
 }
 
 struct Camera {
@@ -83,6 +98,16 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     return in.color;
 }
 
+struct Cone {
+  arc: f32,
+  angle: f32,
+}
+
+struct Circle {
+  radius: f32,
+  emit_from_edge: u32,
+}
+
 struct SimulationParams {
   delta_time: f32,
   total: f32,
@@ -90,13 +115,23 @@ struct SimulationParams {
   color: vec4<f32>,
   dir: vec2<f32>,
   color_over_lifetime: f32,
-  arc: f32,
   rate_over_distance: f32,
   distance_traveled: f32,
   lifetime_factor: f32,
-  circle_radius: f32,
   start_speed: f32,
+  shape_selected: u32,
+  cone: Cone,
+  circle: Circle,
 }
+
+//shapes
+//circle
+// circle_radius
+// randomize
+
+// cone
+// arc,
+// randomize
 
 struct Particle {
   position: vec2<f32>,
@@ -139,24 +174,63 @@ fn simulate(@builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
   init_rand(idx, vec4f(f32(idx), sim_params.delta_time, particle.position.x, particle.position.y));
 
 
-  let dir: vec2f = normalize(cone(sim_params.dir, sim_params.arc)); 
+  // let dir: vec2f = normalize(cone(sim_params.dir, sim_params.arc)); 
   
   particle.lifetime -=  sim_params.delta_time;
 
 
+  // here the particle is initialized
   if (particle.lifetime < 0.0) {
-      let p = circle(sim_params.circle_radius, sim_params.position.x, sim_params.position.y);
-      particle.position.x =  p.x;
-      particle.position.y = p.y ;
+
+      var position = vec2f(0.0, 0.0);
+      var dir = vec2f(0.0, 0.0);
+
+      switch sim_params.shape_selected {
+        case CIRCLE_SHAPE: {
+          let position_dir = circle(
+            sim_params.circle.radius, 
+            sim_params.position.x, 
+            sim_params.position.y, 
+            sim_params.circle.emit_from_edge
+          );
+
+          position = position_dir.xy;
+          dir = position_dir.zw;
+        }
+        case CONE_SHAPE: {
+          let position_dir = cone(
+            sim_params.cone.angle,
+            sim_params.cone.arc,
+            sim_params.position.x, 
+            sim_params.position.y
+          );
+          position = position_dir.xy;
+          dir = position_dir.zw;
+        }
+        default: {
+          let position_dir = circle(
+            5.0, 
+            sim_params.position.x, 
+            sim_params.position.y, 
+            0u
+          );
+          position = position_dir.xy;
+          dir = position_dir.zw;
+        }
+      }
+      // let p = circle(sim_params.circle_radius, sim_params.position.x, sim_params.position.y);
+      particle.position.x = position.x;
+      particle.position.y = position.y ;
       particle.dir.x = dir.x;
       particle.dir.y = dir.y;
       particle.lifetime = rand() * sim_params.lifetime_factor;
       particle.velocity = particle.velocity * sim_params.start_speed;
-    if(sim_params.distance_traveled > sim_params.rate_over_distance) {
-      particle.color = sim_params.color;
-    } else {
-      particle.color = vec4f(0.0, 0.0, 0.0, 0.0);
-    }
+
+      if(sim_params.rate_over_distance == 0.0 || sim_params.distance_traveled > sim_params.rate_over_distance) {
+        particle.color = sim_params.color;
+      } else {
+        particle.color = vec4f(0.0, 0.0, 0.0, 0.0);
+      }
   }
 
 

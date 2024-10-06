@@ -1,8 +1,4 @@
-use std::borrow::Borrow;
-
-use bytemuck::AnyBitPattern;
 use cgmath::{Array, Vector2, Vector3, Vector4};
-use rodio::cpal::FromSample;
 
 pub struct SimulationBuffer {
     buffer: wgpu::Buffer,
@@ -49,6 +45,20 @@ impl SimulationBuffer {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
+pub struct Cone {
+    pub arc: f32,
+    pub angle: f32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct Circle {
+    pub radius: f32,
+    pub emit_from_edge: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
 pub struct SimulationParams {
     pub delta_time: f32,
     pub total: f32,
@@ -56,41 +66,14 @@ pub struct SimulationParams {
     pub color: Vector4<f32>,
     pub dir: Vector2<f32>,
     pub color_over_lifetime: f32,
-    pub arc: f32,
     pub rate_over_distance: f32,
     pub distance_traveled: f32,
     pub lifetime_factor: f32,
-    pub circle_radius: f32,
     pub start_speed: f32,
-    pub _pad: Vector3<f32>,
-}
-
-impl SimulationParams {
-    // pub fn new(
-    //     delta_time: f32,
-    //     total: f32,
-    //     position: Vector2<f32>,
-    //     color: Vector4<f32>,
-    //     dir: Vector2<f32>,
-    //     color_over_lifetime: f32,
-    //     arc: f32,
-    //     rate_over_distance: f32,
-    //     distance_traveled: f32,
-    // ) -> Self {
-    //     Self {
-    //         delta_time,
-    //         total,
-    //         position,
-    //         color,
-    //         dir,
-    //         color_over_lifetime,
-    //         arc,
-    //         rate_over_distance,
-    //         distance_traveled,
-    //         _pad: 0.0,
-    //         __pad: 0.0,
-    //     }
-    // }
+    pub shape_selected: u32,
+    pub cone: Cone,
+    pub circle: Circle,
+    // pub _pad: u32,
 }
 
 unsafe impl bytemuck::Pod for SimulationParams {}
@@ -104,14 +87,32 @@ impl Default for SimulationParams {
             position: (0.0, 0.0).into(),
             dir: (0.0, 0.0).into(),
             color: (1.0, 1.0, 1.0, 1.0).into(),
-            arc: 0.0,
             color_over_lifetime: 1.0,
-            distance_traveled: 0.0,
             rate_over_distance: 0.0,
-            circle_radius: 5.0,
+            distance_traveled: 0.0,
             lifetime_factor: 1.0,
             start_speed: 1.0,
-            _pad: Vector3::from_value(0.0),
+            shape_selected: 0,
+            cone: Cone::default(),
+            circle: Circle::default(),
+            // _pad: 0,
+        }
+    }
+}
+
+impl Default for Circle {
+    fn default() -> Self {
+        Self {
+            emit_from_edge: 0,
+            radius: 5.0,
+        }
+    }
+}
+impl Default for Cone {
+    fn default() -> Self {
+        Self {
+            angle: 0.0,
+            arc: 45.0,
         }
     }
 }
