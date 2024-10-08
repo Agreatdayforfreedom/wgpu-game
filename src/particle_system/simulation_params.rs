@@ -60,7 +60,7 @@ pub struct Circle {
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct SimulationParams {
-    pub delta_time: f32,
+    pub interval: f32,
     pub total: f32,
     pub position: Vector2<f32>,
     pub color: Vector4<f32>,
@@ -70,10 +70,11 @@ pub struct SimulationParams {
     pub distance_traveled: f32,
     pub lifetime_factor: f32,
     pub start_speed: f32,
+    pub mode: u32,
     pub shape_selected: u32,
     pub cone: Cone,
     pub circle: Circle,
-    // pub _pad: u32,
+    pub _pad: Vector3<u32>,
 }
 
 unsafe impl bytemuck::Pod for SimulationParams {}
@@ -82,7 +83,7 @@ unsafe impl bytemuck::Zeroable for SimulationParams {}
 impl Default for SimulationParams {
     fn default() -> Self {
         Self {
-            delta_time: 0.0,
+            interval: 0.0,
             total: 1000.0,
             position: (0.0, 0.0).into(),
             dir: (0.0, 0.0).into(),
@@ -92,10 +93,11 @@ impl Default for SimulationParams {
             distance_traveled: 0.0,
             lifetime_factor: 1.0,
             start_speed: 1.0,
+            mode: 0,
             shape_selected: 0,
             cone: Cone::default(),
             circle: Circle::default(),
-            // _pad: 0,
+            _pad: Vector3::from_value(0),
         }
     }
 }

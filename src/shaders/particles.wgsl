@@ -27,8 +27,8 @@ fn opposite(degrees: f32) -> f32 {
 }
 
 fn direction_vector(angle: f32) -> vec2f {
-  let x = cos(angle);
-  let y = sin(angle);
+  let x = cos(radians(angle));
+  let y = sin(radians(angle));
 
   return normalize(vec2f(x, y));
 }
@@ -47,13 +47,18 @@ fn cone(angle: f32, arc: f32, x: f32, y: f32) -> vec4f {
   return vec4f(x, y, cone);
 }
 
-fn circle(radius: f32, x: f32, y: f32, emit_from_edge: u32) -> vec4f {
+fn circle(invocation_id: u32, radius: f32, x: f32, y: f32, emit_from_edge: u32, mode: u32) -> vec4f {
   var length = length(gen_range(0.0, exp2(radius))); // this indeed emit from any position in the circle.
   if (emit_from_edge == 1) {
     length = length(exp2(radius));
   }
-
-  let degree = gen_range(0.0, 1.0) * 2.0 * PI;
+  var degree = 0.0;
+  // 1 = loop
+  if (mode == 1) {
+    degree = f32( invocation_id % 360);
+  } else { // 2 and default = random
+    degree = degrees(gen_range(0.0, 1.0) * 2.0 * PI);
+  }
   let dir = direction_vector(degree);
   let dx = x + length * dir.x;
   let dy = y + length * dir.y;
@@ -109,7 +114,7 @@ struct Circle {
 }
 
 struct SimulationParams {
-  delta_time: f32,
+  interval: f32,
   total: f32,
   position: vec2<f32>,
   color: vec4<f32>,
@@ -119,9 +124,15 @@ struct SimulationParams {
   distance_traveled: f32,
   lifetime_factor: f32,
   start_speed: f32,
+  mode: u32,
   shape_selected: u32,
   cone: Cone,
   circle: Circle,
+}
+
+struct Uniforms {
+  delta_time: f32,
+  time: f32,
 }
 
 //shapes
@@ -144,6 +155,7 @@ struct Particle {
 
 @binding(0) @group(0) var<storage, read_write> particles_dst : array<Particle>;
 @binding(1) @group(0) var<storage> sim_params_groups: array<SimulationParams>;
+@binding(2) @group(0) var<uniform> uniforms: Uniforms;
 
 @compute @workgroup_size(64)
 fn simulate(@builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
@@ -171,27 +183,28 @@ fn simulate(@builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
   var sim_params = sim_params_groups[group_id]; 
   
   var particle: Particle = particles_dst[idx];
-  init_rand(idx, vec4f(f32(idx), sim_params.delta_time, particle.position.x, particle.position.y));
+  init_rand(idx, vec4f(f32(idx), uniforms.delta_time, particle.position.x, particle.position.y));
 
 
-  // let dir: vec2f = normalize(cone(sim_params.dir, sim_params.arc)); 
   
-  particle.lifetime -=  sim_params.delta_time;
+  particle.lifetime -= uniforms.delta_time;
 
 
   // here the particle is initialized
   if (particle.lifetime < 0.0) {
-
+      let local_idx = idx - (cumulative_total - u32(sim_params.total));
       var position = vec2f(0.0, 0.0);
       var dir = vec2f(0.0, 0.0);
 
       switch sim_params.shape_selected {
         case CIRCLE_SHAPE: {
           let position_dir = circle(
+            local_idx,
             sim_params.circle.radius, 
             sim_params.position.x, 
             sim_params.position.y, 
-            sim_params.circle.emit_from_edge
+            sim_params.circle.emit_from_edge,
+            sim_params.mode
           );
 
           position = position_dir.xy;
@@ -209,37 +222,41 @@ fn simulate(@builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
         }
         default: {
           let position_dir = circle(
+            local_idx,
             5.0, 
             sim_params.position.x, 
             sim_params.position.y, 
-            0u
+            0u,
+            sim_params.mode
           );
           position = position_dir.xy;
           dir = position_dir.zw;
         }
       }
-      // let p = circle(sim_params.circle_radius, sim_params.position.x, sim_params.position.y);
       particle.position.x = position.x;
       particle.position.y = position.y ;
       particle.dir.x = dir.x;
       particle.dir.y = dir.y;
       particle.lifetime = rand() * sim_params.lifetime_factor;
-      particle.velocity = particle.velocity * sim_params.start_speed;
+      
 
-      if(sim_params.rate_over_distance == 0.0 || sim_params.distance_traveled > sim_params.rate_over_distance) {
+      particle.velocity = particle.velocity * sim_params.start_speed;      
+
+      if(sim_params.rate_over_distance == -1.0 
+      || sim_params.distance_traveled > 1.0
+       ) {
         particle.color = sim_params.color;
       } else {
         particle.color = vec4f(0.0, 0.0, 0.0, 0.0);
       }
   }
 
-
   if(sim_params.color_over_lifetime == 1.0) {
     particle.color.a = smoothstep(0.0, 0.5, particle.lifetime);
   } 
 
-  particle.position.x += particle.velocity * particle.dir.x * sim_params.delta_time;
-  particle.position.y -= particle.velocity * particle.dir.y * sim_params.delta_time;
+  particle.position.x += particle.velocity * particle.dir.x * uniforms.delta_time;
+  particle.position.y -= particle.velocity * particle.dir.y * uniforms.delta_time;
   
   particles_dst[idx] = particle;
 }

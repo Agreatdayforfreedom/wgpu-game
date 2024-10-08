@@ -188,6 +188,7 @@ impl GameState {
             &dt,
             &mut self.particle_system,
         );
+        self.particle_system.update(queue, &dt);
         self.camera.uniform.write(queue);
     }
 
@@ -250,7 +251,7 @@ impl GameState {
         }
 
         self.particle_system
-            .render(queue, &mut encoder, &frame.texture, &self.camera);
+            .render(&mut encoder, &frame.texture, &self.camera);
 
         self.particle_system.blend(
             &mut encoder,

@@ -375,7 +375,7 @@ impl EntityManager {
                 color: (52.0 / 255.0, 76.0 / 255.0, 235.0 / 255.0, 1.0).into(),
                 rate_over_distance: 7.0,
                 color_over_lifetime: 1.0,
-                delta_time: dt.as_secs_f32(),
+                // interval: dt.as_secs_f32(),
                 lifetime_factor: 0.25,
                 start_speed: 0.0,
                 shape_selected: 0,
@@ -402,7 +402,7 @@ impl EntityManager {
                 color: (52.0 / 255.0, 76.0 / 255.0, 235.0 / 255.0, 1.0).into(),
                 rate_over_distance: 7.0,
                 color_over_lifetime: 1.0,
-                delta_time: dt.as_secs_f32(),
+                // delta_time: dt.as_secs_f32(),
                 lifetime_factor: 0.25,
                 start_speed: 0.0,
                 shape_selected: 0,
@@ -418,20 +418,21 @@ impl EntityManager {
             10,
             SimulationParams {
                 total: 1000.0,
-                position: (-200.0, -200.0).into(),
+                position: (0.0, 0.0).into(),
                 dir: (0.0, 1.0).into(),
                 color: (225.0 / 255.0, 69.0 / 255.0, 0.0 / 255.0, 1.0).into(),
-                rate_over_distance: 0.0,
+                rate_over_distance: -1.0,
                 color_over_lifetime: 1.0,
-                delta_time: dt.as_secs_f32(),
-                lifetime_factor: 100.0,
+                // interval: dt.as_secs_f32(),
+                lifetime_factor: 10000.0,
                 start_speed: 0.0,
+                mode: 1,
                 shape_selected: 0,
                 circle: Circle {
-                    radius: 9.0,
+                    radius: 10.0,
                     emit_from_edge: 1,
                 },
-                ..Default::default()
+                ..*particle_system.get_sim_params(10) // ..Default::default()
             },
         );
         self.explosions = self

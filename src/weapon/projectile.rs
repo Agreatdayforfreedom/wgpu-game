@@ -23,11 +23,6 @@ impl Projectile {
         dir: CompassDir,
         uniform: uniform::Uniform<EntityUniform>,
     ) -> Self {
-        println!(
-            "{:?}, {:?}",
-            cgmath::Deg(90.0) - rotation,
-            CompassDir::from_deg(dir.angle.0).angle
-        );
         Self {
             position,
             scale,
