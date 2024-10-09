@@ -20,7 +20,7 @@ struct Sprite {
     model: mat4x4<f32>,
     color: vec4<f32>,
     tex_scale: vec2<f32>,
-    tex_pos: f32
+    tex_pos:  vec2<f32>
 }
 @group(2) @binding(0)
 var<uniform> sprite: Sprite;
@@ -30,7 +30,7 @@ fn vs_main(in: VertexInput) -> VertexOutput {
     var out: VertexOutput;
     
     out.clip_position = camera.proj * sprite.model * vec4<f32>(in.position, 0.0, 1.0);
-    out.tex_coords = vec2<f32>(in.tex_coords.x, in.tex_coords.y + sprite.tex_pos) * sprite.tex_scale;
+    out.tex_coords = vec2<f32>(in.tex_coords.x + sprite.tex_pos.x, in.tex_coords.y + sprite.tex_pos.y) * sprite.tex_scale;
     out.color = sprite.color;
     return out;
 }

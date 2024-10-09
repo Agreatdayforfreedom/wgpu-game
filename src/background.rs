@@ -1,10 +1,16 @@
-use cgmath::Vector2;
+use std::time::Duration;
+
+use cgmath::{InnerSpace, Vector2};
 
 use crate::{
+    camera::{self, Camera},
     entity::{Entity, EntityUniform},
+    input,
     rendering::{create_bind_group_layout, Sprite},
     uniform::Uniform,
 };
+
+const LAYER_1_SPEED: f32 = 0.01;
 
 pub struct Background {
     id: u32,
@@ -51,18 +57,38 @@ impl Background {
             diffuse_bytes,
         );
         let mut uniform = Uniform::<EntityUniform>::new(&device);
-        uniform
-            .data
-            .set_scale((856.0 * 2.0, 375.0 * 2.0).into())
-            .exec();
+        uniform.data.set_scale((1200.0, 800.0).into()).exec();
+        uniform.data.set_tex_scale((2.0, 2.0).into()).exec();
+        uniform.data.set_rotation(cgmath::Deg(180.0)).exec();
 
         Box::new(Self {
             id: 10000, //TODO
             sprite,
             uniform,
-            scale: (856.0 * 2.0, 375.0 * 2.0).into(),
+            scale: (1200.0, 800.0).into(),
             position: (0.0, 0.0).into(),
             rotation: cgmath::Deg(0.0),
         })
+    }
+
+    pub fn update(&mut self, camera: &camera::Camera, input: &input::Input, dt: &Duration) {
+        let dt = dt.as_secs_f32();
+        let mut position = Vector2::new(0.0, 0.0);
+        if input.is_pressed("d") {
+            position.x += LAYER_1_SPEED * dt;
+        }
+        if input.is_pressed("a") {
+            position.x -= LAYER_1_SPEED * dt;
+        }
+        if input.is_pressed("w") {
+            position.y += LAYER_1_SPEED * dt;
+        }
+        if input.is_pressed("s") {
+            position.y -= LAYER_1_SPEED * dt;
+        }
+
+        self.uniform.data.tex_pos -= position;
+        self.position = camera.position.xy() + (self.scale / 2.0); //se te position in the center
+        self.uniform.data.set_position(self.position).exec();
     }
 }

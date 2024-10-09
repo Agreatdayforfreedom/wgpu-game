@@ -89,7 +89,7 @@ impl Weapon for Laser {
                     .uniform
                     .data
                     .set_color((1.0, 0.5, 0.0, 1.0).into());
-                projectile.uniform.data.tex_pos -= SPEED_LASER_MOVEMENT * dt.as_secs_f32();
+                projectile.uniform.data.tex_pos.y -= SPEED_LASER_MOVEMENT * dt.as_secs_f32();
                 projectile.uniform.write(queue);
             }
         }

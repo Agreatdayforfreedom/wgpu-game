@@ -93,7 +93,7 @@ pub struct EntityUniform {
     pub model: cgmath::Matrix4<f32>,
     color: cgmath::Vector4<f32>,
     tex_scale: cgmath::Vector2<f32>,
-    pub tex_pos: f32,
+    pub tex_pos: cgmath::Vector2<f32>,
     position: cgmath::Vector2<f32>,
     angle: Deg<f32>,
     scale: cgmath::Vector2<f32>,
@@ -109,7 +109,7 @@ impl Default for EntityUniform {
             color: (1.0, 1.0, 1.0, 1.0).into(),
             tex_scale: (1.0, 1.0).into(), //TODO
             pivot: (0.5 * 24.0, 0.5 * 24.0).into(),
-            tex_pos: 1.0,
+            tex_pos: (1.0, 1.0).into(),
             position: (0.0, 0.0).into(),
             angle: Deg(0.0),
             scale: (24.0, 24.0).into(),

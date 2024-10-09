@@ -177,8 +177,6 @@ impl GameState {
 
         println!("FPS: {}", 1.0 / dt.as_secs_f64());
 
-        self.background.uniform.write(queue);
-
         self.entity_manager.update(
             device,
             queue,
@@ -188,8 +186,12 @@ impl GameState {
             &dt,
             &mut self.particle_system,
         );
+
+        self.background
+            .update(&self.camera, &self.input_controller, &dt);
         self.particle_system.update(queue, &dt);
         self.camera.uniform.write(queue);
+        self.background.uniform.write(queue);
     }
 
     pub fn input(&mut self, event: &WindowEvent) -> bool {
