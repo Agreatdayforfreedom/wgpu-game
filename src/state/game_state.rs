@@ -53,7 +53,6 @@ impl GameState {
 
         let background = Background::new(&device, &queue);
         let player = Player::new(&device, &queue, 0);
-        background.uniform.write(queue);
 
         // entity_manager.add(None, vec![background]);
         //ENEMIES
@@ -188,10 +187,9 @@ impl GameState {
         );
 
         self.background
-            .update(&self.camera, &self.input_controller, &dt);
+            .update(queue, &self.camera, &self.input_controller, &dt);
         self.particle_system.update(queue, &dt);
         self.camera.uniform.write(queue);
-        self.background.uniform.write(queue);
     }
 
     pub fn input(&mut self, event: &WindowEvent) -> bool {
