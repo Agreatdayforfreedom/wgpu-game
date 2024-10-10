@@ -49,7 +49,22 @@ impl Entity for Background {
 impl Background {
     pub fn new(device: &wgpu::Device, queue: &wgpu::Queue) -> Box<Self> {
         let mut uniforms = vec![];
-        let diffuse_bytes = include_bytes!("./assets/NebulaBlue.png");
+        let diffuse_bytes = include_bytes!("./assets/nebula.png");
+        let sprite = Sprite::new(
+            &device,
+            &queue,
+            wgpu::AddressMode::ClampToEdge,
+            &create_bind_group_layout(device),
+            diffuse_bytes,
+        );
+        let mut uniform = Uniform::<EntityUniform>::new(&device);
+        uniform.data.set_scale((1200.0, 800.0).into()).exec();
+        uniform.data.set_tex_scale((1.0, 1.0).into()).exec();
+        uniform.data.set_rotation(cgmath::Deg(180.0)).exec();
+
+        uniforms.push((sprite, uniform));
+        let diffuse_bytes = include_bytes!("./assets/stars.png");
+
         let sprite = Sprite::new(
             &device,
             &queue,
@@ -63,23 +78,8 @@ impl Background {
         uniform.data.set_rotation(cgmath::Deg(180.0)).exec();
 
         uniforms.push((sprite, uniform));
-        let diffuse_bytes = include_bytes!("./assets/bg.png");
 
-        let sprite = Sprite::new(
-            &device,
-            &queue,
-            wgpu::AddressMode::ClampToEdge,
-            &create_bind_group_layout(device),
-            diffuse_bytes,
-        );
-        let mut uniform = Uniform::<EntityUniform>::new(&device);
-        uniform.data.set_scale((1200.0, 800.0).into()).exec();
-        uniform.data.set_tex_scale((2.0, 2.0).into()).exec();
-        uniform.data.set_rotation(cgmath::Deg(180.0)).exec();
-
-        uniforms.push((sprite, uniform));
-
-        let diffuse_bytes = include_bytes!("./assets/Stars-Big.png");
+        let diffuse_bytes = include_bytes!("./assets/big-stars.png");
 
         let sprite = Sprite::new(
             &device,
