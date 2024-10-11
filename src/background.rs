@@ -1,6 +1,6 @@
 use std::{time::Duration, vec};
 
-use cgmath::{InnerSpace, Vector2};
+use cgmath::Vector2;
 
 use crate::{
     camera,
@@ -10,14 +10,38 @@ use crate::{
     uniform::Uniform,
 };
 
-const LAYERS_SPEED: [f32; 3] = [0.01, 0.025, 0.05];
+fn create_layer(
+    device: &wgpu::Device,
+    queue: &wgpu::Queue,
+    scale: Vector2<f32>,
+    tex_scale: Vector2<f32>,
+    layer_speed: f32,
+    bytes: &[u8],
+) -> (Sprite, f32, Uniform<EntityUniform>) {
+    let sprite = Sprite::new(
+        device,
+        queue,
+        wgpu::AddressMode::ClampToEdge,
+        &create_bind_group_layout(device),
+        bytes,
+    );
+    let mut uniform = Uniform::<EntityUniform>::new(&device);
+    uniform
+        .data
+        .set_scale(scale)
+        .set_tex_scale(tex_scale)
+        .set_rotation(cgmath::Deg(180.0))
+        .exec();
+
+    (sprite, layer_speed, uniform)
+}
 
 pub struct Background {
     id: u32,
     position: Vector2<f32>,
     scale: Vector2<f32>,
     rotation: cgmath::Deg<f32>,
-    uniforms: Vec<(Sprite, Uniform<EntityUniform>)>,
+    uniforms: Vec<(Sprite, f32, Uniform<EntityUniform>)>,
 }
 
 impl Entity for Background {
@@ -38,7 +62,7 @@ impl Entity for Background {
     }
 
     fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
-        for (sprite, uniform) in &mut self.uniforms {
+        for (sprite, _, uniform) in &mut self.uniforms {
             sprite.bind(rpass);
             rpass.set_bind_group(2, &uniform.bind_group, &[]);
             rpass.draw(0..6, 0..1);
@@ -49,51 +73,61 @@ impl Entity for Background {
 impl Background {
     pub fn new(device: &wgpu::Device, queue: &wgpu::Queue) -> Box<Self> {
         let mut uniforms = vec![];
-        let diffuse_bytes = include_bytes!("./assets/nebula.png");
-        let sprite = Sprite::new(
-            &device,
-            &queue,
-            wgpu::AddressMode::ClampToEdge,
-            &create_bind_group_layout(device),
-            diffuse_bytes,
+
+        let bytes = include_bytes!("./assets/nebula.png");
+        let layer = create_layer(
+            device,
+            queue,
+            (1200.0, 800.0).into(),
+            (1.0, 1.0).into(),
+            0.01,
+            bytes,
         );
-        let mut uniform = Uniform::<EntityUniform>::new(&device);
-        uniform.data.set_scale((1200.0, 800.0).into()).exec();
-        uniform.data.set_tex_scale((1.0, 1.0).into()).exec();
-        uniform.data.set_rotation(cgmath::Deg(180.0)).exec();
+        uniforms.push(layer);
 
-        uniforms.push((sprite, uniform));
-        let diffuse_bytes = include_bytes!("./assets/stars.png");
-
-        let sprite = Sprite::new(
-            &device,
-            &queue,
-            wgpu::AddressMode::ClampToEdge,
-            &create_bind_group_layout(device),
-            diffuse_bytes,
+        let bytes = include_bytes!("./assets/deep-asteroids.png");
+        let layer = create_layer(
+            device,
+            queue,
+            (1200.0, 800.0).into(),
+            (2.0, 2.0).into(),
+            0.0125,
+            bytes,
         );
-        let mut uniform = Uniform::<EntityUniform>::new(&device);
-        uniform.data.set_scale((1200.0, 800.0).into()).exec();
-        uniform.data.set_tex_scale((2.0, 2.0).into()).exec();
-        uniform.data.set_rotation(cgmath::Deg(180.0)).exec();
+        uniforms.push(layer);
 
-        uniforms.push((sprite, uniform));
-
-        let diffuse_bytes = include_bytes!("./assets/big-stars.png");
-
-        let sprite = Sprite::new(
-            &device,
-            &queue,
-            wgpu::AddressMode::ClampToEdge,
-            &create_bind_group_layout(device),
-            diffuse_bytes,
+        let bytes = include_bytes!("./assets/stars.png");
+        let layer = create_layer(
+            device,
+            queue,
+            (1200.0, 800.0).into(),
+            (2.0, 2.0).into(),
+            0.025,
+            bytes,
         );
-        let mut uniform = Uniform::<EntityUniform>::new(&device);
-        uniform.data.set_scale((1200.0, 800.0).into()).exec();
-        uniform.data.set_tex_scale((2.0, 2.0).into()).exec();
-        uniform.data.set_rotation(cgmath::Deg(180.0)).exec();
+        uniforms.push(layer);
 
-        uniforms.push((sprite, uniform));
+        let bytes = include_bytes!("./assets/big-stars.png");
+        let layer = create_layer(
+            device,
+            queue,
+            (1200.0, 800.0).into(),
+            (2.0, 2.0).into(),
+            0.05,
+            bytes,
+        );
+        uniforms.push(layer);
+
+        let bytes = include_bytes!("./assets/near-asteroids.png");
+        let layer = create_layer(
+            device,
+            queue,
+            (1200.0, 800.0).into(),
+            (2.0, 2.0).into(),
+            0.06,
+            bytes,
+        );
+        uniforms.push(layer);
 
         Box::new(Self {
             id: 10000, //TODO
@@ -111,21 +145,23 @@ impl Background {
         input: &input::Input,
         dt: &Duration,
     ) {
-        for (i, (_, uniform)) in &mut self.uniforms.iter_mut().enumerate() {
+        for (_, speed, uniform) in &mut self.uniforms {
             let dt = dt.as_secs_f32();
+            let speed = *speed;
             let mut position = Vector2::new(0.0, 0.0);
             if input.is_pressed("d") {
-                position.x += LAYERS_SPEED[i] * dt;
+                position.x += speed * dt;
             }
             if input.is_pressed("a") {
-                position.x -= LAYERS_SPEED[i] * dt;
+                position.x -= speed * dt;
             }
             if input.is_pressed("w") {
-                position.y += LAYERS_SPEED[i] * dt;
+                position.y += speed * dt;
             }
             if input.is_pressed("s") {
-                position.y -= LAYERS_SPEED[i] * dt;
+                position.y -= speed * dt;
             }
+
             uniform.data.tex_pos -= position;
             uniform
                 .data
@@ -134,6 +170,5 @@ impl Background {
 
             uniform.write(queue);
         }
-        // self.position = ; //se te position in the center
     }
 }

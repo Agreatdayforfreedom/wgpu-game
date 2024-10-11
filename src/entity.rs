@@ -94,7 +94,7 @@ pub struct EntityUniform {
     color: cgmath::Vector4<f32>,
     tex_scale: cgmath::Vector2<f32>,
     pub tex_pos: cgmath::Vector2<f32>,
-    position: cgmath::Vector2<f32>,
+    pub position: cgmath::Vector2<f32>,
     angle: Deg<f32>,
     scale: cgmath::Vector2<f32>,
     pivot: cgmath::Point2<f32>,
