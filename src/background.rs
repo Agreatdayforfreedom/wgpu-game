@@ -1,6 +1,6 @@
 use std::{time::Duration, vec};
 
-use cgmath::{vec4, InnerSpace, Vector2};
+use cgmath::{vec2, vec4, InnerSpace, Vector2};
 
 use crate::{
     camera,
@@ -31,7 +31,7 @@ fn create_layer(
         .data
         .set_scale(scale)
         .set_tex_scale(tex_scale)
-        .set_rotation(cgmath::Deg(180.0))
+        .set_rotation(cgmath::Deg(90.0))
         .exec();
 
     (sprite, layer_speed, uniform)
@@ -147,7 +147,7 @@ impl Background {
             uniforms,
             scale: (1200.0, 800.0).into(),
             position: (0.0, 0.0).into(),
-            rotation: cgmath::Deg(0.0),
+            rotation: cgmath::Deg(180.0),
             prev_pos: (0.0, 0.0).into(),
         })
     }
@@ -189,6 +189,7 @@ impl Background {
                 uniform
                     .data
                     .set_position(camera.position.xy() + (self.scale / 2.0))
+                    .set_rotation(self.rotation)
                     .exec();
             }
             uniform.write(queue);
