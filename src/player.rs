@@ -65,6 +65,7 @@ impl Entity for Player {
             .set_rotation(self.rotation)
             .set_scale(self.scale)
             .exec();
+        self.uniform.write(queue);
     }
 
     fn id(&self) -> u32 {

@@ -1,6 +1,6 @@
 use std::{time::Duration, vec};
 
-use cgmath::Vector2;
+use cgmath::{vec4, InnerSpace, Vector2};
 
 use crate::{
     camera,
@@ -8,6 +8,7 @@ use crate::{
     input,
     rendering::{create_bind_group_layout, Sprite},
     uniform::Uniform,
+    util::distance,
 };
 
 fn create_layer(
@@ -42,6 +43,7 @@ pub struct Background {
     scale: Vector2<f32>,
     rotation: cgmath::Deg<f32>,
     uniforms: Vec<(Sprite, f32, Uniform<EntityUniform>)>,
+    prev_pos: Vector2<f32>,
 }
 
 impl Entity for Background {
@@ -81,6 +83,17 @@ impl Background {
             (1200.0, 800.0).into(),
             (1.0, 1.0).into(),
             0.01,
+            bytes,
+        );
+        uniforms.push(layer);
+
+        let bytes = include_bytes!("./assets/planet.png");
+        let layer = create_layer(
+            device,
+            queue,
+            (128.0, 128.0).into(),
+            (1.0, 1.0).into(),
+            475.0,
             bytes,
         );
         uniforms.push(layer);
@@ -135,6 +148,7 @@ impl Background {
             scale: (1200.0, 800.0).into(),
             position: (0.0, 0.0).into(),
             rotation: cgmath::Deg(0.0),
+            prev_pos: (0.0, 0.0).into(),
         })
     }
 
@@ -145,29 +159,38 @@ impl Background {
         input: &input::Input,
         dt: &Duration,
     ) {
+        // let camera_pos = camera.position.xy();
+
         for (_, speed, uniform) in &mut self.uniforms {
             let dt = dt.as_secs_f32();
             let speed = *speed;
             let mut position = Vector2::new(0.0, 0.0);
             if input.is_pressed("d") {
                 position.x += speed * dt;
-            }
-            if input.is_pressed("a") {
+            } else if input.is_pressed("a") {
                 position.x -= speed * dt;
-            }
-            if input.is_pressed("w") {
+            } else if input.is_pressed("w") {
                 position.y += speed * dt;
-            }
-            if input.is_pressed("s") {
+            } else if input.is_pressed("s") {
                 position.y -= speed * dt;
             }
 
-            uniform.data.tex_pos -= position;
-            uniform
-                .data
-                .set_position(camera.position.xy() + (self.scale / 2.0))
-                .exec();
+            if speed > 1.0 {
+                // let position = position.magnitude().clamp(0.0, 1.0);
+                if position.x != 0.0 && position.y != 0.0 {
+                    position.normalize();
+                }
 
+                let px = uniform.data.position.x + position.x;
+                let py = uniform.data.position.y + position.y;
+                uniform.data.set_position((px, py).into()).exec();
+            } else {
+                uniform.data.tex_pos -= position;
+                uniform
+                    .data
+                    .set_position(camera.position.xy() + (self.scale / 2.0))
+                    .exec();
+            }
             uniform.write(queue);
         }
     }

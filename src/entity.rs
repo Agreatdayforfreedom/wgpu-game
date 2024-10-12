@@ -266,12 +266,6 @@ impl EntityManager {
         dt: &instant::Duration,
         particle_system: &mut ParticleSystem,
     ) {
-        self.player.uniform.write(queue);
-        camera.update(Vector3::new(
-            self.player.position.x,
-            self.player.position.y,
-            1.0,
-        ));
         let mut min_dist = f32::MAX;
         for e in &mut self.enemies {
             if e.alive() {
@@ -303,9 +297,6 @@ impl EntityManager {
             //     dt,
             // );
         }
-
-        self.player
-            .update(dt, input_controller, audio, device, queue);
 
         if self.player.active_weapon.get_name() == "laser" {
             for p in self.player.active_weapon.get_projectiles() {
@@ -440,6 +431,14 @@ impl EntityManager {
             .drain(..)
             .filter(|e| e.end != true)
             .collect();
+        self.player
+            .update(dt, input_controller, audio, device, queue);
+
+        camera.update(Vector3::new(
+            self.player.position.x,
+            self.player.position.y,
+            1.0,
+        ));
     }
 
     pub fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
