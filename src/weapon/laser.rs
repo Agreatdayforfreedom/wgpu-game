@@ -79,7 +79,7 @@ impl Weapon for Laser {
             let position = *positions.get(0).unwrap();
             if projectile.alive {
                 //todo remove laser (swap_remove)
-                projectile.update(&dt, 0.0, position);
+                projectile.update(&dt, 0.0, position, queue);
 
                 // projectile.set_bounds(Bounds {
                 //     origin: cgmath::Point2::new(projectile.position.x, projectile.position.y),

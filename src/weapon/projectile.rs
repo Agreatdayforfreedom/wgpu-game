@@ -1,5 +1,11 @@
 use crate::{
-    collider::Bounds, entity::EntityUniform, uniform, util::CompassDir, weapon::projectile,
+    audio::Audio,
+    collider::Bounds,
+    entity::EntityUniform,
+    explosion::{self, Explosion},
+    uniform,
+    util::CompassDir,
+    weapon::projectile,
 };
 
 pub struct Projectile {
@@ -12,6 +18,7 @@ pub struct Projectile {
     pub initial_position: cgmath::Vector2<f32>,
     pub lifetime: instant::Instant,
     pub uniform: uniform::Uniform<EntityUniform>,
+    explosion: Option<Explosion>,
     target: Option<(u32, cgmath::Vector2<f32>)>, // id, position
 }
 
@@ -35,14 +42,17 @@ impl Projectile {
             lifetime: instant::Instant::now(),
             uniform,
             target: None,
+            explosion: None,
         }
     }
+
     // todo
     pub fn update(
         &mut self,
         dt: &instant::Duration,
         fire_speed: f32,
         entity_position: cgmath::Vector2<f32>,
+        queue: &mut wgpu::Queue,
     ) {
         self.uniform
             .data
@@ -50,6 +60,13 @@ impl Projectile {
             .set_rotation(self.rotation)
             .set_scale(self.scale)
             .exec();
+
+        // if self.explosion.is_some() {
+        //     self.explosion
+        //         .as_mut()
+        //         .unwrap()
+        //         .update(&mut Audio::new(), queue, dt);
+        // }
         // if self.position.y < 0.0 || self.position.y > 600.0 {
         //     self.alive = false; // todo life bounds
     }
@@ -81,11 +98,15 @@ impl Projectile {
         self.bounds = bounds;
     }
 
-    pub fn draw<'a, 'b>(&'a self, rpass: &'b mut wgpu::RenderPass<'a>) {
+    pub fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
         if self.alive {
             rpass.set_vertex_buffer(2, self.uniform.buffer.slice(..));
             rpass.set_bind_group(2, &self.uniform.bind_group, &[]);
             rpass.draw(0..6, 0..1);
+        } else {
+            // if self.explosion.is_some() {
+            //     self.explosion.as_mut().unwrap().draw(rpass);
+            // }
         }
     }
 }

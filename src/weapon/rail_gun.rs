@@ -111,7 +111,7 @@ impl Weapon for RailGun {
                     ),
                     area: cgmath::Vector2::new(2.5, 2.5),
                 });
-                projectile.update(&dt, 500.0, position);
+                projectile.update(&dt, 500.0, position, queue);
                 projectile.set_direction(|this| {
                     let spaceship_displacement = position - this.initial_position;
                     this.position.x += 500.0 * this.dir.dir.x * dt.as_secs_f32();

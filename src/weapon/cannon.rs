@@ -105,7 +105,7 @@ impl Weapon for Cannon {
             let projectile = self.projectiles.get_mut(i).unwrap();
             let position = *positions.get(0).unwrap();
             if projectile.alive && projectile.lifetime.elapsed().as_millis() <= LIFETIME {
-                projectile.update(&dt, 500.0, position);
+                projectile.update(&dt, 500.0, position, queue);
                 projectile.set_bounds(Bounds {
                     origin: cgmath::Point2::new(
                         projectile.position.x + projectile.scale.x / 2.0,

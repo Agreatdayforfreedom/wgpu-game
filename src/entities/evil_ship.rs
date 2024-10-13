@@ -21,7 +21,6 @@ pub struct EvilShip {
     scale: cgmath::Vector2<f32>,
     alive: bool,
     pub uniform: Uniform<EntityUniform>,
-    explosion: Explosion,
     weapon: Box<dyn Weapon>,
     rotation: cgmath::Deg<f32>,
     sprite: Sprite, //todo
@@ -77,7 +76,6 @@ impl EvilShip {
             alive: true,
             uniform,
             rotation: cgmath::Deg(0.0),
-            explosion: Explosion::new((48.0, 48.0).into(), device, queue),
             weapon: Cannon::new(400, true, &device, &queue),
             targeting: false,
             sprite,
@@ -121,9 +119,6 @@ impl Entity for EvilShip {
                 .set_rotation(self.rotation)
                 .exec();
             self.uniform.write(queue);
-        } else {
-            //update IF NOT ALIVE
-            self.explosion.update(audio, queue, dt);
         }
     }
 
@@ -148,9 +143,6 @@ impl Entity for EvilShip {
     }
 
     fn destroy(&mut self) {
-        if self.alive() {
-            self.explosion.set_position(self.position());
-        }
         self.alive = false;
     }
     fn set_target_point(&mut self, target: Vector2<f32>, dt: &Duration) {
@@ -191,10 +183,6 @@ impl Entity for EvilShip {
             self.sprite.bind(rpass);
             rpass.set_bind_group(2, &self.uniform.bind_group, &[]);
             rpass.draw(0..6, 0..1);
-        } else {
-            //draw IF NOT alive
-
-            self.explosion.draw(rpass);
         }
 
         self.weapon.draw(rpass);

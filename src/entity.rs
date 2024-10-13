@@ -3,7 +3,7 @@ use crate::{
     camera::Camera,
     collider::{check_collision, Bounds},
     entities::{evil_ship::EvilShip, swift_ship::SwiftShip},
-    explosion::Explosion,
+    explosion::{ExpansiveWave, Explosion, ExplosionManager},
     input::{self, Input},
     particle_system::{
         simulation_params::{Circle, SimulationParams},
@@ -164,7 +164,7 @@ pub struct EntityManager {
     id_vendor: IdVendor,
     pub player: Player,
     enemies: Vec<Box<dyn Entity>>,
-    explosions: Vec<Explosion>,
+    explosion_manager: ExplosionManager,
 }
 
 impl EntityManager {
@@ -253,7 +253,7 @@ impl EntityManager {
             id_vendor,
             player,
             enemies,
-            explosions: vec![],
+            explosion_manager: ExplosionManager::new(device, queue),
         }
     }
 
@@ -340,6 +340,7 @@ impl EntityManager {
         }
         if self.player.active_weapon.get_name() == "homing_missile" {
             for p in self.player.active_weapon.get_projectiles() {
+                // p.set_explosion(device, queue, false);
                 let mut min_dist = f32::MAX;
                 // if there is no target, we set the closer enemy as target.
                 // we keep (in the else statement) the same target regardless if the it's far away then any other enemy
@@ -379,9 +380,18 @@ impl EntityManager {
                 ) {
                     p.alive = false;
                     e.destroy();
+                    if !p.alive && !e.alive() {
+                        audio.push(crate::audio::Sounds::Explosion, 0.2);
+                        self.explosion_manager.add(
+                            Explosion::new(e.center(), (40.0, 40.0).into(), device, queue),
+                            Some(ExpansiveWave::new_at(e.center(), device)),
+                        );
+                    }
                 }
             }
         }
+
+        self.explosion_manager.update(queue, dt);
 
         let pos = self.player.get_orientation_point(
             (
@@ -460,14 +470,10 @@ impl EntityManager {
                 ..*particle_system.get_sim_params(10) // ..Default::default()
             },
         );
-        self.explosions = self
-            .explosions
-            .drain(..)
-            .filter(|e| e.end != true)
-            .collect();
     }
 
     pub fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
+        self.explosion_manager.draw(rpass);
         self.player.draw(rpass);
 
         for e in &mut self.enemies {

@@ -20,7 +20,6 @@ pub struct SwiftShip {
     scale: cgmath::Vector2<f32>,
     alive: bool,
     pub uniform: Uniform<EntityUniform>,
-    explosion: Explosion,
     weapon: Box<dyn Weapon>,
     rotation: cgmath::Deg<f32>,
     sprite: Sprite, //todo
@@ -76,7 +75,6 @@ impl SwiftShip {
             alive: true,
             uniform,
             rotation: cgmath::Deg(0.0),
-            explosion: Explosion::new((32.0, 32.0).into(), device, queue),
             weapon: Cannon::new(100, true, &device, &queue),
             targeting: false,
             sprite,
@@ -121,8 +119,6 @@ impl Entity for SwiftShip {
                 .set_rotation(self.rotation)
                 .exec();
             self.uniform.write(queue);
-        } else {
-            self.explosion.update(audio, queue, dt);
         }
     }
 
@@ -147,9 +143,6 @@ impl Entity for SwiftShip {
     }
 
     fn destroy(&mut self) {
-        if self.alive() {
-            self.explosion.set_position(self.position());
-        }
         self.alive = false;
     }
 
@@ -191,8 +184,6 @@ impl Entity for SwiftShip {
             self.sprite.bind(rpass);
             rpass.set_bind_group(2, &self.uniform.bind_group, &[]);
             rpass.draw(0..6, 0..1);
-        } else {
-            self.explosion.draw(rpass);
         }
 
         self.weapon.draw(rpass);
