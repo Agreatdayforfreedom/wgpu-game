@@ -76,7 +76,7 @@ impl SwiftShip {
             alive: true,
             uniform,
             rotation: cgmath::Deg(0.0),
-            explosion: Explosion::new((20.0, 20.0).into(), device, queue),
+            explosion: Explosion::new((32.0, 32.0).into(), device, queue),
             weapon: Cannon::new(100, true, &device, &queue),
             targeting: false,
             sprite,

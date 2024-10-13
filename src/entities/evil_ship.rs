@@ -77,7 +77,7 @@ impl EvilShip {
             alive: true,
             uniform,
             rotation: cgmath::Deg(0.0),
-            explosion: Explosion::new((40.0, 40.0).into(), device, queue),
+            explosion: Explosion::new((48.0, 48.0).into(), device, queue),
             weapon: Cannon::new(400, true, &device, &queue),
             targeting: false,
             sprite,

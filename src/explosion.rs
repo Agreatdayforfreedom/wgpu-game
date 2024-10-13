@@ -32,6 +32,8 @@ impl Explosion {
         let diffuse_bytes3 = include_bytes!("./assets/exp3.png");
         let diffuse_bytes4 = include_bytes!("./assets/exp4.png");
         let diffuse_bytes5 = include_bytes!("./assets/exp5.png");
+        let diffuse_bytes6 = include_bytes!("./assets/exp6.png");
+        let diffuse_bytes7 = include_bytes!("./assets/exp7.png");
 
         let sprites = vec![
             rendering::Sprite::new(
@@ -69,6 +71,20 @@ impl Explosion {
                 &bind_group_layout,
                 diffuse_bytes5,
             ),
+            rendering::Sprite::new(
+                &device,
+                &queue,
+                wgpu::AddressMode::ClampToEdge,
+                &bind_group_layout,
+                diffuse_bytes6,
+            ),
+            rendering::Sprite::new(
+                &device,
+                &queue,
+                wgpu::AddressMode::ClampToEdge,
+                &bind_group_layout,
+                diffuse_bytes7,
+            ),
         ];
         Self {
             position,
@@ -100,7 +116,7 @@ impl Explosion {
         }
 
         if self.time_to_next_frame > TIME_TO_NEXT_FRAME {
-            if self.i == 4 {
+            if self.i == 6 {
                 self.end = true;
             } else {
                 self.i += 1;
