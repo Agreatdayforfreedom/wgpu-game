@@ -31,6 +31,16 @@ pub trait Weapon {
 
     fn get_projectiles(&mut self) -> IterMut<'_, Projectile>;
 
+    fn set_target(&mut self, target_id: u32, target_pos: cgmath::Vector2<f32>) {}
+
+    fn has_target(&self) -> bool {
+        false
+    }
+
+    fn get_target(&self) -> (u32, cgmath::Vector2<f32>) {
+        (0u32, (0.0, 0.0).into())
+    }
+
     fn get_name(&self) -> &str {
         ""
     }

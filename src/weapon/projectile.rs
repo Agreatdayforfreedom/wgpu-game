@@ -12,6 +12,7 @@ pub struct Projectile {
     pub initial_position: cgmath::Vector2<f32>,
     pub lifetime: instant::Instant,
     pub uniform: uniform::Uniform<EntityUniform>,
+    target: Option<(u32, cgmath::Vector2<f32>)>, // id, position
 }
 
 impl Projectile {
@@ -33,6 +34,7 @@ impl Projectile {
             initial_position: position,
             lifetime: instant::Instant::now(),
             uniform,
+            target: None,
         }
     }
     // todo
@@ -57,6 +59,22 @@ impl Projectile {
         F: FnMut(&mut Self),
     {
         f(self);
+    }
+
+    pub fn set_target(&mut self, target_id: u32, target_pos: cgmath::Vector2<f32>) {
+        self.target = Some((target_id, target_pos));
+    }
+
+    pub fn has_target(&self) -> bool {
+        if self.target.is_some() {
+            self.target.unwrap().0 != 0
+        } else {
+            false
+        }
+    }
+
+    pub fn get_target(&self) -> (u32, cgmath::Vector2<f32>) {
+        self.target.unwrap()
     }
 
     pub fn set_bounds(&mut self, bounds: Bounds) {

@@ -5,6 +5,7 @@ use crate::uniform::{self, Uniform};
 use crate::util::CompassDir;
 use crate::weapon::cannon::Cannon;
 use crate::weapon::double_connon::DoubleCannon;
+use crate::weapon::homing_missile::HomingMissile;
 use crate::weapon::laser::Laser;
 use crate::weapon::rail_gun::RailGun;
 use crate::weapon::weapon::Weapon;
@@ -53,7 +54,7 @@ impl Entity for Player {
         self.active_weapon.shoot(
             device,
             &positions,
-            (40.0, 40.0).into(),
+            (15.0, 21.0).into(),
             CompassDir::from_deg(self.rotation.0),
             input,
             audio,
@@ -119,7 +120,7 @@ impl Player {
             rotation: cgmath::Deg(360.0),
             uniform,
             sprite,
-            active_weapon: DoubleCannon::new(100, false, device, queue),
+            active_weapon: HomingMissile::new(100, false, device, queue),
         }
     }
 

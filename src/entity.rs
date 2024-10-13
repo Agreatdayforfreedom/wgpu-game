@@ -11,6 +11,7 @@ use crate::{
     },
     player::Player,
     util::{distance, CompassDir, IdVendor},
+    weapon,
 };
 use cgmath::{Angle, Deg, Point2, SquareMatrix, Vector2, Vector3, Vector4};
 use rand::Rng;
@@ -337,7 +338,42 @@ impl EntityManager {
                 }
             }
         }
-        //check collsions
+        if self.player.active_weapon.get_name() == "homing_missile" {
+            for p in self.player.active_weapon.get_projectiles() {
+                let mut min_dist = f32::MAX;
+                // if there is no target, we set the closer enemy as target.
+                // we keep (in the else statement) the same target regardless if the it's far away then any other enemy
+                if !p.has_target() {
+                    for e in &mut self.enemies {
+                        let dist = distance(self.player.position, e.position());
+                        if dist < min_dist {
+                            min_dist = dist;
+                            p.set_target(e.id(), e.center());
+                        }
+                    }
+                } else {
+                    for e in &mut self.enemies {
+                        if e.id() == p.get_target().0 {
+                            p.set_target(e.id(), e.center());
+                        }
+                    }
+                }
+            }
+
+            // } else {
+            //     for p in self.player.active_weapon.get_projectiles() {
+            //         for e in &mut self.enemies {
+            //             if e.id() == self.player.active_weapon.get_target() {
+            //                 let dist = distance(self.player.position, e.position());
+            //                 p.set_direction(|this| {});
+            //             }
+
+            //             // self.player.active_weapon.set_target(e.id());
+            //         }
+            //     }
+            // }
+        }
+
         for p in &mut self.player.active_weapon.get_projectiles() {
             // let mut min_dist = f32::MAX;
             for e in &mut self.enemies {
