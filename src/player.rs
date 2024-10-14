@@ -109,9 +109,7 @@ impl Player {
 
         let scale: cgmath::Vector2<f32> = (44.0, 33.0).into();
         let position = cgmath::Vector2::new(0.0, 0.0);
-        uniform
-            .data
-            .set_pivot(Point2::new(scale.x * 0.5, scale.y * 0.5));
+
         Self {
             id,
             position,

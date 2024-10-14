@@ -176,7 +176,6 @@ impl ExpansiveWave {
             .data
             .set_scale(self.scale)
             .set_color(self.color)
-            .set_pivot((self.scale.x * 0.5, self.scale.y * 0.5).into())
             .exec();
 
         self.uniform.write(queue);

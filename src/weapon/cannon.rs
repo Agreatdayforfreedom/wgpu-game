@@ -85,10 +85,6 @@ impl Weapon for Cannon {
                 dir,
                 projectile_uniform,
             );
-            p.uniform
-                .data
-                .set_pivot((0.5 * scale.x, 0.5 * scale.y).into())
-                .exec();
 
             self.projectiles.push(p);
         };

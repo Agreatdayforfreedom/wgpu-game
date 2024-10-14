@@ -36,10 +36,6 @@ impl SwiftShip {
         scale: cgmath::Vector2<f32>,
     ) -> Box<Self> {
         let mut uniform = Uniform::<EntityUniform>::new(&device);
-        uniform
-            .data
-            .set_pivot(Point2::new(scale.x * 0.5, scale.y * 0.5))
-            .exec();
 
         let bytes = include_bytes!("../assets/fast_ship.png");
         let sprite = Sprite::new(

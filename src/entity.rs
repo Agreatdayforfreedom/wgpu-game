@@ -320,10 +320,7 @@ impl EntityManager {
                             // Apply the rotation
 
                             this.rotation = self.player.rotation;
-                            this.uniform
-                                .data
-                                .set_pivot(cgmath::Point2::new(0.5 * 20.0, 1.0))
-                                .exec();
+
                             this.scale.x = 20.0;
                             this.scale.y = -min_dist;
                         });

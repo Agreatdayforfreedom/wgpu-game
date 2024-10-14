@@ -57,14 +57,10 @@ impl Weapon for RailGun {
             self.time = instant::Instant::now();
             audio.push(Sounds::Shoot, 1.0);
             audio.push(Sounds::Shoot, 1.0);
-            //todo
             for i in 0..=5 {
                 let mut projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
                 let position = *positions.get(i).unwrap(); //todo this fix direction vectors
-                projectile_uniform
-                    .data
-                    .set_pivot((0.5 * scale.x, 0.5 * scale.y).into())
-                    .exec();
+
                 self.projectiles.push(Projectile::new(
                     ((position.x), position.y).into(),
                     scale,
