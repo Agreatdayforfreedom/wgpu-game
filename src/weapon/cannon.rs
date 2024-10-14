@@ -71,7 +71,7 @@ impl Weapon for Cannon {
             let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
             let position = *positions.get(0).unwrap();
             audio.push(Sounds::Shoot, 0.5);
-            let mut p = Projectile::new(
+            let p = Projectile::new(
                 (position.x - scale.x / 2.0, position.y - scale.y / 2.0).into(),
                 scale,
                 dir.angle,

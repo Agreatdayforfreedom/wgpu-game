@@ -72,7 +72,7 @@ impl Weapon for DoubleCannon {
             for i in 0..2 {
                 let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
                 let position = positions.get(i).unwrap();
-                let mut p = Projectile::new(
+                let p = Projectile::new(
                     ((position.x - scale.x / 2.0), (position.y - scale.y / 2.0)).into(),
                     scale,
                     dir.angle,
@@ -91,7 +91,6 @@ impl Weapon for DoubleCannon {
             }
         };
     }
-    //TODO ULTRA: FIX THE NUMBER OF POSITIONS THAT CAN BE SENT.
     fn update(
         &mut self,
         positions: &Vec<cgmath::Vector2<f32>>,

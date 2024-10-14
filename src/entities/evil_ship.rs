@@ -36,7 +36,7 @@ impl EvilShip {
         position: cgmath::Vector2<f32>,
         scale: cgmath::Vector2<f32>,
     ) -> Box<Self> {
-        let mut uniform = Uniform::<EntityUniform>::new(&device);
+        let uniform = Uniform::<EntityUniform>::new(&device);
 
         let bytes = include_bytes!("../assets/evil_ship.png");
         let sprite = Sprite::new(
