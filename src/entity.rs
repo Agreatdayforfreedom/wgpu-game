@@ -38,13 +38,6 @@ pub trait Entity {
 
     fn id(&self) -> u32;
 
-    fn center(&self) -> Vector2<f32> {
-        Vector2::new(
-            self.position().x + (self.scale().x / 2.0),
-            self.position().y + (self.scale().y / 2.0),
-        )
-    }
-
     fn top_right(&self) -> Vector2<f32> {
         self.scale() / 2.0
     }
@@ -72,8 +65,8 @@ pub trait Entity {
         let point_oriented_x = point.x * rotation.cos() - point.y * rotation.sin();
         let point_oriented_y = point.x * rotation.sin() + point.y * rotation.cos();
         (
-            self.center().x + point_oriented_x,
-            self.center().y + point_oriented_y,
+            self.position().x + point_oriented_x,
+            self.position().y + point_oriented_y,
         )
             .into()
     }
@@ -109,7 +102,7 @@ impl Default for EntityUniform {
             model: cgmath::Matrix4::identity(),
             color: (1.0, 1.0, 1.0, 1.0).into(),
             tex_scale: (1.0, 1.0).into(), //TODO
-            pivot: (0.5 * 24.0, 0.5 * 24.0).into(),
+            pivot: (0.5, 0.5).into(),
             tex_pos: (1.0, 1.0).into(),
             position: (0.0, 0.0).into(),
             angle: Deg(0.0),
@@ -152,10 +145,10 @@ impl EntityUniform {
     pub fn exec(&mut self) {
         self.model = cgmath::Matrix4::identity()
             * cgmath::Matrix4::from_translation((self.position.x, self.position.y, 0.0).into())
-            * cgmath::Matrix4::from_translation((self.pivot.x, self.pivot.y, 0.0).into())
+            * cgmath::Matrix4::from_translation(((0.5), (0.5), 0.0).into())
             * cgmath::Matrix4::from_angle_z(self.angle)
-            * cgmath::Matrix4::from_translation((-self.pivot.x, -self.pivot.y, 0.0).into())
-            * cgmath::Matrix4::from_nonuniform_scale(self.scale.x, self.scale.y, 0.0);
+            * cgmath::Matrix4::from_nonuniform_scale(self.scale.x, self.scale.y, 1.0)
+            * cgmath::Matrix4::from_translation((-(0.5), -(0.5), 0.0).into());
     }
 }
 
@@ -350,7 +343,7 @@ impl EntityManager {
                             let dist = distance(self.player.position, e.position());
                             if dist < min_dist {
                                 min_dist = dist;
-                                p.set_target(e.id(), e.center());
+                                p.set_target(e.id(), e.position());
                             }
                         }
                     }
@@ -358,7 +351,7 @@ impl EntityManager {
                     for e in &mut self.enemies {
                         if e.alive() {
                             if e.id() == p.get_target().0 {
-                                p.set_target(e.id(), e.center());
+                                p.set_target(e.id(), e.position());
                             }
                         }
                     }
@@ -383,8 +376,8 @@ impl EntityManager {
                     if !p.alive && !e.alive() {
                         audio.push(crate::audio::Sounds::Explosion, 0.2);
                         self.explosion_manager.add(
-                            Explosion::new(e.center(), (40.0, 40.0).into(), device, queue),
-                            Some(ExpansiveWave::new_at(e.center(), device)),
+                            Explosion::new(e.position(), (40.0, 40.0).into(), device, queue),
+                            Some(ExpansiveWave::new_at(e.position(), device)),
                         );
                     }
                 }
