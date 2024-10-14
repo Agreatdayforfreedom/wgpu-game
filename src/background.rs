@@ -147,7 +147,7 @@ impl Background {
             uniforms,
             scale: (1200.0, 800.0).into(),
             position: (0.0, 0.0).into(),
-            rotation: cgmath::Deg(180.0),
+            rotation: cgmath::Deg(0.0),
             prev_pos: (0.0, 0.0).into(),
         })
     }
@@ -185,10 +185,10 @@ impl Background {
                 let py = uniform.data.position.y + position.y;
                 uniform.data.set_position((px, py).into()).exec();
             } else {
-                uniform.data.tex_pos -= position;
+                uniform.data.tex_pos += position;
                 uniform
                     .data
-                    .set_position(camera.position.xy() + (self.scale / 2.0))
+                    .set_position(camera.position.xy())
                     .set_rotation(self.rotation)
                     .exec();
             }
