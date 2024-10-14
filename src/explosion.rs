@@ -108,7 +108,7 @@ impl Explosion {
     pub fn update(&mut self, queue: &mut wgpu::Queue, dt: &instant::Duration) {
         self.uniform
             .data
-            .set_position(self.position - cgmath::Vector2::new(8.0, 8.0))
+            .set_position(self.position)
             .set_scale(self.scale)
             .exec();
         self.time_to_next_frame += dt.as_secs_f32();
@@ -165,11 +165,14 @@ impl ExpansiveWave {
         let dt = dt.as_secs_f32();
 
         // let scale = (self.scale.x + 100.0, self.);
-        if self.scale.x >= 200.0 {
+        self.color.x = 0.0;
+        self.color.y = 1.0;
+        self.color.z = 1.0;
+        if self.scale.x >= 175.0 {
             self.color.w -= dt;
         } else {
-            self.scale.x += 100.0 * dt;
-            self.scale.y += 100.0 * dt;
+            self.scale.x += 200.0 * dt;
+            self.scale.y += 200.0 * dt;
         }
 
         self.uniform
