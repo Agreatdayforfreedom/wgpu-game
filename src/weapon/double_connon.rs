@@ -16,6 +16,8 @@ use super::projectile::Projectile;
 use super::weapon::Weapon;
 
 const LIFETIME: u128 = 5000;
+const SCALE: Vector2<f32> = Vector2::new(40.0, 40.0);
+
 pub struct DoubleCannon {
     pub projectiles: Vec<Projectile>,
     time: instant::Instant,
@@ -58,8 +60,7 @@ impl Weapon for DoubleCannon {
     fn shoot(
         &mut self,
         device: &wgpu::Device,
-        positions: &Vec<cgmath::Vector2<f32>>,
-        scale: cgmath::Vector2<f32>,
+        position: cgmath::Vector2<f32>,
         dir: CompassDir,
         input: &Input,
         audio: &mut Audio,
@@ -69,40 +70,39 @@ impl Weapon for DoubleCannon {
         {
             self.time = instant::Instant::now();
             audio.push(Sounds::Shoot, 0.5);
-            for i in 0..2 {
-                let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
-                let position = positions.get(i).unwrap();
-                let p = Projectile::new(
-                    ((position.x - scale.x / 2.0), (position.y - scale.y / 2.0)).into(),
-                    scale,
-                    dir.angle,
-                    Bounds {
-                        area: scale,
-                        origin: cgmath::Point2 {
-                            x: position.x,
-                            y: position.y,
-                        },
-                    },
-                    dir,
-                    projectile_uniform,
-                );
+            // for i in 0..2 {
+            let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
 
-                self.projectiles.push(p);
-            }
+            let p = Projectile::new(
+                position,
+                SCALE,
+                dir.angle,
+                Bounds {
+                    area: SCALE,
+                    origin: cgmath::Point2 {
+                        x: position.x,
+                        y: position.y,
+                    },
+                },
+                dir,
+                projectile_uniform,
+            );
+
+            self.projectiles.push(p);
+            // }
         };
     }
     fn update(
         &mut self,
-        positions: &Vec<cgmath::Vector2<f32>>,
+        position: cgmath::Vector2<f32>,
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
     ) {
         let mut i = 0;
         while i < self.projectiles.len() {
             let projectile = self.projectiles.get_mut(i).unwrap();
-            let position = positions.get(1 & i).unwrap();
             if projectile.alive && projectile.lifetime.elapsed().as_millis() <= LIFETIME {
-                projectile.update(&dt, 500.0, *position, queue);
+                projectile.update(&dt, 500.0, position, queue);
                 projectile.set_bounds(Bounds {
                     origin: cgmath::Point2::new(
                         projectile.position.x + projectile.scale.x / 2.0,
@@ -115,7 +115,7 @@ impl Weapon for DoubleCannon {
                     this.position.y -= (500.0) * this.dir.dir.y * dt.as_secs_f32();
                     // this.position.x = position.x - this.scale.x / 2.0;
                     // this.position.y = position.y - this.scale.y / 2.0;
-                    this.initial_position = *position;
+                    this.initial_position = position;
                 });
                 projectile.uniform.write(queue);
                 i += 1;

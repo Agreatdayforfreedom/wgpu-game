@@ -1,5 +1,7 @@
 use std::slice::IterMut;
 
+use cgmath::Vector2;
+
 use crate::{
     audio::Audio,
     collider::Bounds,
@@ -12,6 +14,7 @@ use crate::{
 use super::{projectile::Projectile, weapon::Weapon};
 
 const SPEED_LASER_MOVEMENT: f32 = 1.5;
+const SCALE: Vector2<f32> = Vector2::new(4.0, 40.0);
 
 pub struct Laser {
     projectiles: Vec<Projectile>,
@@ -42,22 +45,20 @@ impl Weapon for Laser {
     fn shoot(
         &mut self,
         device: &wgpu::Device,
-        positions: &Vec<cgmath::Vector2<f32>>,
-        scale: cgmath::Vector2<f32>,
+        position: cgmath::Vector2<f32>,
         dir: CompassDir,
         input: &Input,
         _audio: &mut Audio,
     ) {
         if input.is_pressed("f") && self.projectiles.len() < 1 {
             let mut uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
-            let position = *positions.get(0).unwrap();
             uniform.data.set_tex_scale((-1.0, -3.0).into()).exec();
             self.projectiles.push(Projectile::new(
                 position,
-                scale,
+                SCALE,
                 cgmath::Deg(0.0),
                 Bounds {
-                    area: scale,
+                    area: SCALE,
                     origin: cgmath::Point2 {
                         x: position.x,
                         y: position.y,
@@ -71,12 +72,11 @@ impl Weapon for Laser {
 
     fn update(
         &mut self,
-        positions: &Vec<cgmath::Vector2<f32>>,
+        position: cgmath::Vector2<f32>,
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
     ) {
         for projectile in &mut self.projectiles {
-            let position = *positions.get(0).unwrap();
             if projectile.alive {
                 //todo remove laser (swap_remove)
                 projectile.update(&dt, 0.0, position, queue);

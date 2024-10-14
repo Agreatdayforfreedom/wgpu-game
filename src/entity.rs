@@ -300,82 +300,84 @@ impl EntityManager {
             // );
         }
 
-        if self.player.active_weapon.get_name() == "laser" {
-            for p in self.player.active_weapon.get_projectiles() {
-                let mut min_dist = f32::MAX;
+        for weapon in &mut self.player.active_weapons {
+            if weapon.get_name() == "laser" {
+                for p in weapon.get_projectiles() {
+                    let mut min_dist = f32::MAX;
+                    for e in &mut self.enemies {
+                        let dist = distance(self.player.position, e.position());
+                        if dist < min_dist {
+                            min_dist = dist;
+                            p.set_direction(|this| {
+                                let center = Vector2::new(
+                                    self.player.position.x + (self.player.scale.x / 2.0) - 10.0,
+                                    self.player.position.y + (self.player.scale.y / 2.0),
+                                );
+
+                                this.position.x = center.x
+                                    + self.player.scale.x / 2.0 * self.player.rotation.sin();
+                                this.position.y = center.y
+                                    - self.player.scale.y / 2.0 * self.player.rotation.cos();
+                                // Apply the rotation
+
+                                this.rotation = self.player.rotation;
+
+                                this.scale.x = 20.0;
+                                this.scale.y = -min_dist;
+                            });
+                        }
+                    }
+                }
+            }
+            if weapon.get_name() == "homing_missile" {
+                for p in weapon.get_projectiles() {
+                    // p.set_explosion(device, queue, false);
+                    let mut min_dist = f32::MAX;
+                    // if there is no target, we set the closer enemy as target.
+                    // we keep (in the else statement) the same target regardless if the it's far away then any other enemy
+                    if !p.has_target() {
+                        for e in &mut self.enemies {
+                            if e.alive() {
+                                let dist = distance(self.player.position, e.position());
+                                if dist < min_dist {
+                                    min_dist = dist;
+                                    p.set_target(e.id(), e.position());
+                                }
+                            }
+                        }
+                    } else {
+                        for e in &mut self.enemies {
+                            if e.alive() {
+                                if e.id() == p.get_target().0 {
+                                    p.set_target(e.id(), e.position());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            for p in &mut weapon.get_projectiles() {
                 for e in &mut self.enemies {
-                    let dist = distance(self.player.position, e.position());
-                    if dist < min_dist {
-                        min_dist = dist;
-                        p.set_direction(|this| {
-                            let center = Vector2::new(
-                                self.player.position.x + (self.player.scale.x / 2.0) - 10.0,
-                                self.player.position.y + (self.player.scale.y / 2.0),
+                    if !e.alive() {
+                        continue;
+                    }
+                    if check_collision(
+                        p.bounds,
+                        Bounds {
+                            origin: Point2::new(e.position().x, e.position().y),
+                            area: Vector2::new(e.scale().x, e.scale().y),
+                        },
+                    ) {
+                        p.alive = false;
+                        e.destroy();
+                        if !p.alive && !e.alive() {
+                            audio.push(crate::audio::Sounds::Explosion, 0.2);
+                            self.explosion_manager.add(
+                                Explosion::new(e.position(), (40.0, 40.0).into(), device, queue),
+                                Some(ExpansiveWave::new_at(e.position(), device)),
                             );
-
-                            this.position.x =
-                                center.x + self.player.scale.x / 2.0 * self.player.rotation.sin();
-                            this.position.y =
-                                center.y - self.player.scale.y / 2.0 * self.player.rotation.cos();
-                            // Apply the rotation
-
-                            this.rotation = self.player.rotation;
-
-                            this.scale.x = 20.0;
-                            this.scale.y = -min_dist;
-                        });
-                    }
-                }
-            }
-        }
-        if self.player.active_weapon.get_name() == "homing_missile" {
-            for p in self.player.active_weapon.get_projectiles() {
-                // p.set_explosion(device, queue, false);
-                let mut min_dist = f32::MAX;
-                // if there is no target, we set the closer enemy as target.
-                // we keep (in the else statement) the same target regardless if the it's far away then any other enemy
-                if !p.has_target() {
-                    for e in &mut self.enemies {
-                        if e.alive() {
-                            let dist = distance(self.player.position, e.position());
-                            if dist < min_dist {
-                                min_dist = dist;
-                                p.set_target(e.id(), e.position());
-                            }
                         }
-                    }
-                } else {
-                    for e in &mut self.enemies {
-                        if e.alive() {
-                            if e.id() == p.get_target().0 {
-                                p.set_target(e.id(), e.position());
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        for p in &mut self.player.active_weapon.get_projectiles() {
-            for e in &mut self.enemies {
-                if !e.alive() {
-                    continue;
-                }
-                if check_collision(
-                    p.bounds,
-                    Bounds {
-                        origin: Point2::new(e.position().x, e.position().y),
-                        area: Vector2::new(e.scale().x, e.scale().y),
-                    },
-                ) {
-                    p.alive = false;
-                    e.destroy();
-                    if !p.alive && !e.alive() {
-                        audio.push(crate::audio::Sounds::Explosion, 0.2);
-                        self.explosion_manager.add(
-                            Explosion::new(e.position(), (40.0, 40.0).into(), device, queue),
-                            Some(ExpansiveWave::new_at(e.position(), device)),
-                        );
                     }
                 }
             }

@@ -15,6 +15,7 @@ use super::{
 };
 
 const LIFETIME: u128 = 5000;
+const SCALE: Vector2<f32> = Vector2::new(15.0, 21.0);
 
 pub struct HomingMissile {
     pub projectiles: Vec<Projectile>,
@@ -58,8 +59,7 @@ impl Weapon for HomingMissile {
     fn shoot(
         &mut self,
         device: &wgpu::Device,
-        positions: &Vec<cgmath::Vector2<f32>>,
-        scale: cgmath::Vector2<f32>,
+        position: cgmath::Vector2<f32>,
         dir: CompassDir,
         input: &Input,
         audio: &mut Audio,
@@ -69,14 +69,13 @@ impl Weapon for HomingMissile {
         {
             self.time = instant::Instant::now();
             let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
-            let position = *positions.get(0).unwrap();
             // audio.push(Sounds::Shoot, 0.5);
             let mut p = Projectile::new(
-                (position.x - scale.x / 2.0, position.y - scale.y / 2.0).into(),
-                scale,
+                position,
+                SCALE,
                 dir.angle,
                 Bounds {
-                    area: scale,
+                    area: SCALE,
                     origin: cgmath::Point2 {
                         x: position.x,
                         y: position.y,
@@ -92,7 +91,7 @@ impl Weapon for HomingMissile {
 
     fn update(
         &mut self,
-        positions: &Vec<cgmath::Vector2<f32>>,
+        position: cgmath::Vector2<f32>,
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
     ) {
@@ -100,7 +99,6 @@ impl Weapon for HomingMissile {
         while i < self.projectiles.len() {
             let projectile = self.projectiles.get_mut(i).unwrap();
 
-            let position = *positions.get(0).unwrap();
             projectile.update(&dt, 500.0, position, queue);
             if projectile.alive && projectile.lifetime.elapsed().as_millis() <= LIFETIME {
                 projectile.set_bounds(Bounds {

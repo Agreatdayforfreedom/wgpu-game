@@ -1,5 +1,7 @@
 use std::slice::IterMut;
 
+use cgmath::Vector2;
+
 use crate::{
     audio::{Audio, Sounds},
     collider::Bounds,
@@ -13,6 +15,7 @@ use crate::{
 use super::{projectile, weapon::Weapon};
 
 const LIFETIME: u128 = 5000;
+const SCALE: Vector2<f32> = Vector2::new(40.0, 40.0);
 
 pub struct RailGun {
     projectiles: Vec<Projectile>,
@@ -47,8 +50,7 @@ impl Weapon for RailGun {
     fn shoot(
         &mut self,
         device: &wgpu::Device,
-        positions: &Vec<cgmath::Vector2<f32>>,
-        scale: cgmath::Vector2<f32>,
+        position: cgmath::Vector2<f32>,
         dir: CompassDir,
         input: &Input,
         audio: &mut Audio,
@@ -59,14 +61,13 @@ impl Weapon for RailGun {
             audio.push(Sounds::Shoot, 1.0);
             for i in 0..=5 {
                 let mut projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
-                let position = *positions.get(i).unwrap(); //todo this fix direction vectors
 
                 self.projectiles.push(Projectile::new(
                     ((position.x), position.y).into(),
-                    scale,
+                    SCALE,
                     dir.angle + cgmath::Deg(180.0),
                     Bounds {
-                        area: scale,
+                        area: SCALE,
                         origin: cgmath::Point2 {
                             x: position.x,
                             y: position.y,
@@ -91,14 +92,13 @@ impl Weapon for RailGun {
 
     fn update(
         &mut self,
-        positions: &Vec<cgmath::Vector2<f32>>,
+        position: cgmath::Vector2<f32>,
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
     ) {
         let mut i = 0;
         while i < self.projectiles.len() {
             let projectile = self.projectiles.get_mut(i).unwrap();
-            let position = *positions.get(i).unwrap();
             if projectile.alive && projectile.lifetime.elapsed().as_millis() <= LIFETIME {
                 projectile.set_bounds(Bounds {
                     origin: cgmath::Point2::new(

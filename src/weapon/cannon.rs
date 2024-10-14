@@ -16,6 +16,8 @@ use super::projectile::Projectile;
 use super::weapon::Weapon;
 
 const LIFETIME: u128 = 5000;
+const SCALE: Vector2<f32> = Vector2::new(40.0, 40.0);
+
 pub struct Cannon {
     pub projectiles: Vec<Projectile>,
     time: instant::Instant,
@@ -58,8 +60,7 @@ impl Weapon for Cannon {
     fn shoot(
         &mut self,
         device: &wgpu::Device,
-        positions: &Vec<cgmath::Vector2<f32>>,
-        scale: cgmath::Vector2<f32>,
+        position: cgmath::Vector2<f32>,
         dir: CompassDir,
         input: &Input,
         audio: &mut Audio,
@@ -69,14 +70,13 @@ impl Weapon for Cannon {
         {
             self.time = instant::Instant::now();
             let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
-            let position = *positions.get(0).unwrap();
             audio.push(Sounds::Shoot, 0.5);
             let p = Projectile::new(
-                (position.x - scale.x / 2.0, position.y - scale.y / 2.0).into(),
-                scale,
+                position,
+                SCALE,
                 dir.angle,
                 Bounds {
-                    area: scale,
+                    area: SCALE,
                     origin: cgmath::Point2 {
                         x: position.x,
                         y: position.y,
@@ -92,14 +92,13 @@ impl Weapon for Cannon {
 
     fn update(
         &mut self,
-        positions: &Vec<cgmath::Vector2<f32>>,
+        position: cgmath::Vector2<f32>,
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
     ) {
         let mut i = 0;
         while i < self.projectiles.len() {
             let projectile = self.projectiles.get_mut(i).unwrap();
-            let position = *positions.get(0).unwrap();
             if projectile.alive && projectile.lifetime.elapsed().as_millis() <= LIFETIME {
                 projectile.update(&dt, 500.0, position, queue);
                 projectile.set_bounds(Bounds {

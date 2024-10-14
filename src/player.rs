@@ -3,6 +3,7 @@ use crate::entity::Entity;
 use crate::rendering::{create_bind_group_layout, Sprite};
 use crate::uniform::{self, Uniform};
 use crate::util::CompassDir;
+use crate::weapon;
 use crate::weapon::cannon::Cannon;
 use crate::weapon::double_connon::DoubleCannon;
 use crate::weapon::homing_missile::HomingMissile;
@@ -21,7 +22,7 @@ pub struct Player {
     pub rotation: cgmath::Deg<f32>,
     pub uniform: uniform::Uniform<EntityUniform>,
     sprite: Sprite,
-    pub active_weapon: Box<dyn Weapon>,
+    pub active_weapons: Vec<Box<dyn Weapon>>,
 }
 
 const SPEED: f32 = 500.0;
@@ -45,21 +46,26 @@ impl Entity for Player {
             self.movement("w", dt);
         }
 
-        let positions = vec![
+        let positions = [
             self.get_orientation_point((8.0, self.bottom_left().y).into()),
             self.get_orientation_point((-10.0, self.bottom_right().y).into()),
         ];
 
-        self.active_weapon.update(&positions, queue, dt);
-        self.active_weapon.shoot(
-            device,
-            &positions,
-            (15.0, 21.0).into(),
-            CompassDir::from_deg(self.rotation.0),
-            input,
-            audio,
-        );
-
+        let mut i = 0usize;
+        // println!("{}, {:?}", self.active_weapons.len(), positions);
+        while i < self.active_weapons.len() {
+            let weapon = self.active_weapons.get_mut(i).unwrap();
+            let position = positions[i];
+            weapon.update(position, queue, dt);
+            weapon.shoot(
+                device,
+                position,
+                CompassDir::from_deg(self.rotation.0),
+                input,
+                audio,
+            );
+            i += 1;
+        }
         self.uniform
             .data
             .set_position(self.position)
@@ -86,7 +92,9 @@ impl Entity for Player {
 
     fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
         // also draw the weapon :P
-        self.active_weapon.draw(rpass);
+        for weapon in &mut self.active_weapons {
+            weapon.draw(rpass);
+        }
 
         rpass.set_bind_group(2, &self.uniform.bind_group, &[]);
         self.sprite.bind(rpass);
@@ -118,7 +126,10 @@ impl Player {
             rotation: cgmath::Deg(360.0),
             uniform,
             sprite,
-            active_weapon: HomingMissile::new(100, false, device, queue),
+            active_weapons: vec![
+                DoubleCannon::new(100, false, device, queue),
+                DoubleCannon::new(100, false, device, queue),
+            ],
         }
     }
 

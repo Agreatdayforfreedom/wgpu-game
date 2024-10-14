@@ -89,8 +89,8 @@ impl Entity for EvilShip {
         device: &wgpu::Device,
         queue: &mut wgpu::Queue,
     ) {
-        let pos = vec![self.get_orientation_point((self.top_right().x, -1.0).into())];
-        self.weapon.update(&pos, queue, dt);
+        let pos = self.get_orientation_point((self.top_right().x, -1.0).into());
+        self.weapon.update(pos, queue, dt);
 
         if self.patrol.is_over(self.position()) {
             println!("OVER");
@@ -101,8 +101,7 @@ impl Entity for EvilShip {
             if self.targeting {
                 self.weapon.shoot(
                     device,
-                    &pos,
-                    (40.0, 40.0).into(),
+                    pos,
                     CompassDir::from_deg(self.rotation.0 + 90.0),
                     input,
                     audio,
