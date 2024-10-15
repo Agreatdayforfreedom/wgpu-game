@@ -6,7 +6,6 @@ use crate::rendering::{create_bind_group_layout, Sprite};
 use crate::uniform;
 use crate::uniform::Uniform;
 use crate::{audio, rendering};
-
 const TIME_TO_NEXT_FRAME: f32 = 2.0 / 30.0;
 
 pub struct Explosion {
@@ -165,11 +164,11 @@ impl ExpansiveWave {
         let dt = dt.as_secs_f32();
 
         // let scale = (self.scale.x + 100.0, self.);
-        self.color.x = 0.0;
-        self.color.y = 1.0;
-        self.color.z = 1.0;
+        self.color.x = 1.0;
+        self.color.y = 0.0;
+        self.color.z = 0.0;
         if self.scale.x >= 175.0 {
-            self.color.w -= dt;
+            self.color.w -= 2.5 * dt;
         } else {
             self.scale.x += 200.0 * dt;
             self.scale.y += 200.0 * dt;
