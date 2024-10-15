@@ -1,8 +1,8 @@
-use cgmath::{Angle, InnerSpace, Vector2};
+use cgmath::{Angle, InnerSpace, Point2, Vector2};
 
 use crate::{
     audio::{Audio, Sounds},
-    collider::Bounds,
+    collider::{check_collision, Bounds},
     entity::EntityUniform,
     input::Input,
     rendering::{create_bind_group_layout, Sprite},
@@ -108,6 +108,7 @@ impl Weapon for HomingMissile {
                     ),
                     area: cgmath::Vector2::new(2.5, 2.5),
                 });
+
                 if !projectile.has_target() {
                     projectile.set_direction(|this| {
                         this.position.x += (200.0) * this.dir.dir.x * dt.as_secs_f32();
@@ -115,6 +116,7 @@ impl Weapon for HomingMissile {
                     });
                 } else {
                     let (_, position) = projectile.get_target();
+
                     let dir = position - projectile.position;
                     let dir = dir.normalize();
                     let angle = dir.y.atan2(dir.x).to_degrees() + 90.0;

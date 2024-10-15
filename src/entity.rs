@@ -347,10 +347,8 @@ impl EntityManager {
                         }
                     } else {
                         for e in &mut self.enemies {
-                            if e.alive() {
-                                if e.id() == p.get_target().0 {
-                                    p.set_target(e.id(), e.position());
-                                }
+                            if e.id() == p.get_target().0 {
+                                p.set_target(e.id(), e.position());
                             }
                         }
                     }
@@ -371,11 +369,19 @@ impl EntityManager {
                     ) {
                         p.alive = false;
                         e.destroy();
-                        if !p.alive && !e.alive() {
+                        if !p.alive {
                             audio.push(crate::audio::Sounds::Explosion, 0.2);
                             self.explosion_manager.add(
                                 Explosion::new(e.position(), (40.0, 40.0).into(), device, queue),
                                 Some(ExpansiveWave::new_at(e.position(), device)),
+                            );
+                        }
+
+                        if !e.alive() {
+                            audio.push(crate::audio::Sounds::Explosion, 0.2);
+                            self.explosion_manager.add(
+                                Explosion::new(e.position(), (40.0, 40.0).into(), device, queue),
+                                None,
                             );
                         }
                     }

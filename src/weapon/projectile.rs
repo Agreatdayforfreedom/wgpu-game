@@ -4,7 +4,7 @@ use crate::{
     entity::EntityUniform,
     explosion::{self, Explosion},
     uniform,
-    util::CompassDir,
+    util::{distance, CompassDir},
     weapon::projectile,
 };
 
@@ -79,6 +79,11 @@ impl Projectile {
     }
 
     pub fn set_target(&mut self, target_id: u32, target_pos: cgmath::Vector2<f32>) {
+        let dist = distance(self.position, target_pos);
+        println!("dist: >>>>>>>>>>>>>>>>> {}", dist);
+        if dist < 1.0 {
+            self.alive = false;
+        }
         self.target = Some((target_id, target_pos));
     }
 
