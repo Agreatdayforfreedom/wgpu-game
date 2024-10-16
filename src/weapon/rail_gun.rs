@@ -99,7 +99,10 @@ impl Weapon for RailGun {
         let mut i = 0;
         while i < self.projectiles.len() {
             let projectile = self.projectiles.get_mut(i).unwrap();
-            if projectile.is_active() && projectile.lifetime.elapsed().as_millis() <= LIFETIME {
+            if projectile.lifetime() > LIFETIME {
+                projectile.destroy();
+            }
+            if !projectile.is_destroyed() {
                 projectile.set_bounds(Bounds {
                     origin: cgmath::Point2::new(
                         projectile.position.x + projectile.scale.x / 2.0,

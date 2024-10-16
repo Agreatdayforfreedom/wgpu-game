@@ -27,7 +27,7 @@ pub struct Projectile {
     pub dir: CompassDir,
     pub bounds: Bounds,
     pub initial_position: Vector2<f32>,
-    pub lifetime: instant::Instant,
+    lifetime: instant::Instant,
     pub uniform: uniform::Uniform<EntityUniform>,
     target: Option<(u32, Vector2<f32>)>, // id, position
 }
@@ -111,6 +111,10 @@ impl Projectile {
 
     pub fn is_destroyed(&self) -> bool {
         self.destroyed
+    }
+
+    pub fn lifetime(&self) -> u128 {
+        self.lifetime.elapsed().as_millis()
     }
 
     /// desactive the projectile
