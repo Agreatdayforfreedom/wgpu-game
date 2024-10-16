@@ -101,8 +101,8 @@ impl Weapon for DoubleCannon {
         let mut i = 0;
         while i < self.projectiles.len() {
             let projectile = self.projectiles.get_mut(i).unwrap();
-            if projectile.alive && projectile.lifetime.elapsed().as_millis() <= LIFETIME {
-                projectile.update(&dt, 500.0, position, queue);
+            if projectile.is_active() && projectile.lifetime.elapsed().as_millis() <= LIFETIME {
+                projectile.update();
                 projectile.set_bounds(Bounds {
                     origin: cgmath::Point2::new(
                         projectile.position.x + projectile.scale.x / 2.0,

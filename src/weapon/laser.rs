@@ -77,9 +77,9 @@ impl Weapon for Laser {
         dt: &instant::Duration,
     ) {
         for projectile in &mut self.projectiles {
-            if projectile.alive {
+            if projectile.is_active() {
                 //todo remove laser (swap_remove)
-                projectile.update(&dt, 0.0, position, queue);
+                projectile.update();
 
                 // projectile.set_bounds(Bounds {
                 //     origin: cgmath::Point2::new(projectile.position.x, projectile.position.y),

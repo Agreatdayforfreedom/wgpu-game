@@ -99,8 +99,9 @@ impl Weapon for HomingMissile {
         while i < self.projectiles.len() {
             let projectile = self.projectiles.get_mut(i).unwrap();
 
-            projectile.update(&dt, 500.0, position, queue);
-            if projectile.alive && projectile.lifetime.elapsed().as_millis() <= LIFETIME {
+            projectile.update();
+
+            if !projectile.is_destroyed() && projectile.lifetime.elapsed().as_millis() <= LIFETIME {
                 projectile.set_bounds(Bounds {
                     origin: cgmath::Point2::new(
                         projectile.position.x + projectile.scale.x / 2.0,
