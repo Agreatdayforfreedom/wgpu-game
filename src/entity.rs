@@ -356,6 +356,14 @@ impl EntityManager {
             }
 
             for p in &mut weapon.get_projectiles() {
+                if !p.alive && !p.destroyed {
+                    audio.push(crate::audio::Sounds::Explosion, 0.2);
+                    self.explosion_manager.add(
+                        Explosion::new(p.position, (40.0, 40.0).into(), device, queue),
+                        Some(ExpansiveWave::new_at(p.position, device)),
+                    );
+                    p.destroy();
+                }
                 for e in &mut self.enemies {
                     if !e.alive() {
                         continue;
@@ -369,13 +377,6 @@ impl EntityManager {
                     ) {
                         p.alive = false;
                         e.destroy();
-                        if !p.alive {
-                            audio.push(crate::audio::Sounds::Explosion, 0.2);
-                            self.explosion_manager.add(
-                                Explosion::new(e.position(), (40.0, 40.0).into(), device, queue),
-                                Some(ExpansiveWave::new_at(e.position(), device)),
-                            );
-                        }
 
                         if !e.alive() {
                             audio.push(crate::audio::Sounds::Explosion, 0.2);

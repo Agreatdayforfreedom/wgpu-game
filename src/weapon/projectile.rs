@@ -11,7 +11,15 @@ use crate::{
 pub struct Projectile {
     pub position: cgmath::Vector2<f32>,
     pub scale: cgmath::Vector2<f32>,
+
+    /// When the projectile is alive, it will be updated and drawn on the screen. </br>
+    /// So we can avoid draw the projectile, but track the last position. </br>
+    /// [default]: true
     pub alive: bool,
+
+    /// when the projectile is destroyed, it can be filtered. </br>
+    /// [default]: false
+    pub destroyed: bool,
     pub dir: CompassDir,
     pub bounds: Bounds,
     pub rotation: cgmath::Deg<f32>,
@@ -38,6 +46,7 @@ impl Projectile {
             bounds,
             dir,
             alive: true,
+            destroyed: false,
             initial_position: position,
             lifetime: instant::Instant::now(),
             uniform,
@@ -79,9 +88,9 @@ impl Projectile {
     }
 
     pub fn set_target(&mut self, target_id: u32, target_pos: cgmath::Vector2<f32>) {
+        // is there a better way to do this? maybe
         let dist = distance(self.position, target_pos);
-        println!("dist: >>>>>>>>>>>>>>>>> {}", dist);
-        if dist < 1.0 {
+        if dist < 2.5 {
             self.alive = false;
         }
         self.target = Some((target_id, target_pos));
@@ -103,15 +112,15 @@ impl Projectile {
         self.bounds = bounds;
     }
 
+    pub fn destroy(&mut self) {
+        self.destroyed = true;
+    }
+
     pub fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
         if self.alive {
             rpass.set_vertex_buffer(2, self.uniform.buffer.slice(..));
             rpass.set_bind_group(2, &self.uniform.bind_group, &[]);
             rpass.draw(0..6, 0..1);
-        } else {
-            // if self.explosion.is_some() {
-            //     self.explosion.as_mut().unwrap().draw(rpass);
-            // }
         }
     }
 }
