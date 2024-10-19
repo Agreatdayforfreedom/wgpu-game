@@ -150,6 +150,7 @@ struct Particle {
   color: vec4<f32>,
   velocity: f32,
   lifetime: f32,
+  actived: f32,
 }
 
 
@@ -189,10 +190,19 @@ fn simulate(@builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
   
   particle.lifetime -= uniforms.delta_time;
 
+  let local_idx = idx - (cumulative_total - u32(sim_params.total));
+
+
+  if (idx > cumulative_total) {
+    particle.color = vec4(0.0);
+  }
 
   // here the particle is initialized
-  if (particle.lifetime < 0.0) {
-      let local_idx = idx - (cumulative_total - u32(sim_params.total));
+
+  if (particle.actived == 0.0 && idx < cumulative_total) {
+  // if (particle.lifetime < 0.0){
+      // particle.lifetime = 1.0 * sim_params.lifetime_factor;
+      particle.actived = 1.0;
       var position = vec2f(0.0, 0.0);
       var dir = vec2f(0.0, 0.0);
 
@@ -240,7 +250,7 @@ fn simulate(@builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
       particle.lifetime = rand() * sim_params.lifetime_factor;
       
 
-      particle.velocity = particle.velocity * sim_params.start_speed;      
+      particle.velocity = 50.0;      
 
       if(sim_params.rate_over_distance == -1.0 
       || sim_params.distance_traveled > 1.0
@@ -249,6 +259,11 @@ fn simulate(@builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
       } else {
         particle.color = vec4f(0.0, 0.0, 0.0, 0.0);
       }
+  }
+
+  if (particle.lifetime < 0.0 && particle.actived == 1.0) {
+    particle.actived = 0.0;
+    // particle.lifetime = rand() * sim_params.lifetime_factor;
   }
 
   if(sim_params.color_over_lifetime == 1.0) {

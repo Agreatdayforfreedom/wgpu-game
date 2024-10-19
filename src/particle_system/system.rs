@@ -9,7 +9,7 @@ use crate::{camera, post_processing::PostProcessing, rendering::{create_bind_gro
 
 use super::simulation_params::{SimulationBuffer, SimulationParams};
 
-const NUM_PARTICLES: wgpu::BufferAddress = 1000;
+const PARTICLE_POOLING: wgpu::BufferAddress = 10000;
 pub struct ParticleSystem {
     texture_view: Sprite,
     total_particles: u64,
@@ -102,7 +102,7 @@ impl ParticleSystem {
 
         let particle_buffer = device.create_buffer(&wgpu::BufferDescriptor {
                     label: Some(&format!("Particle Buffer")),
-                    size: 12 * 4,
+                    size: 12 * 4 * PARTICLE_POOLING,
                     usage: wgpu::BufferUsages::VERTEX
                         | wgpu::BufferUsages::STORAGE
                         | wgpu::BufferUsages::COPY_DST,
@@ -242,20 +242,19 @@ impl ParticleSystem {
 
     pub fn update_sim_params(&mut self,
         id: u32,
-        data: SimulationParams 
-      
+        position: Vector2<f32>,
     ) {
         
-        let mut data = data; 
 
         for t in &mut self.sim_params {
             if t.0 == id {
-                if data.interval > 10.0 {
-                    data.interval -= 10.0;
-                }
-                let dist = distance(t.1.position(), data.position);
-                data.set_distance_traveled(dist);
-                t.1 = data;
+                println!("id particle group:: [{}, {}]", t.0, id);
+                // if data.interval > 10.0 {
+                //     data.interval -= 10.0;
+                // }
+                let dist = distance(t.1.position(), position);
+                t.1.set_distance_traveled(dist);
+                t.1.position = position;
                 break;
             }
         }        
@@ -267,10 +266,19 @@ impl ParticleSystem {
     ) {
         let dt = dt.as_secs_f64();
         self.time += dt;
-
+        let mut i = 0;
         for (_, data) in &mut self.sim_params {
+            i += 1;
             data.interval += dt as f32;
+            // if data.position.x == 0.0 {
+
+            // }
+            // data.position = (100.0 * i as f32,0.0).into();
+            data.circle.radius = 0.1;
+            data.total = 100.0;
         }
+
+
 
         queue.write_buffer(
             self.simulation_buffer.buffer(),
@@ -285,7 +293,7 @@ impl ParticleSystem {
 
     pub fn push_group(&mut self, id: u32, device: &wgpu::Device, num_particles: wgpu::BufferAddress, position:Vector2<f32>, color: Vector4<f32>) {
 
-        self.total_particles += num_particles;
+        self.total_particles = PARTICLE_POOLING;
         
         let mut particles = vec![0.0f32; (12 * num_particles) as usize];
         println!("particles size: {}", std::mem::size_of::<f32>() * (12 * num_particles) as usize);
@@ -313,25 +321,27 @@ impl ParticleSystem {
             // chunk[11] = 0.0;
         }
 
-        let sim_params = SimulationParams::default();
-
+        let mut sim_params = SimulationParams::default();
+        sim_params.color = color;
+        sim_params.position = position;
+        
         //extend the previous particles
-        self.particles.insert(id, particles);
+        // self.particles.insert(id, particles);
         //extend the sim params uniform
         self.sim_params.push((id, sim_params));
 
         //create a new buffer with the new particles
-        let particle_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some(&format!("Particle Buffer")),
-            contents: bytemuck::cast_slice(&self.particles.values().cloned().flatten().collect::<Vec<f32>>()),
-            usage: wgpu::BufferUsages::VERTEX
-                | wgpu::BufferUsages::STORAGE
-                | wgpu::BufferUsages::COPY_DST,
-        });
+        // let particle_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+        //     label: Some(&format!("Particle Buffer")),
+        //     contents: bytemuck::cast_slice(&self.particles.values().cloned().flatten().collect::<Vec<f32>>()),
+        //     usage: wgpu::BufferUsages::VERTEX
+        //         | wgpu::BufferUsages::STORAGE
+        //         | wgpu::BufferUsages::COPY_DST,
+        // });
 
     
         //destroy previous buffers
-        self.particle_buffer.destroy();
+        // self.particle_buffer.destroy();
         self.simulation_buffer.destroy();
 
         let simulation_buffer = self.simulation_buffer.with_contents(&device, bytemuck::cast_slice(&self.sim_params.iter().map(|t| { t.1 }).collect::<Vec<SimulationParams>>()));
@@ -343,7 +353,7 @@ impl ParticleSystem {
             entries: &[
                 wgpu::BindGroupEntry {
                     binding: 0,
-                    resource: particle_buffer.as_entire_binding(),
+                    resource: self.particle_buffer.as_entire_binding(),
                 },
                 wgpu::BindGroupEntry {
                     binding: 1,
@@ -358,7 +368,7 @@ impl ParticleSystem {
         });
 
         //save the new buffers
-        self.particle_buffer = particle_buffer;
+        // self.particle_buffer = particle_buffer;
 
     }
 

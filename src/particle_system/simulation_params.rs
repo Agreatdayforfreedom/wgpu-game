@@ -89,7 +89,7 @@ impl Default for SimulationParams {
             dir: (0.0, 0.0).into(),
             color: (1.0, 1.0, 1.0, 1.0).into(),
             color_over_lifetime: 1.0,
-            rate_over_distance: 0.0,
+            rate_over_distance: -1.0,
             distance_traveled: 0.0,
             lifetime_factor: 1.0,
             start_speed: 1.0,
