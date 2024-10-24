@@ -124,6 +124,9 @@ struct SimulationParams {
   distance_traveled: f32,
   lifetime_factor: f32,
   start_speed: f32,
+  // determine if they will respawn. 0 = false, 1 = true
+  infinite: u32,
+  // determine the mode emision, if it is 1 then the particles are emitted in a loop, and randomly if it's 0.
   mode: u32,
   shape_selected: u32,
   cone: Cone,
@@ -250,7 +253,7 @@ fn simulate(@builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
       particle.lifetime = rand() * sim_params.lifetime_factor;
       
 
-      particle.velocity = 50.0;      
+      particle.velocity = rand() * sim_params.start_speed;      
 
       if(sim_params.rate_over_distance == -1.0 
       || sim_params.distance_traveled > 1.0
@@ -262,8 +265,9 @@ fn simulate(@builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
   }
 
   if (particle.lifetime < 0.0 && particle.actived == 1.0) {
-    particle.actived = 0.0;
-    // particle.lifetime = rand() * sim_params.lifetime_factor;
+    if (sim_params.infinite == 1) {
+      particle.actived = 0.0;
+    }
   }
 
   if(sim_params.color_over_lifetime == 1.0) {

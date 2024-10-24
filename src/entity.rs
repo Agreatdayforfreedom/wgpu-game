@@ -171,16 +171,36 @@ impl EntityManager {
         particle_system.push_group(
             player.id(),
             device,
-            100,
-            (0.0, 0.0).into(),
-            (1.0, 1.0, 1.0, 1.0).into(),
+            SimulationParams {
+                total: 100.0,
+                color: (0.0, 1.0, 1.0, 1.0).into(),
+                position: player.position(),
+                infinite: 1,
+                rate_over_distance: 7.0,
+                lifetime_factor: 0.25,
+                circle: Circle {
+                    radius: 1.5,
+                    emit_from_edge: 0,
+                },
+                ..Default::default()
+            },
         );
         particle_system.push_group(
             player.id() + 1,
             device,
-            100,
-            (0.0, 0.0).into(),
-            (1.0, 1.0, 1.0, 1.0).into(),
+            SimulationParams {
+                total: 100.0,
+                color: (0.0, 1.0, 1.0, 1.0).into(),
+                position: player.position(), //* relative orientation
+                infinite: 1,
+                lifetime_factor: 0.25,
+                rate_over_distance: 7.0,
+                circle: Circle {
+                    radius: 1.5,
+                    emit_from_edge: 0,
+                },
+                ..Default::default()
+            },
         );
         let mut enemies: Vec<Box<dyn Entity>> = vec![];
 
@@ -199,24 +219,8 @@ impl EntityManager {
                 (61.0, 19.0).into(),
             );
 
-            // particle_system.push_group(
-            //     enemy.id(),
-            //     device,
-            //     1000,
-            //     (0.0, 0.0).into(),
-            //     (0.0, 1.0, 0.5, 1.0).into(),
-            // );
-
             enemies.push(enemy);
         }
-
-        particle_system.push_group(
-            10,
-            device,
-            100,
-            (-200.0, -200.0).into(),
-            (1.0, 1.0, 1.0, 1.0).into(),
-        );
 
         //swift_ships
         for _ in 0..5 {
@@ -232,13 +236,7 @@ impl EntityManager {
                 position.into(),
                 (17.5, 20.0).into(),
             );
-            // particle_system.push_group(
-            //     enemy.id(),
-            //     device,
-            //     1000,
-            //     (0.0, 0.0).into(),
-            //     (1.0, 0.5, 0.0, 1.0).into(),
-            // );
+
             enemies.push(enemy);
         }
 
@@ -305,14 +303,6 @@ impl EntityManager {
             }
 
             e.update(&dt, input_controller, audio, device, queue);
-            // particle_system.update_sim_params(
-            //     queue,
-            //     e.id(),
-            //     &e.get_orientation_point((0.0, e.top_right().y).into()),
-            //     e.rotation(),
-            //     (0.0, 1.0, 0.0, 1.0).into(),
-            //     dt,
-            // );
         }
 
         for weapon in &mut self.player.active_weapons {
@@ -373,16 +363,25 @@ impl EntityManager {
             for p in &mut weapon.get_projectiles() {
                 if !p.is_active() && !p.is_destroyed() {
                     audio.push(crate::audio::Sounds::Explosion, 0.2);
-                    self.explosion_manager.add(
-                        Explosion::new(p.position, (40.0, 40.0).into(), device, queue),
-                        Some(ExpansiveWave::new_at(p.position, device)),
-                    );
+                    // self.explosion_manager.add(
+                    //     Explosion::new(p.position, (40.0, 40.0).into(), device, queue),
+                    //     Some(ExpansiveWave::new_at(p.position, device)),
+                    // );
                     particle_system.push_group(
                         self.id_vendor.next_id(),
                         device,
-                        100,
-                        p.position,
-                        (1.0, 0.0, 0.0, 1.0).into(),
+                        SimulationParams {
+                            total: 100.0,
+                            color: (1.0, 0.466, 0.0, 1.0).into(),
+                            position: p.position,
+                            infinite: 0,
+                            start_speed: 10.0,
+                            circle: Circle {
+                                radius: 3.0,
+                                emit_from_edge: 0,
+                            },
+                            ..Default::default()
+                        },
                     );
                     // we destroy the projectile to track the last position and emit an explosion
                     p.destroy();
@@ -414,84 +413,6 @@ impl EntityManager {
         }
 
         self.explosion_manager.update(queue, dt);
-
-        let pos = self.player.get_orientation_point(
-            (
-                self.player.top_right().x - 12.0,
-                self.player.top_right().y - 15.0,
-            )
-                .into(),
-        );
-
-        // particle_system.update_sim_params(
-        //     self.player.id(),
-        //     SimulationParams {
-        //         total: 100.0,
-        //         position: pos,
-        //         dir: CompassDir::from_deg(self.player.rotation().opposite().0).dir,
-        //         color: (52.0 / 255.0, 76.0 / 255.0, 235.0 / 255.0, 1.0).into(),
-        //         rate_over_distance: 7.0,
-        //         color_over_lifetime: 1.0,
-        //         // interval: dt.as_secs_f32(),
-        //         lifetime_factor: 0.25,
-        //         start_speed: 0.0,
-        //         shape_selected: 0,
-        //         circle: Circle {
-        //             radius: 1.5,
-        //             emit_from_edge: 0,
-        //         },
-        //         ..Default::default()
-        //     },
-        // );
-        let pos = self.player.get_orientation_point(
-            (
-                self.player.top_left().x + 12.0,
-                self.player.top_left().y - 15.0,
-            )
-                .into(),
-        );
-        // particle_system.update_sim_params(
-        //     self.player.id() + 1,
-        //     SimulationParams {
-        //         total: 100.0,
-        //         position: pos,
-        //         dir: CompassDir::from_deg(self.player.rotation().opposite().0).dir,
-        //         color: (52.0 / 255.0, 76.0 / 255.0, 235.0 / 255.0, 1.0).into(),
-        //         rate_over_distance: 7.0,
-        //         color_over_lifetime: 1.0,
-        //         // delta_time: dt.as_secs_f32(),
-        //         lifetime_factor: 0.25,
-        //         start_speed: 0.0,
-        //         shape_selected: 0,
-        //         circle: Circle {
-        //             radius: 1.5,
-        //             emit_from_edge: 0,
-        //         },
-        //         ..Default::default()
-        //     },
-        // );
-
-        // particle_system.update_sim_params(
-        //     10,
-        //     SimulationParams {
-        //         total: 1000.0,
-        //         position: (0.0, 0.0).into(),
-        //         dir: (0.0, 1.0).into(),
-        //         color: (225.0 / 255.0, 69.0 / 255.0, 0.0 / 255.0, 1.0).into(),
-        //         rate_over_distance: -1.0,
-        //         color_over_lifetime: 1.0,
-        //         // interval: dt.as_secs_f32(),
-        //         lifetime_factor: 10000.0,
-        //         start_speed: 0.0,
-        //         mode: 1,
-        //         shape_selected: 0,
-        //         circle: Circle {
-        //             radius: 10.0,
-        //             emit_from_edge: 1,
-        //         },
-        //         ..*particle_system.get_sim_params(10) // ..Default::default()
-        //     },
-        // );
     }
 
     pub fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {

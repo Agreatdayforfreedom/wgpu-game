@@ -70,11 +70,12 @@ pub struct SimulationParams {
     pub distance_traveled: f32,
     pub lifetime_factor: f32,
     pub start_speed: f32,
+    pub infinite: u32,
     pub mode: u32,
     pub shape_selected: u32,
     pub cone: Cone,
     pub circle: Circle,
-    pub _pad: Vector3<u32>,
+    pub _pad: Vector2<u32>,
 }
 
 unsafe impl bytemuck::Pod for SimulationParams {}
@@ -89,15 +90,16 @@ impl Default for SimulationParams {
             dir: (0.0, 0.0).into(),
             color: (1.0, 1.0, 1.0, 1.0).into(),
             color_over_lifetime: 1.0,
-            rate_over_distance: -1.0,
+            rate_over_distance: -1.0, // todo: this does not work as expected
             distance_traveled: 0.0,
             lifetime_factor: 1.0,
             start_speed: 1.0,
+            infinite: 0,
             mode: 0,
             shape_selected: 0,
             cone: Cone::default(),
             circle: Circle::default(),
-            _pad: Vector3::from_value(0),
+            _pad: Vector2::from_value(0),
         }
     }
 }

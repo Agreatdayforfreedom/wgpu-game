@@ -1,15 +1,14 @@
 
-use std::{collections::HashMap, ops::DerefMut};
+use std::collections::HashMap;
 
-use cgmath::{ Vector2, Vector4};
-use rand::Rng;
+use cgmath::Vector2;
 use wgpu::util::DeviceExt;
 
-use crate::{camera, post_processing::PostProcessing, rendering::{create_bind_group_layout, Sprite}, util::{distance, CompassDir}};
+use crate::{camera, post_processing::PostProcessing, rendering::{create_bind_group_layout, Sprite}, util::distance};
 
 use super::simulation_params::{SimulationBuffer, SimulationParams};
 
-const PARTICLE_POOLING: wgpu::BufferAddress = 10000;
+const PARTICLE_POOLING: wgpu::BufferAddress = 100000;
 pub struct ParticleSystem {
     texture_view: Sprite,
     total_particles: u64,
@@ -236,10 +235,6 @@ impl ParticleSystem {
         }
     }
 
-    pub fn get_sim_params(&self, id: u32) -> &SimulationParams {
-        &self.sim_params.iter().find(|&(key, _)| { *key == id }).unwrap().1
-    }
-
     pub fn update_sim_params(&mut self,
         id: u32,
         position: Vector2<f32>,
@@ -249,9 +244,6 @@ impl ParticleSystem {
         for t in &mut self.sim_params {
             if t.0 == id {
                 println!("id particle group:: [{}, {}]", t.0, id);
-                // if data.interval > 10.0 {
-                //     data.interval -= 10.0;
-                // }
                 let dist = distance(t.1.position(), position);
                 t.1.set_distance_traveled(dist);
                 t.1.position = position;
@@ -270,12 +262,6 @@ impl ParticleSystem {
         for (_, data) in &mut self.sim_params {
             i += 1;
             data.interval += dt as f32;
-            // if data.position.x == 0.0 {
-
-            // }
-            // data.position = (100.0 * i as f32,0.0).into();
-            data.circle.radius = 0.1;
-            data.total = 100.0;
         }
 
 
@@ -291,57 +277,14 @@ impl ParticleSystem {
     }
 
 
-    pub fn push_group(&mut self, id: u32, device: &wgpu::Device, num_particles: wgpu::BufferAddress, position:Vector2<f32>, color: Vector4<f32>) {
+    pub fn push_group(&mut self, id: u32, device: &wgpu::Device, params: SimulationParams) {
 
         self.total_particles = PARTICLE_POOLING;
         
-        let mut particles = vec![0.0f32; (12 * num_particles) as usize];
-        println!("particles size: {}", std::mem::size_of::<f32>() * (12 * num_particles) as usize);
-        for chunk in particles.chunks_mut(12) {
-            chunk[0] = rand::thread_rng().gen_range(-400..400) as f32;
-            chunk[1] = rand::thread_rng().gen_range(-400..400) as f32;
-    
-            chunk[2] = 0.0;
-            chunk[3] = 0.0;
-    
-            //color
-            chunk[4] = 1.0;
-            chunk[5] = 0.9;
-            chunk[6] = 0.0;
-            chunk[7] = 1.0;
-    
-            // velocity
-            chunk[8] =  rand::thread_rng().gen_range(10.0..50.0);
-            // chunk[8] =  rand::thread_rng().gen_range(100.0..500.0);
-            // lifetime
-            chunk[9] = 0.0 as f32;
-    
-            //padding
-            // chunk[10] = rand::thread_rng().gen_range(0.0..30.0);
-            // chunk[11] = 0.0;
-        }
-
-        let mut sim_params = SimulationParams::default();
-        sim_params.color = color;
-        sim_params.position = position;
         
-        //extend the previous particles
-        // self.particles.insert(id, particles);
-        //extend the sim params uniform
-        self.sim_params.push((id, sim_params));
-
-        //create a new buffer with the new particles
-        // let particle_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-        //     label: Some(&format!("Particle Buffer")),
-        //     contents: bytemuck::cast_slice(&self.particles.values().cloned().flatten().collect::<Vec<f32>>()),
-        //     usage: wgpu::BufferUsages::VERTEX
-        //         | wgpu::BufferUsages::STORAGE
-        //         | wgpu::BufferUsages::COPY_DST,
-        // });
-
-    
+        self.sim_params.push((id, params));
+        
         //destroy previous buffers
-        // self.particle_buffer.destroy();
         self.simulation_buffer.destroy();
 
         let simulation_buffer = self.simulation_buffer.with_contents(&device, bytemuck::cast_slice(&self.sim_params.iter().map(|t| { t.1 }).collect::<Vec<SimulationParams>>()));
@@ -367,8 +310,6 @@ impl ParticleSystem {
             label: None,
         });
 
-        //save the new buffers
-        // self.particle_buffer = particle_buffer;
 
     }
 
@@ -381,7 +322,6 @@ impl ParticleSystem {
         camera: &camera::Camera,
     ) {
         
-        // let view = &view.create_view(&wgpu::TextureViewDescriptor::default());
         let rpass_layout = wgpu::RenderPassDescriptor {
             label: None,
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
@@ -397,7 +337,15 @@ impl ParticleSystem {
             occlusion_query_set: None,
         };
 
-        
+        {
+            let mut rpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+                label: None,
+                timestamp_writes: None,
+            });
+            rpass.set_pipeline(&self.compute_pipeline);
+            rpass.set_bind_group(0, &self.particle_bind_group, &[]);
+            rpass.dispatch_workgroups((self.total_particles as f32 / 64.0).ceil() as u32, 1, 1);
+        }
         {
             let mut rpass = encoder.begin_render_pass(&rpass_layout);
             rpass.set_pipeline(&self.render_pipeline);
@@ -408,15 +356,7 @@ impl ParticleSystem {
 
             rpass.draw(0..6, 0..self.total_particles as u32);
         }
-        {
-            let mut rpass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-                label: None,
-                timestamp_writes: None,
-            });
-            rpass.set_pipeline(&self.compute_pipeline);
-            rpass.set_bind_group(0, &self.particle_bind_group, &[]);
-            rpass.dispatch_workgroups((self.total_particles as f32 / 64.0).ceil() as u32, 1, 1);
-        }
+        
         let v = view.create_view(&wgpu::TextureViewDescriptor::default());
         self.bloom.render(encoder, &self.texture_view, &v);
 
