@@ -7,8 +7,9 @@ use crate::{
     collider::Bounds,
     entity::EntityUniform,
     input::Input,
+    particle_system::system::ParticleSystem,
     rendering::{create_bind_group_layout, Sprite},
-    util::CompassDir,
+    util::{CompassDir, IdVendor},
 };
 
 use super::{projectile::Projectile, weapon::Weapon};
@@ -49,11 +50,14 @@ impl Weapon for Laser {
         dir: CompassDir,
         input: &Input,
         _audio: &mut Audio,
+        id_vendor: &mut IdVendor,
+        particle_system: &mut ParticleSystem,
     ) {
         if input.is_pressed("f") && self.projectiles.len() < 1 {
             let mut uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
             uniform.data.set_tex_scale((-1.0, -3.0).into()).exec();
             self.projectiles.push(Projectile::new(
+                id_vendor.next_id(),
                 position,
                 SCALE,
                 cgmath::Deg(0.0),
@@ -75,6 +79,7 @@ impl Weapon for Laser {
         position: cgmath::Vector2<f32>,
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
+        particle_system: &mut ParticleSystem,
     ) {
         for projectile in &mut self.projectiles {
             if projectile.is_active() {

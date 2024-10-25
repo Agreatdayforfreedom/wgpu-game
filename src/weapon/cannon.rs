@@ -7,9 +7,10 @@ use crate::{
     collider::Bounds,
     entity::EntityUniform,
     input::Input,
+    particle_system::system::ParticleSystem,
     player,
     rendering::{create_bind_group_layout, Sprite},
-    util::CompassDir,
+    util::{CompassDir, IdVendor},
 };
 
 use super::projectile::Projectile;
@@ -64,6 +65,8 @@ impl Weapon for Cannon {
         dir: CompassDir,
         input: &Input,
         audio: &mut Audio,
+        id_vendor: &mut IdVendor,
+        particle_system: &mut ParticleSystem,
     ) {
         if (input.is_pressed("f") || self.auto)
             && self.time.elapsed().as_millis() >= self.shooting_interval
@@ -72,6 +75,7 @@ impl Weapon for Cannon {
             let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
             audio.push(Sounds::Shoot, 0.5);
             let p = Projectile::new(
+                id_vendor.next_id(),
                 position,
                 SCALE,
                 dir.angle,
@@ -95,6 +99,7 @@ impl Weapon for Cannon {
         position: cgmath::Vector2<f32>,
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
+        particle_system: &mut ParticleSystem,
     ) {
         let mut i = 0;
         while i < self.projectiles.len() {

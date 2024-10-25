@@ -23,6 +23,8 @@ pub trait Entity {
         _audio: &mut Audio,
         _device: &wgpu::Device,
         _queue: &mut wgpu::Queue,
+        _id_vendor: &mut IdVendor,
+        _particle_system: &mut ParticleSystem,
     ) {
     }
 
@@ -258,8 +260,15 @@ impl EntityManager {
         dt: &instant::Duration,
         particle_system: &mut ParticleSystem,
     ) {
-        self.player
-            .update(dt, input_controller, audio, device, queue);
+        self.player.update(
+            dt,
+            input_controller,
+            audio,
+            device,
+            queue,
+            &mut self.id_vendor,
+            particle_system,
+        );
         let pos = self.player.get_orientation_point(
             (
                 self.player.top_right().x - 12.0,
@@ -267,7 +276,7 @@ impl EntityManager {
             )
                 .into(),
         );
-        particle_system.update_sim_params(self.player.id(), pos);
+        particle_system.update_sim_params(self.player.id(), pos, 1);
         let pos = self.player.get_orientation_point(
             (
                 self.player.top_left().x + 12.0,
@@ -275,7 +284,7 @@ impl EntityManager {
             )
                 .into(),
         );
-        particle_system.update_sim_params(self.player.id() + 1, pos);
+        particle_system.update_sim_params(self.player.id() + 1, pos, 1);
         camera.update(Vector3::new(
             self.player.position.x,
             self.player.position.y,
@@ -302,7 +311,15 @@ impl EntityManager {
                 e.set_target_point(self.player.position(), dt);
             }
 
-            e.update(&dt, input_controller, audio, device, queue);
+            e.update(
+                &dt,
+                input_controller,
+                audio,
+                device,
+                queue,
+                &mut self.id_vendor,
+                particle_system,
+            );
         }
 
         for weapon in &mut self.player.active_weapons {
@@ -336,7 +353,6 @@ impl EntityManager {
             }
             if weapon.get_name() == "homing_missile" {
                 for p in weapon.get_projectiles() {
-                    // p.set_explosion(device, queue, false);
                     let mut min_dist = f32::MAX;
                     // if there is no target, we set the closer enemy as target.
                     // we keep (in the else statement) the same target regardless if the it's far away then any other enemy

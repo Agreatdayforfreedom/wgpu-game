@@ -7,8 +7,9 @@ use crate::{
     collider::Bounds,
     entity::EntityUniform,
     input::Input,
+    particle_system::system::ParticleSystem,
     rendering::{create_bind_group_layout, Sprite},
-    util::CompassDir,
+    util::{CompassDir, IdVendor},
     weapon::projectile::Projectile,
 };
 
@@ -54,6 +55,8 @@ impl Weapon for RailGun {
         dir: CompassDir,
         input: &Input,
         audio: &mut Audio,
+        id_vendor: &mut IdVendor,
+        particle_system: &mut ParticleSystem,
     ) {
         if input.is_pressed("f") && self.time.elapsed().as_millis() >= self.shooting_interval {
             self.time = instant::Instant::now();
@@ -63,6 +66,7 @@ impl Weapon for RailGun {
                 let mut projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
 
                 self.projectiles.push(Projectile::new(
+                    id_vendor.next_id(),
                     ((position.x), position.y).into(),
                     SCALE,
                     dir.angle + cgmath::Deg(180.0),
@@ -95,6 +99,7 @@ impl Weapon for RailGun {
         position: cgmath::Vector2<f32>,
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
+        particle_system: &mut ParticleSystem,
     ) {
         let mut i = 0;
         while i < self.projectiles.len() {

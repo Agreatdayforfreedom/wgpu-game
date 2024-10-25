@@ -4,9 +4,10 @@ use crate::{
     ai::patrol_area::PatrolArea,
     entity::{Entity, EntityUniform},
     explosion::Explosion,
+    particle_system::system::ParticleSystem,
     rendering::{create_bind_group_layout, Sprite},
     uniform::Uniform,
-    util::{distance, CompassDir},
+    util::{distance, CompassDir, IdVendor},
     weapon::{cannon::Cannon, weapon::Weapon},
 };
 use cgmath::{InnerSpace, Point2, Vector2};
@@ -87,13 +88,14 @@ impl Entity for SwiftShip {
         audio: &mut crate::audio::Audio,
         device: &wgpu::Device,
         queue: &mut wgpu::Queue,
+        id_vendor: &mut IdVendor,
+        particle_system: &mut ParticleSystem,
     ) {
         let pos = self.get_orientation_point((1.0, self.top_left().y).into());
 
-        self.weapon.update(pos, queue, dt);
+        self.weapon.update(pos, queue, dt, particle_system);
 
         if self.patrol.is_over(self.position()) {
-            println!("OVER");
             self.patrol.next(self.position());
         }
 
@@ -105,6 +107,8 @@ impl Entity for SwiftShip {
                     CompassDir::from_deg(self.rotation.0 + 180.0),
                     input,
                     audio,
+                    id_vendor,
+                    particle_system,
                 );
             }
             self.uniform

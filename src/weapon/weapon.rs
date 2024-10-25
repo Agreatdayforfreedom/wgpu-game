@@ -3,10 +3,9 @@ use std::slice::IterMut;
 use super::projectile::Projectile;
 use crate::{
     audio::Audio,
-    collider::Bounds,
     input::Input,
-    player::{self, Player},
-    util::CompassDir,
+    particle_system::{self, system::ParticleSystem},
+    util::{CompassDir, IdVendor},
 };
 
 pub trait Weapon {
@@ -17,6 +16,8 @@ pub trait Weapon {
         dir: CompassDir,
         input: &Input,
         audio: &mut Audio,
+        id_vendor: &mut IdVendor,
+        particle_system: &mut ParticleSystem,
     ) {
     }
 
@@ -25,6 +26,7 @@ pub trait Weapon {
         position: cgmath::Vector2<f32>,
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
+        particle_system: &mut ParticleSystem,
     ) {
     }
 

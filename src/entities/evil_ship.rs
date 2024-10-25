@@ -8,9 +8,10 @@ use crate::{
     audio::Audio,
     entity::{Entity, EntityUniform},
     explosion::Explosion,
+    particle_system::{self, system::ParticleSystem},
     rendering::{create_bind_group_layout, Sprite},
     uniform::Uniform,
-    util::{distance, CompassDir},
+    util::{distance, CompassDir, IdVendor},
     weapon::{cannon::Cannon, weapon::Weapon},
 };
 
@@ -88,12 +89,13 @@ impl Entity for EvilShip {
         audio: &mut Audio,
         device: &wgpu::Device,
         queue: &mut wgpu::Queue,
+        id_vendor: &mut IdVendor,
+        particle_system: &mut ParticleSystem,
     ) {
         let pos = self.get_orientation_point((self.top_right().x, -1.0).into());
-        self.weapon.update(pos, queue, dt);
+        self.weapon.update(pos, queue, dt, particle_system);
 
         if self.patrol.is_over(self.position()) {
-            println!("OVER");
             self.patrol.next(self.position());
         }
 
@@ -105,6 +107,8 @@ impl Entity for EvilShip {
                     CompassDir::from_deg(self.rotation.0 + 90.0),
                     input,
                     audio,
+                    id_vendor,
+                    particle_system,
                 );
             }
             self.uniform

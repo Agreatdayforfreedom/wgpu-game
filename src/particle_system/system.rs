@@ -238,6 +238,7 @@ impl ParticleSystem {
     pub fn update_sim_params(&mut self,
         id: u32,
         position: Vector2<f32>,
+        infinite: u32,
     ) {
         
 
@@ -247,6 +248,9 @@ impl ParticleSystem {
                 let dist = distance(t.1.position(), position);
                 t.1.set_distance_traveled(dist);
                 t.1.position = position;
+                if infinite != t.1.infinite {
+                    t.1.infinite = infinite; // so we do this so that when a projectile dies, it stops emitting particles
+                }
                 break;
             }
         }        

@@ -5,8 +5,12 @@ use crate::{
     collider::{check_collision, Bounds},
     entity::EntityUniform,
     input::Input,
+    particle_system::{
+        simulation_params::{Cone, SimulationParams},
+        system::ParticleSystem,
+    },
     rendering::{create_bind_group_layout, Sprite},
-    util::{distance, CompassDir},
+    util::{distance, CompassDir, IdVendor},
 };
 
 use super::{
@@ -63,14 +67,37 @@ impl Weapon for HomingMissile {
         dir: CompassDir,
         input: &Input,
         audio: &mut Audio,
+        id_vendor: &mut IdVendor,
+        particle_system: &mut ParticleSystem,
     ) {
         if (input.is_pressed("f") || self.auto)
             && self.time.elapsed().as_millis() >= self.shooting_interval
         {
             self.time = instant::Instant::now();
             let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
+            let pid = id_vendor.next_id();
+            particle_system.push_group(
+                pid,
+                device,
+                SimulationParams {
+                    total: 100.0,
+                    color: (1.0, 0.74, 0.0, 1.0).into(),
+                    position,
+                    infinite: 1,
+                    rate_over_distance: 7.0,
+                    start_speed: 40.0,
+                    lifetime_factor: 0.25,
+                    shape_selected: 1,
+                    cone: Cone {
+                        angle: 90.0,
+                        arc: 90.0,
+                    },
+                    ..Default::default()
+                },
+            );
             // audio.push(Sounds::Shoot, 0.5);
             let mut p = Projectile::new(
+                pid,
                 position,
                 SCALE,
                 dir.angle,
@@ -94,6 +121,7 @@ impl Weapon for HomingMissile {
         position: cgmath::Vector2<f32>,
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
+        particle_system: &mut ParticleSystem,
     ) {
         let mut i = 0;
         while i < self.projectiles.len() {
@@ -129,11 +157,12 @@ impl Weapon for HomingMissile {
                         this.rotation = cgmath::Deg(angle);
                     });
                 }
-
+                particle_system.update_sim_params(projectile.id, projectile.position, 1);
                 projectile.update();
                 projectile.uniform.write(queue);
                 i += 1;
             } else {
+                particle_system.update_sim_params(projectile.id, projectile.position, 0);
                 self.projectiles.swap_remove(i);
             }
         }

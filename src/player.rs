@@ -1,8 +1,9 @@
 use crate::audio::Audio;
 use crate::entity::Entity;
+use crate::particle_system::system::ParticleSystem;
 use crate::rendering::{create_bind_group_layout, Sprite};
 use crate::uniform::{self, Uniform};
-use crate::util::CompassDir;
+use crate::util::{CompassDir, IdVendor};
 use crate::weapon;
 // use crate::weapon::cannon::Cannon;
 // use crate::weapon::double_connon::DoubleCannon;
@@ -35,6 +36,8 @@ impl Entity for Player {
         audio: &mut Audio,
         device: &wgpu::Device,
         queue: &mut wgpu::Queue,
+        id_vendor: &mut IdVendor,
+        particle_system: &mut ParticleSystem,
     ) {
         if input.is_pressed("d") {
             self.movement("d", dt);
@@ -56,13 +59,15 @@ impl Entity for Player {
         while i < self.active_weapons.len() {
             let weapon = self.active_weapons.get_mut(i).unwrap();
             let position = positions[i];
-            weapon.update(position, queue, dt);
+            weapon.update(position, queue, dt, particle_system);
             weapon.shoot(
                 device,
                 position,
                 CompassDir::from_deg(self.rotation.0),
                 input,
                 audio,
+                id_vendor,
+                particle_system,
             );
             i += 1;
         }

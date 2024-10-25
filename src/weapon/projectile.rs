@@ -11,6 +11,7 @@ use crate::{
 };
 
 pub struct Projectile {
+    pub id: u32,
     pub position: Vector2<f32>,
     pub scale: Vector2<f32>,
     pub rotation: Deg<f32>,
@@ -34,6 +35,7 @@ pub struct Projectile {
 
 impl Projectile {
     pub fn new(
+        id: u32,
         position: Vector2<f32>,
         scale: Vector2<f32>,
         rotation: Deg<f32>,
@@ -42,6 +44,7 @@ impl Projectile {
         uniform: uniform::Uniform<EntityUniform>,
     ) -> Self {
         Self {
+            id,
             position,
             scale,
             rotation: Deg(90.0) - rotation,
