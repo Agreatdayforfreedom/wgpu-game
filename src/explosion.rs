@@ -1,11 +1,10 @@
-use cgmath::{vec2, Array, Vector2, Vector4};
+use cgmath::{Vector2, Vector4};
 
-use crate::audio::{Audio, Sounds};
 use crate::entity::EntityUniform;
+use crate::rendering;
 use crate::rendering::{create_bind_group_layout, Sprite};
 use crate::uniform;
 use crate::uniform::Uniform;
-use crate::{audio, rendering};
 const TIME_TO_NEXT_FRAME: f32 = 2.0 / 30.0;
 
 pub struct Explosion {
@@ -15,7 +14,6 @@ pub struct Explosion {
     pub end: bool,
     pub uniform: uniform::Uniform<EntityUniform>,
     pub i: u32,
-    // pub sprites: Vec<rendering::Sprite>,
     time_to_next_frame: f32,
 }
 
@@ -24,10 +22,8 @@ impl Explosion {
         position: cgmath::Vector2<f32>,
         scale: cgmath::Vector2<f32>,
         device: &wgpu::Device,
-        queue: &wgpu::Queue,
     ) -> Self {
         let uniform = Uniform::<EntityUniform>::new(device);
-        let bind_group_layout = create_bind_group_layout(device);
 
         Self {
             position,
@@ -39,10 +35,6 @@ impl Explosion {
             end: false,
             start: true,
         }
-    }
-
-    pub fn set_position(&mut self, position: cgmath::Vector2<f32>) {
-        self.position = position;
     }
 
     pub fn update(&mut self, queue: &mut wgpu::Queue, dt: &instant::Duration) {
@@ -95,7 +87,7 @@ impl ExpansiveWave {
             scale: initial_scale,
             position,
             uniform,
-            color: Vector4::from_value(1.0),
+            color: Vector4::new(0.0, 1.0, 1.0, 1.0),
             end: false,
         }
     }
@@ -103,12 +95,11 @@ impl ExpansiveWave {
     pub fn update(&mut self, queue: &mut wgpu::Queue, dt: &instant::Duration) {
         let dt = dt.as_secs_f32();
 
-        // let scale = (self.scale.x + 100.0, self.);
-        self.color.x = 1.0;
-        self.color.y = 0.0;
-        self.color.z = 0.0;
         if self.scale.x >= 175.0 {
             self.color.w -= 2.5 * dt;
+            if self.color.w < 0.0 {
+                self.end = true;
+            }
         } else {
             self.scale.x += 200.0 * dt;
             self.scale.y += 200.0 * dt;
@@ -139,13 +130,13 @@ impl ExplosionManager {
     pub fn new(device: &wgpu::Device, queue: &wgpu::Queue) -> Self {
         let bind_group_layout = create_bind_group_layout(device);
 
-        let diffuse_bytes1 = include_bytes!("./assets/exp1.png");
-        let diffuse_bytes2 = include_bytes!("./assets/exp2.png");
-        let diffuse_bytes3 = include_bytes!("./assets/exp3.png");
-        let diffuse_bytes4 = include_bytes!("./assets/exp4.png");
-        let diffuse_bytes5 = include_bytes!("./assets/exp5.png");
-        let diffuse_bytes6 = include_bytes!("./assets/exp6.png");
-        let diffuse_bytes7 = include_bytes!("./assets/exp7.png");
+        let diffuse_bytes1 = include_bytes!("./assets/bexp1.png");
+        let diffuse_bytes2 = include_bytes!("./assets/bexp2.png");
+        let diffuse_bytes3 = include_bytes!("./assets/bexp3.png");
+        let diffuse_bytes4 = include_bytes!("./assets/bexp4.png");
+        let diffuse_bytes5 = include_bytes!("./assets/bexp5.png");
+        let diffuse_bytes6 = include_bytes!("./assets/bexp6.png");
+        let diffuse_bytes7 = include_bytes!("./assets/bexp7.png");
 
         let sprites = vec![
             rendering::Sprite::new(
@@ -225,14 +216,27 @@ impl ExplosionManager {
     }
 
     pub fn update(&mut self, queue: &mut wgpu::Queue, dt: &instant::Duration) {
-        println!("{}", self.explosions.len());
-        for explosion in &mut self.explosions {
+        let mut i = 0usize;
+        while i < self.explosions.len() {
+            let explosion = self.explosions.get_mut(i).unwrap();
             if !explosion.end {
                 explosion.update(queue, dt);
+
+                i += 1;
+            } else {
+                self.explosions.swap_remove(i);
             }
         }
-        for wave in &mut self.waves.1 {
-            wave.update(queue, dt);
+
+        let mut i = 0usize;
+        while i < self.waves.1.len() {
+            let wave = self.waves.1.get_mut(i).unwrap();
+            if !wave.end {
+                wave.update(queue, dt);
+                i += 1;
+            } else {
+                self.waves.1.swap_remove(i);
+            }
         }
     }
 

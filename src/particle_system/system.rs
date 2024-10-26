@@ -244,7 +244,6 @@ impl ParticleSystem {
 
         for t in &mut self.sim_params {
             if t.0 == id {
-                println!("id particle group:: [{}, {}]", t.0, id);
                 let dist = distance(t.1.position(), position);
                 t.1.set_distance_traveled(dist);
                 t.1.position = position;
