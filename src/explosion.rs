@@ -15,7 +15,7 @@ pub struct Explosion {
     pub end: bool,
     pub uniform: uniform::Uniform<EntityUniform>,
     pub i: u32,
-    pub sprites: Vec<rendering::Sprite>,
+    // pub sprites: Vec<rendering::Sprite>,
     time_to_next_frame: f32,
 }
 
@@ -29,72 +29,13 @@ impl Explosion {
         let uniform = Uniform::<EntityUniform>::new(device);
         let bind_group_layout = create_bind_group_layout(device);
 
-        let diffuse_bytes1 = include_bytes!("./assets/exp1.png");
-        let diffuse_bytes2 = include_bytes!("./assets/exp2.png");
-        let diffuse_bytes3 = include_bytes!("./assets/exp3.png");
-        let diffuse_bytes4 = include_bytes!("./assets/exp4.png");
-        let diffuse_bytes5 = include_bytes!("./assets/exp5.png");
-        let diffuse_bytes6 = include_bytes!("./assets/exp6.png");
-        let diffuse_bytes7 = include_bytes!("./assets/exp7.png");
-
-        let sprites = vec![
-            rendering::Sprite::new(
-                &device,
-                &queue,
-                wgpu::AddressMode::ClampToEdge,
-                &bind_group_layout,
-                diffuse_bytes1,
-            ),
-            rendering::Sprite::new(
-                &device,
-                &queue,
-                wgpu::AddressMode::ClampToEdge,
-                &bind_group_layout,
-                diffuse_bytes2,
-            ),
-            rendering::Sprite::new(
-                &device,
-                &queue,
-                wgpu::AddressMode::ClampToEdge,
-                &bind_group_layout,
-                diffuse_bytes3,
-            ),
-            rendering::Sprite::new(
-                &device,
-                &queue,
-                wgpu::AddressMode::ClampToEdge,
-                &bind_group_layout,
-                diffuse_bytes4,
-            ),
-            rendering::Sprite::new(
-                &device,
-                &queue,
-                wgpu::AddressMode::ClampToEdge,
-                &bind_group_layout,
-                diffuse_bytes5,
-            ),
-            rendering::Sprite::new(
-                &device,
-                &queue,
-                wgpu::AddressMode::ClampToEdge,
-                &bind_group_layout,
-                diffuse_bytes6,
-            ),
-            rendering::Sprite::new(
-                &device,
-                &queue,
-                wgpu::AddressMode::ClampToEdge,
-                &bind_group_layout,
-                diffuse_bytes7,
-            ),
-        ];
         Self {
             position,
             scale,
             uniform,
             i: 0,
             time_to_next_frame: 0.0,
-            sprites,
+            // sprites,
             end: false,
             start: true,
         }
@@ -132,7 +73,6 @@ impl Explosion {
     pub fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
         if !self.end {
             rpass.set_bind_group(2, &self.uniform.bind_group, &[]);
-            self.sprites.get_mut(self.i as usize).unwrap().bind(rpass);
             rpass.draw(0..6, 0..1);
         }
     }
@@ -197,19 +137,81 @@ pub struct ExplosionManager {
 
 impl ExplosionManager {
     pub fn new(device: &wgpu::Device, queue: &wgpu::Queue) -> Self {
+        let bind_group_layout = create_bind_group_layout(device);
+
+        let diffuse_bytes1 = include_bytes!("./assets/exp1.png");
+        let diffuse_bytes2 = include_bytes!("./assets/exp2.png");
+        let diffuse_bytes3 = include_bytes!("./assets/exp3.png");
+        let diffuse_bytes4 = include_bytes!("./assets/exp4.png");
+        let diffuse_bytes5 = include_bytes!("./assets/exp5.png");
+        let diffuse_bytes6 = include_bytes!("./assets/exp6.png");
+        let diffuse_bytes7 = include_bytes!("./assets/exp7.png");
+
+        let sprites = vec![
+            rendering::Sprite::new(
+                &device,
+                &queue,
+                wgpu::AddressMode::ClampToEdge,
+                &bind_group_layout,
+                diffuse_bytes1,
+            ),
+            rendering::Sprite::new(
+                &device,
+                &queue,
+                wgpu::AddressMode::ClampToEdge,
+                &bind_group_layout,
+                diffuse_bytes2,
+            ),
+            rendering::Sprite::new(
+                &device,
+                &queue,
+                wgpu::AddressMode::ClampToEdge,
+                &bind_group_layout,
+                diffuse_bytes3,
+            ),
+            rendering::Sprite::new(
+                &device,
+                &queue,
+                wgpu::AddressMode::ClampToEdge,
+                &bind_group_layout,
+                diffuse_bytes4,
+            ),
+            rendering::Sprite::new(
+                &device,
+                &queue,
+                wgpu::AddressMode::ClampToEdge,
+                &bind_group_layout,
+                diffuse_bytes5,
+            ),
+            rendering::Sprite::new(
+                &device,
+                &queue,
+                wgpu::AddressMode::ClampToEdge,
+                &bind_group_layout,
+                diffuse_bytes6,
+            ),
+            rendering::Sprite::new(
+                &device,
+                &queue,
+                wgpu::AddressMode::ClampToEdge,
+                &bind_group_layout,
+                diffuse_bytes7,
+            ),
+        ];
+
         let bytes = include_bytes!("./assets/expansive_wave.png");
 
         let wave_sprite = rendering::Sprite::new(
             &device,
             &queue,
             wgpu::AddressMode::ClampToEdge,
-            &create_bind_group_layout(device),
+            &bind_group_layout,
             bytes,
         );
 
         let waves = (wave_sprite, vec![]);
         Self {
-            sprites: vec![],
+            sprites,
             explosions: vec![],
             waves,
         }
@@ -236,6 +238,8 @@ impl ExplosionManager {
 
     pub fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
         for explosion in &mut self.explosions {
+            let sprite = self.sprites.get(explosion.i as usize).unwrap();
+            sprite.bind(rpass);
             explosion.draw(rpass);
         }
         self.waves.0.bind(rpass);
