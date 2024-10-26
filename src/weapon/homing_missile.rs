@@ -101,6 +101,7 @@ impl Weapon for HomingMissile {
                 position,
                 SCALE,
                 dir.angle,
+                5,
                 Bounds {
                     area: SCALE,
                     origin: cgmath::Point2 {

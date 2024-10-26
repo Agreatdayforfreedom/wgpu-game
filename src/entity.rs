@@ -73,6 +73,9 @@ pub trait Entity {
             .into()
     }
 
+    /// decrease the hit points by [hits]  
+    fn hit(&mut self, hits: i32) {}
+
     fn set_colors(&mut self, color: Vector4<f32>) {}
 
     fn destroy(&mut self) {}
@@ -403,7 +406,7 @@ impl EntityManager {
                     p.destroy();
                 }
                 for e in &mut self.enemies {
-                    if !e.alive() {
+                    if !e.alive() || !p.is_active() {
                         continue;
                     }
                     if check_collision(
@@ -413,16 +416,8 @@ impl EntityManager {
                             area: Vector2::new(e.scale().x, e.scale().y),
                         },
                     ) {
+                        e.hit(p.hit_damage);
                         p.desactive();
-                        e.destroy();
-
-                        if !e.alive() {
-                            // audio.push(crate::audio::Sounds::Explosion, 0.2);
-                            // self.explosion_manager.add(
-                            //     Explosion::new(e.position(), (40.0, 40.0).into(), device, queue),
-                            //     None,
-                            // );
-                        }
                     }
                 }
             }

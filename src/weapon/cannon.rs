@@ -79,6 +79,7 @@ impl Weapon for Cannon {
                 position,
                 SCALE,
                 dir.angle,
+                1,
                 Bounds {
                     area: SCALE,
                     origin: cgmath::Point2 {

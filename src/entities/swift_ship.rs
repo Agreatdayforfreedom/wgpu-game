@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{ffi::c_long, time::Duration};
 
 use crate::{
     ai::patrol_area::PatrolArea,
@@ -10,10 +10,11 @@ use crate::{
     util::{distance, CompassDir, IdVendor},
     weapon::{cannon::Cannon, weapon::Weapon},
 };
-use cgmath::{InnerSpace, Point2, Vector2};
+use cgmath::{num_traits::SaturatingSub, InnerSpace, Point2, Vector2};
 use rand::Rng;
 
 const MIN_DISTANCE_TO_ATTACK: f32 = 500.0;
+const INITIAL_HIT_POINTS: i32 = 10;
 
 pub struct SwiftShip {
     id: u32,
@@ -25,6 +26,7 @@ pub struct SwiftShip {
     rotation: cgmath::Deg<f32>,
     sprite: Sprite, //todo
     targeting: bool,
+    hit_points: i32,
     patrol: PatrolArea,
 }
 
@@ -71,6 +73,7 @@ impl SwiftShip {
             scale,
             alive: true,
             uniform,
+            hit_points: INITIAL_HIT_POINTS,
             rotation: cgmath::Deg(0.0),
             weapon: Cannon::new(200, true, &device, &queue),
             targeting: false,
@@ -143,6 +146,14 @@ impl Entity for SwiftShip {
 
     fn destroy(&mut self) {
         self.alive = false;
+    }
+
+    fn hit(&mut self, hits: i32) {
+        self.hit_points -= hits;
+
+        if self.hit_points <= 0 {
+            self.destroy();
+        }
     }
 
     fn set_target_point(&mut self, target: Vector2<f32>, dt: &Duration) {

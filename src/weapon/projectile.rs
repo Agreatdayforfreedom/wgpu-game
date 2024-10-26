@@ -25,6 +25,7 @@ pub struct Projectile {
     /// [default]: false
     destroyed: bool,
 
+    pub hit_damage: i32,
     pub dir: CompassDir,
     pub bounds: Bounds,
     pub initial_position: Vector2<f32>,
@@ -39,6 +40,7 @@ impl Projectile {
         position: Vector2<f32>,
         scale: Vector2<f32>,
         rotation: Deg<f32>,
+        hit_damage: i32,
         bounds: Bounds,
         dir: CompassDir,
         uniform: uniform::Uniform<EntityUniform>,
@@ -52,6 +54,7 @@ impl Projectile {
             dir,
             active: true,
             destroyed: false,
+            hit_damage,
             initial_position: position,
             lifetime: instant::Instant::now(),
             uniform,

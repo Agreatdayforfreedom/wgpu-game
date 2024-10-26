@@ -61,6 +61,7 @@ impl Weapon for Laser {
                 position,
                 SCALE,
                 cgmath::Deg(0.0),
+                1,
                 Bounds {
                     area: SCALE,
                     origin: cgmath::Point2 {

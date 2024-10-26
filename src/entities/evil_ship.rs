@@ -16,6 +16,8 @@ use crate::{
 };
 
 const MIN_DISTANCE_TO_ATTACK: f32 = 250.0;
+const INITIAL_HIT_POINTS: i32 = 15;
+
 pub struct EvilShip {
     id: u32,
     position: cgmath::Vector2<f32>,
@@ -25,6 +27,7 @@ pub struct EvilShip {
     weapon: Box<dyn Weapon>,
     rotation: cgmath::Deg<f32>,
     sprite: Sprite, //todo
+    hit_points: i32,
     targeting: bool,
     patrol: PatrolArea,
 }
@@ -73,6 +76,7 @@ impl EvilShip {
             alive: true,
             uniform,
             rotation: cgmath::Deg(0.0),
+            hit_points: INITIAL_HIT_POINTS,
             weapon: Cannon::new(400, true, &device, &queue),
             targeting: false,
             sprite,
@@ -139,6 +143,13 @@ impl Entity for EvilShip {
 
     fn position(&self) -> cgmath::Vector2<f32> {
         self.position
+    }
+
+    fn hit(&mut self, hits: i32) {
+        self.hit_points -= hits;
+        if self.hit_points <= 0 {
+            self.destroy();
+        }
     }
 
     fn destroy(&mut self) {

@@ -70,6 +70,7 @@ impl Weapon for RailGun {
                     ((position.x), position.y).into(),
                     SCALE,
                     dir.angle + cgmath::Deg(180.0),
+                    2,
                     Bounds {
                         area: SCALE,
                         origin: cgmath::Point2 {

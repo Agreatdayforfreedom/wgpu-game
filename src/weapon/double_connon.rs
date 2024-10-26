@@ -81,6 +81,7 @@ impl Weapon for DoubleCannon {
                 position,
                 SCALE,
                 dir.angle,
+                2,
                 Bounds {
                     area: SCALE,
                     origin: cgmath::Point2 {
