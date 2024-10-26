@@ -72,7 +72,7 @@ impl SwiftShip {
             alive: true,
             uniform,
             rotation: cgmath::Deg(0.0),
-            weapon: Cannon::new(100, true, &device, &queue),
+            weapon: Cannon::new(200, true, &device, &queue),
             targeting: false,
             sprite,
             patrol: PatrolArea::new(points),
