@@ -96,7 +96,7 @@ impl Entity for EvilShip {
         id_vendor: &mut IdVendor,
         particle_system: &mut ParticleSystem,
     ) {
-        let pos = self.get_orientation_point((self.top_right().x, -1.0).into());
+        let pos = self.get_orientation_point((1.0, self.bottom_left().y).into());
         self.weapon.update(pos, queue, dt, particle_system);
 
         if self.patrol.is_over(self.position()) {
@@ -108,7 +108,7 @@ impl Entity for EvilShip {
                 self.weapon.shoot(
                     device,
                     pos,
-                    CompassDir::from_deg(self.rotation.0 + 90.0),
+                    CompassDir::from_deg(self.rotation.0),
                     input,
                     audio,
                     id_vendor,
@@ -172,7 +172,7 @@ impl Entity for EvilShip {
             self.targeting = true;
             self.position.x -= 100.0 * dir.x * dt.as_secs_f32();
             self.position.y -= 100.0 * dir.y * dt.as_secs_f32();
-            self.rotation = cgmath::Deg(angle + 180.0);
+            self.rotation = cgmath::Deg(angle - 90.0);
         } else {
             //COUPLE IT AGAIN
             self.patrol.couple(self.position());
@@ -184,7 +184,7 @@ impl Entity for EvilShip {
             let angle = dy.atan2(dx);
 
             let angle = angle * 180.0 / std::f32::consts::PI;
-            self.rotation = cgmath::Deg(angle + 180.0);
+            self.rotation = cgmath::Deg(angle - 90.0);
         }
     }
 

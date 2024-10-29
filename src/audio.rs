@@ -32,7 +32,7 @@ impl Sounds {
     fn volume(&self) -> f32 {
         match self {
             Self::Explosion => 0.2,
-            Self::Shoot => 0.2,
+            Self::Shoot => 0.05,
             Self::MainTheme => 1.0,
         }
     }

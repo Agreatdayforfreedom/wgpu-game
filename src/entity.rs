@@ -221,7 +221,7 @@ impl EntityManager {
                 queue,
                 id_vendor.next_id(),
                 position.into(),
-                (61.0, 19.0).into(),
+                (28.0, 28.0).into(),
             );
 
             enemies.push(enemy);
@@ -412,7 +412,10 @@ impl EntityManager {
                     if check_collision(
                         p.bounds,
                         Bounds {
-                            origin: Point2::new(e.position().x, e.position().y),
+                            origin: Point2::new(
+                                e.position().x - e.scale().x / 2.0,
+                                e.position().y - e.scale().y / 2.0,
+                            ),
                             area: Vector2::new(e.scale().x, e.scale().y),
                         },
                     ) {
@@ -427,11 +430,10 @@ impl EntityManager {
     }
 
     pub fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
-        self.explosion_manager.draw(rpass);
-        self.player.draw(rpass);
-
         for e in &mut self.enemies {
             e.draw(rpass);
         }
+        self.player.draw(rpass);
+        self.explosion_manager.draw(rpass);
     }
 }
