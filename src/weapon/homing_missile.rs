@@ -1,4 +1,6 @@
-use cgmath::{Angle, InnerSpace, Point2, Vector2};
+use std::ffi::c_long;
+
+use cgmath::{Angle, InnerSpace, Point2, Vector2, VectorSpace};
 
 use crate::{
     audio::{Audio, Sounds},
@@ -20,6 +22,7 @@ use super::{
 
 const LIFETIME: u128 = 5000;
 const SCALE: Vector2<f32> = Vector2::new(15.0, 21.0);
+const DIRS: [f32; 5] = [110.0, 140.0, 180.0, 210.0, 240.0];
 
 pub struct HomingMissile {
     pub projectiles: Vec<Projectile>,
@@ -74,46 +77,49 @@ impl Weapon for HomingMissile {
             && self.time.elapsed().as_millis() >= self.shooting_interval
         {
             self.time = instant::Instant::now();
-            let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
-            let pid = id_vendor.next_id();
-            particle_system.push_group(
-                pid,
-                device,
-                SimulationParams {
-                    total: 100.0,
-                    color: (1.0, 0.74, 0.0, 1.0).into(),
+            for _dir in DIRS {
+                let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
+                let pid = id_vendor.next_id();
+                particle_system.push_group(
+                    pid,
+                    device,
+                    SimulationParams {
+                        total: 100.0,
+                        color: (1.0, 0.74, 0.0, 1.0).into(),
+                        position,
+                        infinite: 1,
+                        rate_over_distance: 7.0,
+                        start_speed: 40.0,
+                        lifetime_factor: 0.25,
+                        shape_selected: 1,
+                        cone: Cone {
+                            angle: 90.0,
+                            arc: 90.0,
+                        },
+                        ..Default::default()
+                    },
+                );
+                // audio.push(Sounds::Shoot, 0.5);
+                let dir = CompassDir::from_deg(_dir + dir.angle.0 + 90.0);
+                let p = Projectile::new(
+                    pid,
                     position,
-                    infinite: 1,
-                    rate_over_distance: 7.0,
-                    start_speed: 40.0,
-                    lifetime_factor: 0.25,
-                    shape_selected: 1,
-                    cone: Cone {
-                        angle: 90.0,
-                        arc: 90.0,
+                    SCALE,
+                    dir.angle,
+                    5,
+                    Bounds {
+                        area: SCALE,
+                        origin: cgmath::Point2 {
+                            x: position.x,
+                            y: position.y,
+                        },
                     },
-                    ..Default::default()
-                },
-            );
-            // audio.push(Sounds::Shoot, 0.5);
-            let mut p = Projectile::new(
-                pid,
-                position,
-                SCALE,
-                dir.angle,
-                5,
-                Bounds {
-                    area: SCALE,
-                    origin: cgmath::Point2 {
-                        x: position.x,
-                        y: position.y,
-                    },
-                },
-                dir,
-                projectile_uniform,
-            );
+                    dir,
+                    projectile_uniform,
+                );
 
-            self.projectiles.push(p);
+                self.projectiles.push(p);
+            }
         };
     }
 
@@ -148,16 +154,25 @@ impl Weapon for HomingMissile {
                 } else {
                     let (_, position) = projectile.get_target();
 
-                    let dir = position - projectile.position;
-                    let dir = dir.normalize();
-                    let angle = dir.y.atan2(dir.x).to_degrees() + 90.0;
+                    let linear_dir = position - projectile.position;
 
+                    let dir = projectile
+                        .dir
+                        .dir
+                        .lerp(linear_dir.normalize(), 0.05)
+                        .normalize();
+
+                    let angle = dir.y.atan2(dir.x);
+                    // projectile.rotation = cgmath::Deg(0.0);
                     projectile.set_direction(|this| {
-                        this.position.x += (200.0) * dir.x * dt.as_secs_f32();
-                        this.position.y += (200.0) * dir.y * dt.as_secs_f32();
-                        this.rotation = cgmath::Deg(angle);
+                        this.position.x += (250.0) * dir.x * dt.as_secs_f32();
+                        this.position.y += (250.0) * dir.y * dt.as_secs_f32();
+                        this.dir.dir = dir;
+                        this.rotation = cgmath::Deg(angle.to_degrees() + 90.0);
                     });
                 }
+                // this.dir.dir = dir;
+                // this.rotation = cgmath::Deg(angle);
                 particle_system.update_sim_params(projectile.id, projectile.position, 1);
                 projectile.update();
                 projectile.uniform.write(queue);

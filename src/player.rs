@@ -58,11 +58,10 @@ impl Entity for Player {
         // println!("{}, {:?}", self.active_weapons.len(), positions);
         while i < self.active_weapons.len() {
             let weapon = self.active_weapons.get_mut(i).unwrap();
-            let position = positions[i];
-            weapon.update(position, queue, dt, particle_system);
+            weapon.update(self.position, queue, dt, particle_system);
             weapon.shoot(
                 device,
-                position,
+                self.position,
                 CompassDir::from_deg(self.rotation.0),
                 input,
                 audio,
