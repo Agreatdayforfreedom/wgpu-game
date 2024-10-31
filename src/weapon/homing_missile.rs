@@ -59,13 +59,15 @@ impl Weapon for HomingMissile {
     fn shoot(
         &mut self,
         device: &wgpu::Device,
-        position: cgmath::Vector2<f32>,
+        positions: Vec<cgmath::Vector2<f32>>,
+
         dir: CompassDir,
         input: &Input,
         _audio: &mut Audio,
         id_vendor: &mut IdVendor,
         particle_system: &mut ParticleSystem,
     ) {
+        let position = *positions.get(0).unwrap();
         if (input.is_pressed("f") || self.auto)
             && self.time.elapsed().as_millis() >= self.shooting_interval
         {

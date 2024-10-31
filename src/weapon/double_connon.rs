@@ -61,7 +61,7 @@ impl Weapon for DoubleCannon {
     fn shoot(
         &mut self,
         device: &wgpu::Device,
-        position: cgmath::Vector2<f32>,
+        positions: Vec<cgmath::Vector2<f32>>,
         dir: CompassDir,
         input: &Input,
         audio: &mut Audio,
@@ -74,26 +74,27 @@ impl Weapon for DoubleCannon {
             self.time = instant::Instant::now();
             audio.push(Sounds::Shoot, 0.5);
 
-            let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
-
-            let p = Projectile::new(
-                id_vendor.next_id(),
-                position,
-                SCALE,
-                dir.angle,
-                2,
-                Bounds {
-                    area: SCALE,
-                    origin: cgmath::Point2 {
-                        x: position.x,
-                        y: position.y,
+            for position in positions {
+                let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
+                let p = Projectile::new(
+                    id_vendor.next_id(),
+                    position,
+                    SCALE,
+                    dir.angle,
+                    2,
+                    Bounds {
+                        area: SCALE,
+                        origin: cgmath::Point2 {
+                            x: position.x,
+                            y: position.y,
+                        },
                     },
-                },
-                dir,
-                projectile_uniform,
-            );
+                    dir,
+                    projectile_uniform,
+                );
 
-            self.projectiles.push(p);
+                self.projectiles.push(p);
+            }
         };
     }
     fn update(

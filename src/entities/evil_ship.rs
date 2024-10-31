@@ -107,7 +107,7 @@ impl Entity for EvilShip {
             if self.targeting {
                 self.weapon.shoot(
                     device,
-                    pos,
+                    vec![pos],
                     CompassDir::from_deg(self.rotation.0),
                     input,
                     audio,

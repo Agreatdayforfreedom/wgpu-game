@@ -61,7 +61,8 @@ impl Weapon for Cannon {
     fn shoot(
         &mut self,
         device: &wgpu::Device,
-        position: cgmath::Vector2<f32>,
+        positions: Vec<cgmath::Vector2<f32>>,
+
         dir: CompassDir,
         input: &Input,
         audio: &mut Audio,
@@ -71,6 +72,7 @@ impl Weapon for Cannon {
         if (input.is_pressed("f") || self.auto)
             && self.time.elapsed().as_millis() >= self.shooting_interval
         {
+            let position = *positions.get(0).unwrap();
             self.time = instant::Instant::now();
             let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
             audio.push(Sounds::Shoot, 0.5);

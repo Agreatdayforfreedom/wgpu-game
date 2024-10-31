@@ -106,7 +106,7 @@ impl Entity for SwiftShip {
             if self.targeting {
                 self.weapon.shoot(
                     device,
-                    pos,
+                    vec![pos],
                     CompassDir::from_deg(self.rotation.0 + 180.0),
                     input,
                     audio,

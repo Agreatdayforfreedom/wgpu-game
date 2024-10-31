@@ -46,7 +46,7 @@ impl Weapon for Laser {
     fn shoot(
         &mut self,
         device: &wgpu::Device,
-        position: cgmath::Vector2<f32>,
+        positions: Vec<cgmath::Vector2<f32>>,
         dir: CompassDir,
         input: &Input,
         _audio: &mut Audio,
@@ -54,6 +54,7 @@ impl Weapon for Laser {
         particle_system: &mut ParticleSystem,
     ) {
         if input.is_pressed("f") && self.projectiles.len() < 1 {
+            let position = *positions.get(0).unwrap();
             let mut uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
             uniform.data.set_tex_scale((-1.0, -3.0).into()).exec();
             self.projectiles.push(Projectile::new(

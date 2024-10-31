@@ -51,7 +51,7 @@ impl Weapon for RailGun {
     fn shoot(
         &mut self,
         device: &wgpu::Device,
-        position: cgmath::Vector2<f32>,
+        positions: Vec<cgmath::Vector2<f32>>,
         dir: CompassDir,
         input: &Input,
         audio: &mut Audio,
@@ -59,6 +59,7 @@ impl Weapon for RailGun {
         particle_system: &mut ParticleSystem,
     ) {
         if input.is_pressed("f") && self.time.elapsed().as_millis() >= self.shooting_interval {
+            let position = *positions.get(0).unwrap();
             self.time = instant::Instant::now();
             audio.push(Sounds::Shoot, 1.0);
             audio.push(Sounds::Shoot, 1.0);

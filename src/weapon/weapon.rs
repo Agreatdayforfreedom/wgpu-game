@@ -12,7 +12,7 @@ pub trait Weapon {
     fn shoot(
         &mut self,
         device: &wgpu::Device,
-        position: cgmath::Vector2<f32>,
+        positions: Vec<cgmath::Vector2<f32>>,
         dir: CompassDir,
         input: &Input,
         audio: &mut Audio,

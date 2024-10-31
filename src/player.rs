@@ -5,6 +5,7 @@ use crate::rendering::{create_bind_group_layout, Sprite};
 use crate::uniform::{self, Uniform};
 use crate::util::{CompassDir, IdVendor};
 use crate::weapon;
+use crate::weapon::double_connon::DoubleCannon;
 // use crate::weapon::cannon::Cannon;
 // use crate::weapon::double_connon::DoubleCannon;
 use crate::weapon::homing_missile::HomingMissile;
@@ -52,7 +53,8 @@ impl Entity for Player {
         let positions = [
             self.get_orientation_point((8.0, self.bottom_left().y).into()),
             self.get_orientation_point((-10.0, self.bottom_right().y).into()),
-        ];
+        ]
+        .to_vec();
 
         let mut i = 0usize;
         // println!("{}, {:?}", self.active_weapons.len(), positions);
@@ -61,7 +63,7 @@ impl Entity for Player {
             weapon.update(self.position, queue, dt, particle_system);
             weapon.shoot(
                 device,
-                self.position,
+                positions.clone(),
                 CompassDir::from_deg(self.rotation.0),
                 input,
                 audio,
@@ -131,8 +133,8 @@ impl Player {
             uniform,
             sprite,
             active_weapons: vec![
-                HomingMissile::new(100, false, device, queue),
-                // DoubleCannon::new(100, false, device, queue),
+                // HomingMissile::new(100, false, device, queue),
+                DoubleCannon::new(100, false, device, queue),
             ],
         }
     }
