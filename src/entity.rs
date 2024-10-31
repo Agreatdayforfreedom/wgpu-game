@@ -381,7 +381,7 @@ impl EntityManager {
 
             for p in &mut weapon.get_projectiles() {
                 if !p.is_active() && !p.is_destroyed() {
-                    audio.push(crate::audio::Sounds::Explosion, 0.2);
+                    // audio.push(crate::audio::Sounds::Explosion, 0.2);
                     self.explosion_manager.add(
                         Explosion::new(p.position, (40.0, 40.0).into(), device),
                         Some(ExpansiveWave::new_at(p.position, device)),

@@ -1,10 +1,8 @@
-use std::ffi::c_long;
-
-use cgmath::{Angle, InnerSpace, Point2, Vector2, VectorSpace};
+use cgmath::{InnerSpace, Vector2, VectorSpace};
 
 use crate::{
-    audio::{Audio, Sounds},
-    collider::{check_collision, Bounds},
+    audio::Audio,
+    collider::Bounds,
     entity::EntityUniform,
     input::Input,
     particle_system::{
@@ -12,13 +10,10 @@ use crate::{
         system::ParticleSystem,
     },
     rendering::{create_bind_group_layout, Sprite},
-    util::{distance, CompassDir, IdVendor},
+    util::{CompassDir, IdVendor},
 };
 
-use super::{
-    projectile::{self, Projectile},
-    weapon::Weapon,
-};
+use super::{projectile::Projectile, weapon::Weapon};
 
 const LIFETIME: u128 = 5000;
 const SCALE: Vector2<f32> = Vector2::new(15.0, 21.0);
@@ -29,7 +24,6 @@ pub struct HomingMissile {
     time: instant::Instant,
     shooting_interval: u128, // milliseconds
     sprite: Sprite,
-    velocity: f32,
     auto: bool,
 }
 
@@ -56,7 +50,6 @@ impl HomingMissile {
             time: instant::Instant::now(),
             shooting_interval,
             sprite,
-            velocity: 500.0,
             auto,
         })
     }
@@ -69,7 +62,7 @@ impl Weapon for HomingMissile {
         position: cgmath::Vector2<f32>,
         dir: CompassDir,
         input: &Input,
-        audio: &mut Audio,
+        _audio: &mut Audio,
         id_vendor: &mut IdVendor,
         particle_system: &mut ParticleSystem,
     ) {
@@ -89,8 +82,8 @@ impl Weapon for HomingMissile {
                         position,
                         infinite: 1,
                         rate_over_distance: 7.0,
-                        start_speed: 40.0,
-                        lifetime_factor: 0.25,
+                        start_speed: 30.0,
+                        lifetime_factor: 1.0,
                         shape_selected: 1,
                         cone: Cone {
                             angle: 90.0,
@@ -125,7 +118,7 @@ impl Weapon for HomingMissile {
 
     fn update(
         &mut self,
-        position: cgmath::Vector2<f32>,
+        _position: cgmath::Vector2<f32>,
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
         particle_system: &mut ParticleSystem,
@@ -159,11 +152,11 @@ impl Weapon for HomingMissile {
                     let dir = projectile
                         .dir
                         .dir
-                        .lerp(linear_dir.normalize(), 0.05)
+                        .lerp(linear_dir.normalize(), 0.1)
                         .normalize();
 
                     let angle = dir.y.atan2(dir.x);
-                    // projectile.rotation = cgmath::Deg(0.0);
+
                     projectile.set_direction(|this| {
                         this.position.x += (250.0) * dir.x * dt.as_secs_f32();
                         this.position.y += (250.0) * dir.y * dt.as_secs_f32();
@@ -171,11 +164,11 @@ impl Weapon for HomingMissile {
                         this.rotation = cgmath::Deg(angle.to_degrees() + 90.0);
                     });
                 }
-                // this.dir.dir = dir;
-                // this.rotation = cgmath::Deg(angle);
+
                 particle_system.update_sim_params(projectile.id, projectile.position, 1);
                 projectile.update();
                 projectile.uniform.write(queue);
+
                 i += 1;
             } else {
                 particle_system.update_sim_params(projectile.id, projectile.position, 0);
