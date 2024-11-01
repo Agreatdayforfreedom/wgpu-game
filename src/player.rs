@@ -50,7 +50,7 @@ impl Entity for Player {
             self.movement("w", dt);
         }
 
-        let positions = [
+        let double_cannon_positions = [
             self.get_orientation_point((8.0, self.bottom_left().y).into()),
             self.get_orientation_point((-10.0, self.bottom_right().y).into()),
         ]
@@ -63,7 +63,8 @@ impl Entity for Player {
             weapon.update(self.position, queue, dt, particle_system);
             weapon.shoot(
                 device,
-                positions.clone(),
+                vec![self.position],
+                // positions.clone(),
                 CompassDir::from_deg(self.rotation.0),
                 input,
                 audio,
@@ -133,8 +134,8 @@ impl Player {
             uniform,
             sprite,
             active_weapons: vec![
-                // HomingMissile::new(100, false, device, queue),
-                DoubleCannon::new(100, false, device, queue),
+                HomingMissile::new(100, false, device, queue),
+                // DoubleCannon::new(100, false, device, queue),
             ],
         }
     }
