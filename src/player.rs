@@ -10,7 +10,7 @@ use crate::weapon::double_connon::DoubleCannon;
 // use crate::weapon::double_connon::DoubleCannon;
 use crate::weapon::homing_missile::HomingMissile;
 // use crate::weapon::laser::Laser;
-// use crate::weapon::rail_gun::RailGun;
+use crate::weapon::rail_gun::RailGun;
 use crate::weapon::weapon::Weapon;
 use crate::{entity::EntityUniform, input::Input};
 
@@ -134,8 +134,9 @@ impl Player {
             uniform,
             sprite,
             active_weapons: vec![
-                HomingMissile::new(100, false, device, queue),
+                // HomingMissile::new(100, false, device, queue),
                 // DoubleCannon::new(100, false, device, queue),
+                RailGun::new(1000, device, queue),
             ],
         }
     }

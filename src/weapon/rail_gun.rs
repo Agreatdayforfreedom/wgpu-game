@@ -13,21 +13,27 @@ use crate::{
     weapon::projectile::Projectile,
 };
 
-use super::{projectile, weapon::Weapon};
+use super::weapon::Weapon;
 
 const LIFETIME: u128 = 5000;
+const PER_SHOOT_INTERVAL: u128 = 50;
 const SCALE: Vector2<f32> = Vector2::new(40.0, 40.0);
-
+// rotation applied to each bullet to achieve a cone effect
+const MAX_WAVES: u16 = 5;
+const ROTATION_DIRS: [f32; MAX_WAVES as usize] = [0.0, 10.0, 20.0, -10.0, -20.0];
 pub struct RailGun {
     projectiles: Vec<Projectile>,
     time: instant::Instant,
-    shooting_interval: u128, // milliseconds
+    shooting_interval: u128,     // milliseconds
+    wave_time: instant::Instant, // interval per wave
     sprite: Sprite,
+    actived: bool,
+    current_wave_emitted: u16,
 }
 
 impl RailGun {
     pub fn new(shooting_interval: u128, device: &wgpu::Device, queue: &wgpu::Queue) -> Box<Self> {
-        let diffuse_bytes = include_bytes!("./../assets/bullet.png");
+        let diffuse_bytes = include_bytes!("./../assets/blue_bullet.png");
         let bind_group_layout = create_bind_group_layout(device);
 
         let sprite = Sprite::new(
@@ -41,8 +47,11 @@ impl RailGun {
         Box::new(Self {
             projectiles: vec![],
             time: instant::Instant::now(),
+            wave_time: instant::Instant::now(),
             shooting_interval,
             sprite,
+            actived: false,
+            current_wave_emitted: 0,
         })
     }
 }
@@ -56,42 +65,58 @@ impl Weapon for RailGun {
         input: &Input,
         audio: &mut Audio,
         id_vendor: &mut IdVendor,
-        particle_system: &mut ParticleSystem,
+        _particle_system: &mut ParticleSystem,
     ) {
-        if input.is_pressed("f") && self.time.elapsed().as_millis() >= self.shooting_interval {
+        if self.actived
+            || (input.is_pressed("f") && self.time.elapsed().as_millis() >= self.shooting_interval)
+        {
             let position = *positions.get(0).unwrap();
-            self.time = instant::Instant::now();
-            audio.push(Sounds::Shoot, 1.0);
-            audio.push(Sounds::Shoot, 1.0);
-            for i in 0..=5 {
-                let mut projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
+            self.actived = true;
 
-                self.projectiles.push(Projectile::new(
-                    id_vendor.next_id(),
-                    ((position.x), position.y).into(),
-                    SCALE,
-                    dir.angle + cgmath::Deg(180.0),
-                    2,
-                    Bounds {
-                        area: SCALE,
-                        origin: cgmath::Point2 {
-                            x: position.x,
-                            y: position.y,
+            self.time = instant::Instant::now();
+
+            if self.current_wave_emitted < MAX_WAVES
+                && self.wave_time.elapsed().as_millis() >= PER_SHOOT_INTERVAL
+            {
+                audio.push(Sounds::Shoot, 1.5);
+
+                self.wave_time = instant::Instant::now();
+                self.current_wave_emitted += 1;
+
+                for i in 0..5 {
+                    let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
+
+                    self.projectiles.push(Projectile::new(
+                        id_vendor.next_id(),
+                        ((position.x), position.y).into(),
+                        SCALE,
+                        dir.angle,
+                        2,
+                        Bounds {
+                            area: SCALE,
+                            origin: cgmath::Point2 {
+                                x: position.x,
+                                y: position.y,
+                            },
                         },
-                    },
-                    // if i == -2 {
-                    //     dir.rotate(0.0)
-                    // } else if i == -1 {
-                    //     dir.rotate(10.0)
-                    // } else if i == 0 {
-                    //     dir.rotate(20.0)
-                    // } else if i == 1 {
-                    //     dir.rotate(-10.0)
-                    // } else {
-                    dir.rotate(-20.0), //TODO
-                    // },
-                    projectile_uniform,
-                ));
+                        // if i == 0 {
+                        dir.rotate(ROTATION_DIRS[i]),
+                        // } else if i == 1 {
+                        //     dir.rotate(10.0)
+                        // } else if i == 2 {
+                        //     dir.rotate(20.0)
+                        // } else if i == 3 {
+                        //     dir.rotate(-10.0)
+                        // } else {
+                        //     dir.rotate(-20.0)
+                        // },
+                        projectile_uniform,
+                    ));
+                }
+                if self.current_wave_emitted == 5 {
+                    self.actived = false;
+                    self.current_wave_emitted = 0;
+                }
             }
         }
     }
@@ -101,7 +126,7 @@ impl Weapon for RailGun {
         position: cgmath::Vector2<f32>,
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
-        particle_system: &mut ParticleSystem,
+        _particle_system: &mut ParticleSystem,
     ) {
         let mut i = 0;
         while i < self.projectiles.len() {
@@ -119,7 +144,6 @@ impl Weapon for RailGun {
                 });
                 projectile.update();
                 projectile.set_direction(|this| {
-                    let spaceship_displacement = position - this.initial_position;
                     this.position.x += 500.0 * this.dir.dir.x * dt.as_secs_f32();
                     this.position.y -= 500.0 * this.dir.dir.y * dt.as_secs_f32();
                     this.initial_position = position;
