@@ -420,7 +420,7 @@ impl EntityManager {
                         },
                     ) {
                         e.hit(p.hit_damage);
-                        p.desactive();
+                        p.deactivate();
                     }
                 }
             }

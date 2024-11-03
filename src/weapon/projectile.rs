@@ -123,8 +123,8 @@ impl Projectile {
         self.lifetime.elapsed().as_millis()
     }
 
-    /// desactive the projectile
-    pub fn desactive(&mut self) {
+    /// deactivate the projectile
+    pub fn deactivate(&mut self) {
         self.active = false;
     }
 
