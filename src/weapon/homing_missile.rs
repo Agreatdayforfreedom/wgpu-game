@@ -129,7 +129,7 @@ impl Weapon for HomingMissile {
         while i < self.projectiles.len() {
             let projectile = self.projectiles.get_mut(i).unwrap();
             if projectile.lifetime() >= LIFETIME {
-                projectile.desactive(); // this will emit a explosion
+                projectile.deactivate(); // this will emit a explosion
             }
 
             if !projectile.is_destroyed() {
