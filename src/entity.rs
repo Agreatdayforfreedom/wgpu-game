@@ -298,14 +298,12 @@ impl EntityManager {
             if e.alive() {
                 //TODO: THE DIRECTION SHOULD BE POINTING TO THE MOUSE?
                 let dist = distance(self.player.position, e.position());
-                // let dir = e.position() - self.player.position;
-                let dx = (e.position().x + e.scale().x * 0.5) - self.player.position.x;
-                // //set the point in the head
-                let dy = (e.position().y + e.scale().y * 0.5) - (self.player.position.y - 0.5);
+                let dx = (e.position().x) - self.player.position.x;
+                let dy = (e.position().y) - (self.player.position.y);
 
-                let angle = dy.atan2(dx);
+                let angle = dy.atan2(dx).to_degrees();
 
-                let angle = angle * 180.0 / std::f32::consts::PI;
+                // let angle = angle * 180.0 / std::f32::consts::PI;
 
                 if dist < min_dist {
                     self.player.rotation = cgmath::Deg(angle + 90.0); // adjust sprite rotation;
@@ -402,7 +400,6 @@ impl EntityManager {
                     //         ..Default::default()
                     //     },
                     // );
-                    // we destroy the projectile to track the last position and emit an explosion
                     p.destroy();
                 }
                 for e in &mut self.enemies {

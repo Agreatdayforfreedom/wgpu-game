@@ -134,9 +134,9 @@ impl Player {
             uniform,
             sprite,
             active_weapons: vec![
-                HomingMissile::new(100, false, device, queue),
+                // HomingMissile::new(100, false, device, queue),
                 // DoubleCannon::new(100, false, device, queue),
-                // RailGun::new(1000, device, queue),
+                RailGun::new(1000, device, queue),
             ],
         }
     }

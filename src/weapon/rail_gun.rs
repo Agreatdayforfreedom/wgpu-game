@@ -93,23 +93,13 @@ impl Weapon for RailGun {
                         dir.angle,
                         2,
                         Bounds {
-                            area: SCALE,
+                            area: (2.5, 2.5).into(),
                             origin: cgmath::Point2 {
                                 x: position.x,
                                 y: position.y,
                             },
                         },
-                        // if i == 0 {
                         dir.rotate(ROTATION_DIRS[i]),
-                        // } else if i == 1 {
-                        //     dir.rotate(10.0)
-                        // } else if i == 2 {
-                        //     dir.rotate(20.0)
-                        // } else if i == 3 {
-                        //     dir.rotate(-10.0)
-                        // } else {
-                        //     dir.rotate(-20.0)
-                        // },
                         projectile_uniform,
                     ));
                 }
@@ -136,10 +126,7 @@ impl Weapon for RailGun {
             }
             if !projectile.is_destroyed() {
                 projectile.set_bounds(Bounds {
-                    origin: cgmath::Point2::new(
-                        projectile.position.x + projectile.scale.x / 2.0,
-                        projectile.position.y + projectile.scale.y / 2.0,
-                    ),
+                    origin: cgmath::Point2::new(projectile.position.x, projectile.position.y),
                     area: cgmath::Vector2::new(2.5, 2.5),
                 });
                 projectile.update();

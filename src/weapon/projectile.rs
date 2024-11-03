@@ -1,13 +1,10 @@
 use cgmath::{Deg, Vector2};
 
 use crate::{
-    audio::Audio,
     collider::Bounds,
     entity::EntityUniform,
-    explosion::{self, Explosion},
     uniform,
     util::{distance, CompassDir},
-    weapon::projectile,
 };
 
 pub struct Projectile {
@@ -17,7 +14,7 @@ pub struct Projectile {
     pub rotation: Deg<f32>,
 
     /// When the projectile is active, it will be updated and drawn on the screen. </br>
-    /// So we can avoid draw the projectile, but track the last position. </br>
+    /// So we can deactivate it to avoid draw the projectile, but track the last position. </br>
     /// [default]: true
     active: bool,
 

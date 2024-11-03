@@ -134,10 +134,7 @@ impl Weapon for HomingMissile {
 
             if !projectile.is_destroyed() {
                 projectile.set_bounds(Bounds {
-                    origin: cgmath::Point2::new(
-                        projectile.position.x + projectile.scale.x / 2.0,
-                        projectile.position.y + projectile.scale.y / 2.0,
-                    ),
+                    origin: cgmath::Point2::new(projectile.position.x, projectile.position.y),
                     area: cgmath::Vector2::new(2.5, 2.5),
                 });
 
