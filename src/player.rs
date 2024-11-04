@@ -1,5 +1,6 @@
 use crate::audio::Audio;
 use crate::entity::Entity;
+use crate::particle_system::simulation_params::{Circle, SimulationParams};
 use crate::particle_system::system::ParticleSystem;
 use crate::rendering::{create_bind_group_layout, Sprite};
 use crate::uniform::{self, Uniform};
@@ -14,20 +15,28 @@ use crate::weapon::rail_gun::RailGun;
 use crate::weapon::weapon::Weapon;
 use crate::{entity::EntityUniform, input::Input};
 
-use cgmath::{Angle, Point2, Vector2, Vector4};
+use cgmath::{Angle, Array, Point2, Vector2, Vector4};
+
+const SPEED: f32 = 500.0;
+const EVASION_COOLDOWN: u128 = 5000;
+const EVASION_TIME: u128 = 2500;
 
 pub struct Player {
     id: u32,
     pub position: cgmath::Vector2<f32>,
     pub scale: cgmath::Vector2<f32>,
+    color: Vector4<f32>,
     pub alive: bool,
+    pub velocity: f32,
     pub rotation: cgmath::Deg<f32>,
     pub uniform: uniform::Uniform<EntityUniform>,
+    pub evading: bool,
     sprite: Sprite,
     pub active_weapons: Vec<Box<dyn Weapon>>,
-}
 
-const SPEED: f32 = 500.0;
+    pub evasion_cd_timer: instant::Instant,
+    pub evading_timer: instant::Instant,
+}
 
 impl Entity for Player {
     fn update(
@@ -50,6 +59,47 @@ impl Entity for Player {
             self.movement("w", dt);
         }
 
+        if input.is_pressed("v") && self.evasion_cd_timer.elapsed().as_millis() >= EVASION_COOLDOWN
+        {
+            particle_system.push_group(
+                self.id + 3,
+                device,
+                SimulationParams {
+                    total: 100.0,
+                    color: (1.0, 0.0, 0.0, 1.0).into(),
+                    position: self.position,
+                    infinite: 1,
+                    rate_over_distance: 7.0,
+                    start_speed: 30.0,
+                    lifetime_factor: 1.0,
+                    shape_selected: 0,
+                    circle: Circle {
+                        radius: 3.0,
+                        emit_from_edge: 0,
+                    },
+                    ..Default::default()
+                },
+            );
+            self.color = Vector4::new(1.0, 0.0, 0.0, 1.0);
+            self.evasion_cd_timer = instant::Instant::now();
+            self.velocity = SPEED + 200.0;
+            self.evading = true;
+        }
+
+        if self.evading {
+            particle_system.update_sim_params(self.id + 3, self.position, 1);
+        }
+
+        if self.evading_timer.elapsed().as_millis() >= EVASION_TIME {
+            particle_system.update_sim_params(self.id + 3, self.position, 0);
+
+            self.evading_timer = instant::Instant::now();
+            self.velocity = SPEED;
+            self.color = Vector4::from_value(1.0);
+
+            self.evading = false;
+        }
+
         let double_cannon_positions = [
             self.get_orientation_point((8.0, self.bottom_left().y).into()),
             self.get_orientation_point((-10.0, self.bottom_right().y).into()),
@@ -57,7 +107,7 @@ impl Entity for Player {
         .to_vec();
 
         let mut i = 0usize;
-        // println!("{}, {:?}", self.active_weapons.len(), positions);
+
         while i < self.active_weapons.len() {
             let weapon = self.active_weapons.get_mut(i).unwrap();
             weapon.update(self.position, queue, dt, particle_system);
@@ -77,6 +127,7 @@ impl Entity for Player {
             .data
             .set_position(self.position)
             .set_rotation(self.rotation)
+            .set_color(self.color)
             .set_scale(self.scale)
             .exec();
         self.uniform.write(queue);
@@ -111,7 +162,7 @@ impl Entity for Player {
 
 impl Player {
     pub fn new(device: &wgpu::Device, queue: &wgpu::Queue, id: u32) -> Self {
-        let mut uniform = Uniform::<EntityUniform>::new(&device);
+        let uniform = Uniform::<EntityUniform>::new(&device);
 
         let diffuse_bytes = include_bytes!("./assets/spaceship.png");
         let sprite = Sprite::new(
@@ -129,10 +180,15 @@ impl Player {
             id,
             position,
             scale,
+            color: Vector4::from_value(1.0),
             alive: true,
             rotation: cgmath::Deg(360.0),
             uniform,
             sprite,
+            velocity: SPEED,
+            evading: false,
+            evasion_cd_timer: instant::Instant::now(),
+            evading_timer: instant::Instant::now(),
             active_weapons: vec![
                 // HomingMissile::new(100, false, device, queue),
                 // DoubleCannon::new(100, false, device, queue),
@@ -145,16 +201,16 @@ impl Player {
         let dt = dt.as_secs_f32();
         let mut position = Vector2::new(0.0, 0.0);
         if key == "d" {
-            position.x += SPEED * dt;
+            position.x += self.velocity * dt;
         }
         if key == "a" {
-            position.x -= SPEED * dt;
+            position.x -= self.velocity * dt;
         }
         if key == "w" {
-            position.y += SPEED * dt;
+            position.y += self.velocity * dt;
         }
         if key == "s" {
-            position.y -= SPEED * dt;
+            position.y -= self.velocity * dt;
         }
         self.position += position;
     }

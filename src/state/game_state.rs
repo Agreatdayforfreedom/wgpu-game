@@ -186,8 +186,13 @@ impl GameState {
             &mut self.particle_system,
         );
 
-        self.background
-            .update(queue, &self.camera, &self.input_controller, &dt);
+        self.background.update(
+            queue,
+            &self.camera,
+            self.entity_manager.player.velocity,
+            &self.input_controller,
+            &dt,
+        );
         self.particle_system.update(queue, &dt);
         self.camera.uniform.write(queue);
     }

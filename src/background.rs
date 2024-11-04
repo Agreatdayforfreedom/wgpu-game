@@ -11,14 +11,18 @@ use crate::{
     util::distance,
 };
 
+const PLANET_SPEED: f32 = 475.0;
+const PLANET_SPEED_GAP: f32 = 25.0;
+
 fn create_layer(
     device: &wgpu::Device,
     queue: &wgpu::Queue,
     scale: Vector2<f32>,
     tex_scale: Vector2<f32>,
     layer_speed: f32,
+    relative_speed: bool,
     bytes: &[u8],
-) -> (Sprite, f32, Uniform<EntityUniform>) {
+) -> (Sprite, f32, bool, Uniform<EntityUniform>) {
     let sprite = Sprite::new(
         device,
         queue,
@@ -34,7 +38,7 @@ fn create_layer(
         .set_rotation(cgmath::Deg(90.0))
         .exec();
 
-    (sprite, layer_speed, uniform)
+    (sprite, layer_speed, relative_speed, uniform)
 }
 
 pub struct Background {
@@ -42,7 +46,8 @@ pub struct Background {
     position: Vector2<f32>,
     scale: Vector2<f32>,
     rotation: cgmath::Deg<f32>,
-    uniforms: Vec<(Sprite, f32, Uniform<EntityUniform>)>,
+    // sprite, speed, update_speed, uniform
+    uniforms: Vec<(Sprite, f32, bool, Uniform<EntityUniform>)>,
     prev_pos: Vector2<f32>,
 }
 
@@ -64,7 +69,7 @@ impl Entity for Background {
     }
 
     fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
-        for (sprite, _, uniform) in &mut self.uniforms {
+        for (sprite, _, _, uniform) in &mut self.uniforms {
             sprite.bind(rpass);
             rpass.set_bind_group(2, &uniform.bind_group, &[]);
             rpass.draw(0..6, 0..1);
@@ -83,6 +88,7 @@ impl Background {
             (1200.0, 800.0).into(),
             (1.0, 1.0).into(),
             0.01,
+            false,
             bytes,
         );
         uniforms.push(layer);
@@ -93,7 +99,8 @@ impl Background {
             queue,
             (128.0, 128.0).into(),
             (1.0, 1.0).into(),
-            475.0,
+            PLANET_SPEED,
+            true,
             bytes,
         );
         uniforms.push(layer);
@@ -105,6 +112,7 @@ impl Background {
             (1200.0, 800.0).into(),
             (2.0, 2.0).into(),
             0.0125,
+            false,
             bytes,
         );
         uniforms.push(layer);
@@ -116,6 +124,7 @@ impl Background {
             (1200.0, 800.0).into(),
             (2.0, 2.0).into(),
             0.025,
+            false,
             bytes,
         );
         uniforms.push(layer);
@@ -127,6 +136,7 @@ impl Background {
             (1200.0, 800.0).into(),
             (2.0, 2.0).into(),
             0.05,
+            false,
             bytes,
         );
         uniforms.push(layer);
@@ -138,6 +148,7 @@ impl Background {
             (1200.0, 800.0).into(),
             (2.0, 2.0).into(),
             0.06,
+            false,
             bytes,
         );
         uniforms.push(layer);
@@ -156,14 +167,18 @@ impl Background {
         &mut self,
         queue: &mut wgpu::Queue,
         camera: &camera::Camera,
+        relative_speed: f32,
         input: &input::Input,
         dt: &Duration,
     ) {
         // let camera_pos = camera.position.xy();
 
-        for (_, speed, uniform) in &mut self.uniforms {
+        for (_, speed, rs, uniform) in &mut self.uniforms {
             let dt = dt.as_secs_f32();
-            let speed = *speed;
+            let mut speed = *speed;
+            if *rs {
+                speed = relative_speed - PLANET_SPEED_GAP;
+            }
             let mut position = Vector2::new(0.0, 0.0);
             if input.is_pressed("d") {
                 position.x += speed * dt;
@@ -176,7 +191,6 @@ impl Background {
             }
 
             if speed > 1.0 {
-                // let position = position.magnitude().clamp(0.0, 1.0);
                 if position.x != 0.0 && position.y != 0.0 {
                     position.normalize();
                 }

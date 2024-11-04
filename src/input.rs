@@ -8,6 +8,7 @@ pub struct Input {
     w_pressed: bool,
     f_pressed: bool,
     c_pressed: bool,
+    v_pressed: bool,
 }
 //todo: better input  manager
 impl Input {
@@ -36,6 +37,9 @@ impl Input {
             "c" => {
                 self.c_pressed = pressed;
             }
+            "v" => {
+                self.v_pressed = pressed;
+            }
 
             _ => (),
         }
@@ -54,6 +58,8 @@ impl Input {
             self.f_pressed
         } else if key == "c" {
             self.c_pressed
+        } else if key == "v" {
+            self.v_pressed
         } else {
             false
         }
