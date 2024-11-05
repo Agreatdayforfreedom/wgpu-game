@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use crate::audio::Audio;
 use crate::entity::Entity;
 use crate::particle_system::simulation_params::{Circle, SimulationParams};
@@ -6,6 +8,7 @@ use crate::rendering::{create_bind_group_layout, Sprite};
 use crate::uniform::{self, Uniform};
 use crate::util::{CompassDir, IdVendor};
 use crate::weapon;
+use crate::weapon::cannon::Cannon;
 use crate::weapon::double_connon::DoubleCannon;
 // use crate::weapon::cannon::Cannon;
 // use crate::weapon::double_connon::DoubleCannon;
@@ -100,21 +103,28 @@ impl Entity for Player {
             self.evading = false;
         }
 
-        let double_cannon_positions = [
+        let mut i = 0usize;
+        let double_cannon_pos = vec![
             self.get_orientation_point((8.0, self.bottom_left().y).into()),
             self.get_orientation_point((-10.0, self.bottom_right().y).into()),
-        ]
-        .to_vec();
-
-        let mut i = 0usize;
+        ];
+        let cannon_pos = vec![self.get_orientation_point((0.0, self.bottom_left().y).into())];
+        let center_pos = vec![self.get_orientation_point((0.0, 0.0).into())];
 
         while i < self.active_weapons.len() {
             let weapon = self.active_weapons.get_mut(i).unwrap();
+
+            let positions: Vec<Vector2<f32>> = match weapon.get_name() {
+                "double_cannon" => double_cannon_pos.clone(),
+                "cannon" => cannon_pos.clone(),
+                "rail_gun" => center_pos.clone(),
+                "homing_missile" => center_pos.clone(),
+                _ => center_pos.clone(),
+            };
             weapon.update(self.position, queue, dt, particle_system);
             weapon.shoot(
                 device,
-                vec![self.position],
-                // positions.clone(),
+                positions,
                 CompassDir::from_deg(self.rotation.0),
                 input,
                 audio,
@@ -190,9 +200,10 @@ impl Player {
             evasion_cd_timer: instant::Instant::now(),
             evading_timer: instant::Instant::now(),
             active_weapons: vec![
-                HomingMissile::new(100, false, device, queue),
-                // DoubleCannon::new(100, false, device, queue),
-                // RailGun::new(1000, device, queue),
+                HomingMissile::new(1000, false, device, queue),
+                DoubleCannon::new(100, false, device, queue),
+                RailGun::new(2000, device, queue),
+                Cannon::new(100, false, device, queue),
             ],
         }
     }
