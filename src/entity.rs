@@ -3,7 +3,7 @@ use crate::{
     camera::Camera,
     collider::{check_collision, Bounds},
     entities::{evil_ship::EvilShip, swift_ship::SwiftShip},
-    explosion::{ExpansiveWave, Explosion, ExplosionManager},
+    explosion::{ExpansiveWave, Explosion, ExplosionManager, ExplosionType},
     input::{self, Input},
     particle_system::{
         simulation_params::{Circle, SimulationParams},
@@ -381,25 +381,13 @@ impl EntityManager {
                 if !p.is_active() && !p.is_destroyed() {
                     // audio.push(crate::audio::Sounds::Explosion, 0.2);
                     self.explosion_manager.add(
-                        Explosion::new(p.position, (40.0, 40.0).into(), device),
-                        Some(ExpansiveWave::new_at(p.position, device)),
+                        self.id_vendor.next_id(),
+                        ExplosionType::Fire,
+                        p.position,
+                        particle_system,
+                        device,
                     );
-                    // particle_system.push_group(
-                    //     self.id_vendor.next_id(),
-                    //     device,
-                    //     SimulationParams {
-                    //         total: 100.0,
-                    //         color: (1.0, 0.466, 0.0, 1.0).into(),
-                    //         position: p.position,
-                    //         infinite: 0,
-                    //         start_speed: 10.0,
-                    //         circle: Circle {
-                    //             radius: 3.0,
-                    //             emit_from_edge: 0,
-                    //         },
-                    //         ..Default::default()
-                    //     },
-                    // );
+
                     p.destroy();
                 }
                 for e in &mut self.enemies {

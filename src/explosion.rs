@@ -1,11 +1,18 @@
 use cgmath::{Vector2, Vector4};
 
 use crate::entity::EntityUniform;
-use crate::rendering;
+use crate::particle_system::simulation_params::{Circle, SimulationParams};
+use crate::particle_system::system::ParticleSystem;
 use crate::rendering::{create_bind_group_layout, Sprite};
 use crate::uniform;
 use crate::uniform::Uniform;
+use crate::{particle_system, rendering};
 const TIME_TO_NEXT_FRAME: f32 = 2.0 / 30.0;
+
+pub enum ExplosionType {
+    Fire,
+    Particles,
+}
 
 pub struct Explosion {
     pub position: cgmath::Vector2<f32>,
@@ -208,11 +215,59 @@ impl ExplosionManager {
         }
     }
 
-    pub fn add(&mut self, explosion: Explosion, wave: Option<ExpansiveWave>) {
-        if let Some(wave) = wave {
-            self.waves.1.push(wave);
+    pub fn add(
+        &mut self,
+        id: u32,
+        explosios_type: ExplosionType,
+        position: Vector2<f32>,
+        particle_system: &mut ParticleSystem,
+        device: &wgpu::Device,
+    ) {
+        match explosios_type {
+            ExplosionType::Fire => {
+                let explosion = Explosion::new(position, (40.0, 40.0).into(), device);
+                let wave = Some(ExpansiveWave::new_at(position, device));
+                if let Some(wave) = wave {
+                    self.waves.1.push(wave);
+                }
+                self.explosions.push(explosion);
+            }
+            ExplosionType::Particles => {
+                particle_system.push_group(
+                    id,
+                    device,
+                    SimulationParams {
+                        total: 100.0,
+                        color: (1.0, 0.466, 0.0, 1.0).into(),
+                        position: position,
+                        infinite: 0,
+                        start_speed: 10.0,
+                        circle: Circle {
+                            radius: 3.0,
+                            emit_from_edge: 0,
+                        },
+                        ..Default::default()
+                    },
+                );
+            }
+
+            _ => particle_system.push_group(
+                id,
+                device,
+                SimulationParams {
+                    total: 100.0,
+                    color: (1.0, 0.466, 0.0, 1.0).into(),
+                    position: position,
+                    infinite: 0,
+                    start_speed: 10.0,
+                    circle: Circle {
+                        radius: 3.0,
+                        emit_from_edge: 0,
+                    },
+                    ..Default::default()
+                },
+            ),
         }
-        self.explosions.push(explosion);
     }
 
     pub fn update(&mut self, queue: &mut wgpu::Queue, dt: &instant::Duration) {
