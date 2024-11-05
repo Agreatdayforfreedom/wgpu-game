@@ -66,7 +66,7 @@ impl Weapon for Cannon {
 
         dir: CompassDir,
         input: &Input,
-        audio: &mut Audio,
+        audio: Option<&mut Audio>,
         id_vendor: &mut IdVendor,
         particle_system: &mut ParticleSystem,
     ) {
@@ -76,7 +76,11 @@ impl Weapon for Cannon {
             let position = *positions.get(0).unwrap();
             self.time = instant::Instant::now();
             let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
-            audio.push(Sounds::Shoot, 0.5);
+
+            if let Some(audio) = audio {
+                audio.push(Sounds::Shoot, 0.5);
+            }
+
             let p = Projectile::new(
                 id_vendor.next_id(),
                 position,
@@ -102,6 +106,7 @@ impl Weapon for Cannon {
     fn update(
         &mut self,
         position: cgmath::Vector2<f32>,
+        velocity: f32,
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
         particle_system: &mut ParticleSystem,
@@ -120,8 +125,8 @@ impl Weapon for Cannon {
                     area: cgmath::Vector2::new(2.5, 2.5),
                 });
                 projectile.set_direction(|this| {
-                    this.position.x += (500.0) * this.dir.dir.x * dt.as_secs_f32();
-                    this.position.y -= (500.0) * this.dir.dir.y * dt.as_secs_f32();
+                    this.position.x += velocity * this.dir.dir.x * dt.as_secs_f32();
+                    this.position.y -= velocity * this.dir.dir.y * dt.as_secs_f32();
                     // this.position.x = position.x - this.scale.x / 2.0;
                     // this.position.y = position.y - this.scale.y / 2.0;
                     this.initial_position = position;

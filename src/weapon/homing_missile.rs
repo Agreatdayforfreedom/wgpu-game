@@ -64,7 +64,7 @@ impl Weapon for HomingMissile {
 
         dir: CompassDir,
         input: &Input,
-        _audio: &mut Audio,
+        _audio: Option<&mut Audio>,
         id_vendor: &mut IdVendor,
         particle_system: &mut ParticleSystem,
     ) {
@@ -123,6 +123,7 @@ impl Weapon for HomingMissile {
     fn update(
         &mut self,
         _position: cgmath::Vector2<f32>,
+        velocity: f32,
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
         particle_system: &mut ParticleSystem,

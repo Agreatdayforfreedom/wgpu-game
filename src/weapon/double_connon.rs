@@ -65,7 +65,7 @@ impl Weapon for DoubleCannon {
         positions: Vec<cgmath::Vector2<f32>>,
         dir: CompassDir,
         input: &Input,
-        audio: &mut Audio,
+        audio: Option<&mut Audio>,
         id_vendor: &mut IdVendor,
         particle_system: &mut ParticleSystem,
     ) {
@@ -73,7 +73,9 @@ impl Weapon for DoubleCannon {
             && self.time.elapsed().as_millis() >= self.shooting_interval
         {
             self.time = instant::Instant::now();
-            audio.push(Sounds::Shoot, 0.5);
+            if let Some(audio) = audio {
+                audio.push(Sounds::Shoot, 0.5);
+            }
 
             for position in positions {
                 let projectile_uniform = crate::uniform::Uniform::<EntityUniform>::new(&device);
@@ -102,6 +104,7 @@ impl Weapon for DoubleCannon {
     fn update(
         &mut self,
         position: cgmath::Vector2<f32>,
+        velocity: f32,
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
         particle_system: &mut ParticleSystem,

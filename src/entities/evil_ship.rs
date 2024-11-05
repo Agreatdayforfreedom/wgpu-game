@@ -97,7 +97,7 @@ impl Entity for EvilShip {
         particle_system: &mut ParticleSystem,
     ) {
         let pos = self.get_orientation_point((1.0, self.bottom_left().y).into());
-        self.weapon.update(pos, queue, dt, particle_system);
+        self.weapon.update(pos, 500.0, queue, dt, particle_system);
 
         if self.patrol.is_over(self.position()) {
             self.patrol.next(self.position());
@@ -110,7 +110,7 @@ impl Entity for EvilShip {
                     vec![pos],
                     CompassDir::from_deg(self.rotation.0),
                     input,
-                    audio,
+                    Some(audio),
                     id_vendor,
                     particle_system,
                 );

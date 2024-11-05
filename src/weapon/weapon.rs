@@ -15,7 +15,7 @@ pub trait Weapon {
         positions: Vec<cgmath::Vector2<f32>>,
         dir: CompassDir,
         input: &Input,
-        audio: &mut Audio,
+        audio: Option<&mut Audio>,
         id_vendor: &mut IdVendor,
         particle_system: &mut ParticleSystem,
     ) {
@@ -24,6 +24,7 @@ pub trait Weapon {
     fn update(
         &mut self,
         position: cgmath::Vector2<f32>,
+        velocity: f32,
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
         particle_system: &mut ParticleSystem,

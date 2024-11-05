@@ -17,19 +17,19 @@ use crate::{
 
 const MIN_DISTANCE_TO_ATTACK: f32 = 250.0;
 const INITIAL_HIT_POINTS: i32 = 500;
-
 pub struct Boss {
     id: u32,
     position: cgmath::Vector2<f32>,
     scale: cgmath::Vector2<f32>,
     alive: bool,
     pub uniform: Uniform<EntityUniform>,
-    weapon: Box<dyn Weapon>,
+    weapon: Vec<Box<dyn Weapon>>,
     rotation: cgmath::Deg<f32>,
     sprite: Sprite,
     hit_points: i32,
     targeting: bool,
-    patrol: PatrolArea,
+    time: f64,
+    spiral_interval: instant::Instant,
 }
 
 impl Boss {
@@ -51,24 +51,6 @@ impl Boss {
             bytes,
         );
 
-        let points = vec![
-            Vector2::new(
-                rand::thread_rng().gen_range(800.0..1600.0),
-                rand::thread_rng().gen_range(800.0..1600.0),
-            ),
-            Vector2::new(
-                rand::thread_rng().gen_range(800.0..1600.0),
-                rand::thread_rng().gen_range(800.0..1600.0),
-            ),
-            Vector2::new(
-                rand::thread_rng().gen_range(800.0..1600.0),
-                rand::thread_rng().gen_range(800.0..1600.0),
-            ),
-            Vector2::new(
-                rand::thread_rng().gen_range(800.0..1600.0),
-                rand::thread_rng().gen_range(800.0..1600.0),
-            ),
-        ];
         Box::new(Self {
             id,
             position,
@@ -77,10 +59,20 @@ impl Boss {
             uniform,
             rotation: cgmath::Deg(0.0),
             hit_points: INITIAL_HIT_POINTS,
-            weapon: Cannon::new(400, true, &device, &queue),
+            weapon: vec![
+                Cannon::new(50, true, &device, &queue),
+                Cannon::new(50, true, &device, &queue),
+                Cannon::new(50, true, &device, &queue),
+                Cannon::new(50, true, &device, &queue),
+                Cannon::new(50, true, &device, &queue),
+                Cannon::new(50, true, &device, &queue),
+                Cannon::new(50, true, &device, &queue),
+                Cannon::new(50, true, &device, &queue),
+            ],
             targeting: false,
             sprite,
-            patrol: PatrolArea::new(points),
+            time: 0.0,
+            spiral_interval: instant::Instant::now(),
         })
     }
 }
@@ -90,27 +82,55 @@ impl Entity for Boss {
         &mut self,
         dt: &instant::Duration,
         input: &crate::input::Input,
-        audio: &mut Audio,
+        _audio: &mut Audio,
         device: &wgpu::Device,
         queue: &mut wgpu::Queue,
         id_vendor: &mut IdVendor,
         particle_system: &mut ParticleSystem,
     ) {
-        let pos = self.get_orientation_point((1.0, self.bottom_left().y).into());
-        self.weapon.update(pos, queue, dt, particle_system);
+        let pos = vec![
+            self.get_orientation_point(
+                (self.bottom_left().x + 40.0, self.bottom_left().y + 87.5).into(),
+            ),
+            self.get_orientation_point(
+                (self.bottom_right().x - 40.0, self.bottom_right().y + 87.5).into(),
+            ),
+        ];
+        let alive = self.alive;
+
+        let mut i = 0usize;
+        let mut pos_index = 0;
+        while i < self.weapon.len() {
+            if i > 3 {
+                pos_index = 1;
+            }
+            let weapon = self.weapon.get_mut(i).unwrap();
+            weapon.update(pos[pos_index], 300.0, queue, dt, particle_system);
+            if alive {
+                if self.spiral_interval.elapsed().as_millis() >= 5000 {
+                    weapon.shoot(
+                        device,
+                        vec![pos[pos_index]],
+                        CompassDir::from_deg(self.rotation.0)
+                            .rotate(self.time as f32 + (90 * i) as f32),
+                        input,
+                        None,
+                        id_vendor,
+                        particle_system,
+                    );
+                }
+            }
+            i += 1;
+        }
+        if self.spiral_interval.elapsed().as_millis() >= 5000 {
+            self.time += dt.as_secs_f64() * 180.0;
+            if self.time >= 500.0 {
+                self.spiral_interval = instant::Instant::now();
+                self.time = 0.0;
+            }
+        }
 
         if self.alive() {
-            if self.targeting {
-                self.weapon.shoot(
-                    device,
-                    vec![pos],
-                    CompassDir::from_deg(self.rotation.0),
-                    input,
-                    audio,
-                    id_vendor,
-                    particle_system,
-                );
-            }
             self.uniform
                 .data
                 .set_position(self.position)
@@ -177,6 +197,8 @@ impl Entity for Boss {
             rpass.draw(0..6, 0..1);
         }
 
-        self.weapon.draw(rpass);
+        for weapon in &mut self.weapon {
+            weapon.draw(rpass);
+        }
     }
 }

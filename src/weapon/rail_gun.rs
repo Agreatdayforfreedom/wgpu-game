@@ -64,7 +64,7 @@ impl Weapon for RailGun {
         positions: Vec<cgmath::Vector2<f32>>,
         dir: CompassDir,
         input: &Input,
-        audio: &mut Audio,
+        audio: Option<&mut Audio>,
         id_vendor: &mut IdVendor,
         _particle_system: &mut ParticleSystem,
     ) {
@@ -79,7 +79,9 @@ impl Weapon for RailGun {
             if self.current_wave_emitted < MAX_WAVES
                 && self.wave_time.elapsed().as_millis() >= PER_SHOOT_INTERVAL
             {
-                audio.push(Sounds::Shoot, 1.5);
+                if let Some(audio) = audio {
+                    audio.push(Sounds::Shoot, 1.5);
+                }
 
                 self.wave_time = instant::Instant::now();
                 self.current_wave_emitted += 1;
@@ -116,6 +118,7 @@ impl Weapon for RailGun {
     fn update(
         &mut self,
         position: cgmath::Vector2<f32>,
+        velocity: f32,
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
         _particle_system: &mut ParticleSystem,

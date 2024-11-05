@@ -50,7 +50,7 @@ impl Weapon for Laser {
         positions: Vec<cgmath::Vector2<f32>>,
         dir: CompassDir,
         input: &Input,
-        _audio: &mut Audio,
+        _audio: Option<&mut Audio>,
         id_vendor: &mut IdVendor,
         particle_system: &mut ParticleSystem,
     ) {
@@ -81,6 +81,7 @@ impl Weapon for Laser {
     fn update(
         &mut self,
         position: cgmath::Vector2<f32>,
+        velocity: f32,
         queue: &mut wgpu::Queue,
         dt: &instant::Duration,
         particle_system: &mut ParticleSystem,

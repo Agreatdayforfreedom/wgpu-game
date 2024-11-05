@@ -121,13 +121,13 @@ impl Entity for Player {
                 "homing_missile" => center_pos.clone(),
                 _ => center_pos.clone(),
             };
-            weapon.update(self.position, queue, dt, particle_system);
+            weapon.update(self.position, 500.0, queue, dt, particle_system);
             weapon.shoot(
                 device,
                 positions,
                 CompassDir::from_deg(self.rotation.0),
                 input,
-                audio,
+                Some(audio),
                 id_vendor,
                 particle_system,
             );
