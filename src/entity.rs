@@ -2,7 +2,7 @@ use crate::{
     audio::Audio,
     camera::Camera,
     collider::{check_collision, Bounds},
-    entities::{evil_ship::EvilShip, swift_ship::SwiftShip},
+    entities::{boss::Boss, evil_ship::EvilShip, swift_ship::SwiftShip},
     explosion::{ExpansiveWave, Explosion, ExplosionManager, ExplosionType},
     input::{self, Input},
     particle_system::{
@@ -244,6 +244,19 @@ impl EntityManager {
 
             enemies.push(enemy);
         }
+
+        // boss
+        let position = (1000.0, 1000.0);
+
+        let enemy = Boss::new(
+            device,
+            queue,
+            id_vendor.next_id(),
+            position.into(),
+            (319.5, 393.5).into(),
+        );
+
+        enemies.push(enemy);
 
         Self {
             id_vendor,
