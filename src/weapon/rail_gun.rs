@@ -6,6 +6,7 @@ use crate::{
     audio::{Audio, Sounds},
     collider::Bounds,
     entity::EntityUniform,
+    explosion::ExplosionType,
     input::Input,
     particle_system::system::ParticleSystem,
     rendering::{create_bind_group_layout, Sprite},
@@ -100,6 +101,7 @@ impl Weapon for RailGun {
                             },
                         },
                         dir.rotate(ROTATION_DIRS[i]),
+                        ExplosionType::Particles,
                         projectile_uniform,
                     ));
                 }

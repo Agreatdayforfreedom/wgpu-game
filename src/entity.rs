@@ -382,7 +382,7 @@ impl EntityManager {
                     // audio.push(crate::audio::Sounds::Explosion, 0.2);
                     self.explosion_manager.add(
                         self.id_vendor.next_id(),
-                        ExplosionType::Fire,
+                        p.explosion_type,
                         p.position,
                         particle_system,
                         device,

@@ -9,6 +9,7 @@ use crate::uniform::Uniform;
 use crate::{particle_system, rendering};
 const TIME_TO_NEXT_FRAME: f32 = 2.0 / 30.0;
 
+#[derive(Clone, Copy, Debug)]
 pub enum ExplosionType {
     Fire,
     Particles,
@@ -250,23 +251,6 @@ impl ExplosionManager {
                     },
                 );
             }
-
-            _ => particle_system.push_group(
-                id,
-                device,
-                SimulationParams {
-                    total: 100.0,
-                    color: (1.0, 0.466, 0.0, 1.0).into(),
-                    position: position,
-                    infinite: 0,
-                    start_speed: 10.0,
-                    circle: Circle {
-                        radius: 3.0,
-                        emit_from_edge: 0,
-                    },
-                    ..Default::default()
-                },
-            ),
         }
     }
 

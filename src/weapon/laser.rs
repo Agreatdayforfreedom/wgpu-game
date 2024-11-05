@@ -6,6 +6,7 @@ use crate::{
     audio::Audio,
     collider::Bounds,
     entity::EntityUniform,
+    explosion::ExplosionType,
     input::Input,
     particle_system::system::ParticleSystem,
     rendering::{create_bind_group_layout, Sprite},
@@ -71,6 +72,7 @@ impl Weapon for Laser {
                     },
                 },
                 CompassDir::from_deg(0.0),
+                ExplosionType::Particles,
                 uniform,
             ))
         }

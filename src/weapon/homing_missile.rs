@@ -4,6 +4,7 @@ use crate::{
     audio::Audio,
     collider::Bounds,
     entity::EntityUniform,
+    explosion::ExplosionType,
     input::Input,
     particle_system::{
         simulation_params::{Cone, SimulationParams},
@@ -110,6 +111,7 @@ impl Weapon for HomingMissile {
                         },
                     },
                     dir,
+                    ExplosionType::Fire,
                     projectile_uniform,
                 );
 

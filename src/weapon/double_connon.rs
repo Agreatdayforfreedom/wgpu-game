@@ -6,6 +6,7 @@ use crate::{
     audio::{Audio, Sounds},
     collider::Bounds,
     entity::EntityUniform,
+    explosion::ExplosionType,
     input::Input,
     particle_system::system::ParticleSystem,
     player,
@@ -90,6 +91,7 @@ impl Weapon for DoubleCannon {
                         },
                     },
                     dir,
+                    ExplosionType::Particles,
                     projectile_uniform,
                 );
 

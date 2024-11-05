@@ -3,6 +3,7 @@ use cgmath::{Deg, Vector2};
 use crate::{
     collider::Bounds,
     entity::EntityUniform,
+    explosion::ExplosionType,
     uniform,
     util::{distance, CompassDir},
 };
@@ -22,6 +23,7 @@ pub struct Projectile {
     /// [default]: false
     destroyed: bool,
 
+    pub explosion_type: ExplosionType,
     pub hit_damage: i32,
     pub dir: CompassDir,
     pub bounds: Bounds,
@@ -40,6 +42,7 @@ impl Projectile {
         hit_damage: i32,
         bounds: Bounds,
         dir: CompassDir,
+        explosion_type: ExplosionType,
         uniform: uniform::Uniform<EntityUniform>,
     ) -> Self {
         Self {
@@ -55,6 +58,7 @@ impl Projectile {
             initial_position: position,
             lifetime: instant::Instant::now(),
             uniform,
+            explosion_type,
             target: None,
         }
     }
