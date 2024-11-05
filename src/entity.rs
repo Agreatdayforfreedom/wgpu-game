@@ -397,10 +397,7 @@ impl EntityManager {
                     if check_collision(
                         p.bounds,
                         Bounds {
-                            origin: Point2::new(
-                                e.position().x - e.scale().x / 2.0,
-                                e.position().y - e.scale().y / 2.0,
-                            ),
+                            origin: Point2::new(e.position().x, e.position().y),
                             area: Vector2::new(e.scale().x, e.scale().y),
                         },
                     ) {
