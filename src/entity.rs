@@ -423,7 +423,7 @@ impl EntityManager {
                         self.explosion_manager.add(
                             self.id_vendor.next_id(),
                             ExplosionType::Fire,
-                            p.position,
+                            e.position(),
                             e.scale(),
                             particle_system,
                             device,
