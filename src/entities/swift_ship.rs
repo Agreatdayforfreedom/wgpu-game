@@ -43,7 +43,7 @@ impl SwiftShip {
     ) -> Box<Self> {
         let uniform = Uniform::<EntityUniform>::new(&device);
 
-        let bytes = include_bytes!("../assets/fast_ship.png");
+        let bytes = include_bytes!("../assets/entities/fast_ship.png");
         let sprite = Sprite::new(
             device,
             queue,

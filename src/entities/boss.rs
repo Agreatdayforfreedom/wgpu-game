@@ -46,7 +46,7 @@ impl Boss {
     ) -> Box<Self> {
         let uniform = Uniform::<EntityUniform>::new(&device);
 
-        let bytes = include_bytes!("../assets/boss.png");
+        let bytes = include_bytes!("../assets/entities/boss.png");
         let sprite = Sprite::new(
             device,
             queue,

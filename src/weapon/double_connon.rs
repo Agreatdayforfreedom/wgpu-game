@@ -1,6 +1,6 @@
 use std::slice::IterMut;
 
-use cgmath::{Angle, Quaternion, Rotation3, Vector2, Vector3};
+use cgmath::Vector2;
 
 use crate::{
     audio::{Audio, Sounds},
@@ -9,7 +9,6 @@ use crate::{
     explosion::ExplosionType,
     input::Input,
     particle_system::system::ParticleSystem,
-    player,
     rendering::{create_bind_group_layout, Sprite},
     util::{CompassDir, IdVendor},
 };
@@ -36,7 +35,7 @@ impl DoubleCannon {
         device: &wgpu::Device,
         queue: &wgpu::Queue,
     ) -> Box<Self> {
-        let diffuse_bytes = include_bytes!("./../assets/bullet.png");
+        let diffuse_bytes = include_bytes!("./../assets/bullets/bullet.png");
         let bind_group_layout = create_bind_group_layout(device);
 
         let sprite = Sprite::new(

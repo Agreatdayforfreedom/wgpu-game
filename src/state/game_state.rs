@@ -1,5 +1,3 @@
-use cgmath::{Angle, Point2, Vector2, Vector3};
-use rand::{self, Rng};
 use winit::{event::WindowEvent, keyboard::Key};
 
 use crate::{
@@ -9,15 +7,11 @@ use crate::{
     },
     background::Background,
     camera::{Camera, CameraUniform},
-    collider::{check_collision, Bounds},
-    entity::{Entity, EntityManager, EntityUniform},
-    explosion::Explosion,
+    entity::{Entity, EntityManager},
     input::Input,
     particle_system::system::ParticleSystem,
-    player::Player,
     rendering::{create_bind_group_layout, create_render_pipeline, Sprite},
     uniform::Uniform,
-    weapon::projectile::Projectile,
 };
 
 pub struct GameState {
@@ -34,7 +28,6 @@ pub struct GameState {
     dt: instant::Duration,
     particle_system: ParticleSystem,
     render_target_texture: Sprite,
-    // post_processing: PostProcessing,
     time: f64,
 }
 
@@ -52,32 +45,6 @@ impl GameState {
         let bind_group_layout = create_bind_group_layout(&device);
 
         let background = Background::new(&device, &queue);
-        let player = Player::new(&device, &queue, 0);
-
-        // entity_manager.add(None, vec![background]);
-        //ENEMIES
-        let mut entities: Vec<Box<dyn Entity>> = vec![];
-        let mut enemie_sprites = Vec::<Sprite>::new();
-
-        //PROJECTILES
-
-        let diffuse_bytes = include_bytes!("../assets/bullet.png");
-        let projectile_sprite = Sprite::new(
-            &device,
-            &queue,
-            wgpu::AddressMode::ClampToEdge,
-            &bind_group_layout,
-            diffuse_bytes,
-        );
-
-        let diffuse_bytes = include_bytes!("../assets/alien_bullet.png");
-        let enemy_projectile_sprite = Sprite::new(
-            &device,
-            &queue,
-            wgpu::AddressMode::ClampToEdge,
-            &bind_group_layout,
-            diffuse_bytes,
-        );
 
         let input_controller = Input::new();
         // let bind_groups_layouts = %
@@ -85,7 +52,7 @@ impl GameState {
             label: None,
             bind_group_layouts: &[
                 &bind_group_layout,
-                &player.uniform.bind_group_layout,
+                &camera.uniform.bind_group_layout,
                 &camera.uniform.bind_group_layout,
             ],
             push_constant_ranges: &[],

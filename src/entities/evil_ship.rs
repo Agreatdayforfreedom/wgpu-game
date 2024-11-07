@@ -46,7 +46,7 @@ impl EvilShip {
     ) -> Box<Self> {
         let uniform = Uniform::<EntityUniform>::new(&device);
 
-        let bytes = include_bytes!("../assets/evil_ship.png");
+        let bytes = include_bytes!("../assets/entities/evil_ship.png");
         let sprite = Sprite::new(
             device,
             queue,

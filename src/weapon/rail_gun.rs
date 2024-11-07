@@ -34,7 +34,7 @@ pub struct RailGun {
 
 impl RailGun {
     pub fn new(shooting_interval: u128, device: &wgpu::Device, queue: &wgpu::Queue) -> Box<Self> {
-        let diffuse_bytes = include_bytes!("./../assets/blue_bullet.png");
+        let diffuse_bytes = include_bytes!("./../assets/bullets/blue_bullet.png");
         let bind_group_layout = create_bind_group_layout(device);
 
         let sprite = Sprite::new(

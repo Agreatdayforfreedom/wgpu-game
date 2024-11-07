@@ -1,9 +1,6 @@
-use std::{
-    io::{Cursor, Read},
-    slice::IterMut,
-};
+use std::{io::Cursor, slice::IterMut};
 
-use cgmath::{Angle, Quaternion, Rotation3, Vector2, Vector3};
+use cgmath::Vector2;
 
 use crate::{
     audio::{Audio, Sounds},
@@ -12,7 +9,6 @@ use crate::{
     explosion::ExplosionType,
     input::Input,
     particle_system::system::ParticleSystem,
-    player,
     rendering::{create_bind_group_layout, Sprite},
     util::{CompassDir, IdVendor},
 };
@@ -49,10 +45,10 @@ impl Cannon {
     ) -> Box<Self> {
         let diffuse_bytes = match bullet_type {
             BulletType::BulletOrange => {
-                Cursor::new(include_bytes!("./../assets/bullet.png") as &[u8])
+                Cursor::new(include_bytes!("./../assets/bullets/bullet.png") as &[u8])
             }
             BulletType::BulletViolet => {
-                Cursor::new(include_bytes!("./../assets/violet_ring_bullet.png") as &[u8])
+                Cursor::new(include_bytes!("./../assets/bullets/violet_ring_bullet.png") as &[u8])
             }
         };
         let bind_group_layout = create_bind_group_layout(device);

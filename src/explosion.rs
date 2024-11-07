@@ -138,13 +138,13 @@ impl ExplosionManager {
     pub fn new(device: &wgpu::Device, queue: &wgpu::Queue) -> Self {
         let bind_group_layout = create_bind_group_layout(device);
 
-        let diffuse_bytes1 = include_bytes!("./assets/bexp1.png");
-        let diffuse_bytes2 = include_bytes!("./assets/bexp2.png");
-        let diffuse_bytes3 = include_bytes!("./assets/bexp3.png");
-        let diffuse_bytes4 = include_bytes!("./assets/bexp4.png");
-        let diffuse_bytes5 = include_bytes!("./assets/bexp5.png");
-        let diffuse_bytes6 = include_bytes!("./assets/bexp6.png");
-        let diffuse_bytes7 = include_bytes!("./assets/bexp7.png");
+        let diffuse_bytes1 = include_bytes!("./assets/explosions/bexp1.png");
+        let diffuse_bytes2 = include_bytes!("./assets/explosions/bexp2.png");
+        let diffuse_bytes3 = include_bytes!("./assets/explosions/bexp3.png");
+        let diffuse_bytes4 = include_bytes!("./assets/explosions/bexp4.png");
+        let diffuse_bytes5 = include_bytes!("./assets/explosions/bexp5.png");
+        let diffuse_bytes6 = include_bytes!("./assets/explosions/bexp6.png");
+        let diffuse_bytes7 = include_bytes!("./assets/explosions/bexp7.png");
 
         let sprites = vec![
             rendering::Sprite::new(
@@ -198,7 +198,7 @@ impl ExplosionManager {
             ),
         ];
 
-        let bytes = include_bytes!("./assets/expansive_wave.png");
+        let bytes = include_bytes!("./assets/explosions/expansive_wave.png");
 
         let wave_sprite = rendering::Sprite::new(
             &device,

@@ -1,6 +1,6 @@
 use std::{time::Duration, vec};
 
-use cgmath::{vec2, vec4, InnerSpace, Vector2};
+use cgmath::{InnerSpace, Vector2};
 
 use crate::{
     camera,
@@ -8,7 +8,6 @@ use crate::{
     input,
     rendering::{create_bind_group_layout, Sprite},
     uniform::Uniform,
-    util::distance,
 };
 
 const PLANET_SPEED: f32 = 475.0;
@@ -81,7 +80,7 @@ impl Background {
     pub fn new(device: &wgpu::Device, queue: &wgpu::Queue) -> Box<Self> {
         let mut uniforms = vec![];
 
-        let bytes = include_bytes!("./assets/nebula.png");
+        let bytes = include_bytes!("./assets/map/nebula.png");
         let layer = create_layer(
             device,
             queue,
@@ -93,7 +92,7 @@ impl Background {
         );
         uniforms.push(layer);
 
-        let bytes = include_bytes!("./assets/planet.png");
+        let bytes = include_bytes!("./assets/map/planet.png");
         let layer = create_layer(
             device,
             queue,
@@ -105,7 +104,7 @@ impl Background {
         );
         uniforms.push(layer);
 
-        let bytes = include_bytes!("./assets/deep-asteroids.png");
+        let bytes = include_bytes!("./assets/map/deep-asteroids.png");
         let layer = create_layer(
             device,
             queue,
@@ -117,7 +116,7 @@ impl Background {
         );
         uniforms.push(layer);
 
-        let bytes = include_bytes!("./assets/stars.png");
+        let bytes = include_bytes!("./assets/map/stars.png");
         let layer = create_layer(
             device,
             queue,
@@ -129,7 +128,7 @@ impl Background {
         );
         uniforms.push(layer);
 
-        let bytes = include_bytes!("./assets/big-stars.png");
+        let bytes = include_bytes!("./assets/map/big-stars.png");
         let layer = create_layer(
             device,
             queue,
@@ -141,7 +140,7 @@ impl Background {
         );
         uniforms.push(layer);
 
-        let bytes = include_bytes!("./assets/near-asteroids.png");
+        let bytes = include_bytes!("./assets/map/near-asteroids.png");
         let layer = create_layer(
             device,
             queue,

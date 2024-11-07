@@ -35,7 +35,7 @@ impl HomingMissile {
         device: &wgpu::Device,
         queue: &wgpu::Queue,
     ) -> Box<Self> {
-        let diffuse_bytes = include_bytes!("./../assets/brocket.png");
+        let diffuse_bytes = include_bytes!("./../assets/bullets/brocket.png");
         let bind_group_layout = create_bind_group_layout(device);
 
         let sprite = Sprite::new(

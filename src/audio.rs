@@ -23,9 +23,11 @@ pub enum Sounds {
 impl Sounds {
     fn bytes(&self) -> Cursor<&'static [u8]> {
         match self {
-            Self::Explosion => Cursor::new(include_bytes!("./assets/explosion.wav") as &[u8]),
-            Self::Shoot => Cursor::new(include_bytes!("./assets/shoot.wav") as &[u8]),
-            Self::MainTheme => Cursor::new(include_bytes!("./assets/main_theme.mp3") as &[u8]),
+            Self::Explosion => Cursor::new(include_bytes!("./assets/audio/explosion.wav") as &[u8]),
+            Self::Shoot => Cursor::new(include_bytes!("./assets/audio/shoot.wav") as &[u8]),
+            Self::MainTheme => {
+                Cursor::new(include_bytes!("./assets/audio/main_theme.mp3") as &[u8])
+            }
         }
     }
 

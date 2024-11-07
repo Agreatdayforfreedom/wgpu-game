@@ -25,7 +25,7 @@ pub struct Laser {
 
 impl Laser {
     pub fn new(device: &wgpu::Device, queue: &wgpu::Queue) -> Box<Self> {
-        let diffuse_bytes = include_bytes!("./../assets/laser.png");
+        let diffuse_bytes = include_bytes!("./../assets/bullets/laser.png");
         let bind_group_layout = create_bind_group_layout(device);
 
         let sprite = Sprite::new(
