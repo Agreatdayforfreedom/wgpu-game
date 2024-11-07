@@ -6,6 +6,7 @@ use rand::Rng;
 use crate::{
     ai::patrol_area::PatrolArea,
     audio::Audio,
+    collider::Bounds,
     entity::{Entity, EntityUniform},
     explosion::Explosion,
     particle_system::{self, system::ParticleSystem},
@@ -171,6 +172,14 @@ impl Entity for Boss {
     fn destroy(&mut self) {
         self.alive = false;
     }
+
+    fn get_bounds(&self) -> Bounds {
+        Bounds {
+            origin: Point2::new(self.position().x - 80.0, self.position().y - 80.0),
+            area: Vector2::new(160.0, 160.0),
+        }
+    }
+
     fn set_target_point(&mut self, target: Vector2<f32>, dt: &Duration) {
         let dist = distance(target, self.position());
         let dir = (self.position() - target).normalize();

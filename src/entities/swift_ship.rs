@@ -2,15 +2,15 @@ use std::{ffi::c_long, time::Duration};
 
 use crate::{
     ai::patrol_area::PatrolArea,
+    collider::Bounds,
     entity::{Entity, EntityUniform},
-    explosion::Explosion,
     particle_system::system::ParticleSystem,
     rendering::{create_bind_group_layout, Sprite},
     uniform::Uniform,
     util::{distance, CompassDir, IdVendor},
     weapon::{cannon::Cannon, weapon::Weapon},
 };
-use cgmath::{num_traits::SaturatingSub, InnerSpace, Point2, Vector2};
+use cgmath::{InnerSpace, Point2, Vector2};
 use rand::Rng;
 
 const MIN_DISTANCE_TO_ATTACK: f32 = 500.0;
@@ -146,6 +146,16 @@ impl Entity for SwiftShip {
 
     fn destroy(&mut self) {
         self.alive = false;
+    }
+
+    fn get_bounds(&self) -> Bounds {
+        Bounds {
+            origin: Point2::new(
+                self.position().x - self.scale().x / 2.0,
+                self.position().y - self.scale().y / 2.0,
+            ),
+            area: Vector2::new(self.scale().x, self.scale().y),
+        }
     }
 
     fn hit(&mut self, hits: i32) {

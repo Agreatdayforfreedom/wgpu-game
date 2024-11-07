@@ -80,6 +80,13 @@ pub trait Entity {
 
     fn destroy(&mut self) {}
 
+    fn get_bounds(&self) -> Bounds {
+        Bounds {
+            origin: (0.0, 0.0).into(),
+            area: (0.0, 0.0).into(),
+        }
+    }
+
     /// this method is used to set a target entity, move forward, shoot it, etc.
     fn set_target_point(&mut self, target: Vector2<f32>, dt: &instant::Duration) {}
 
@@ -407,13 +414,7 @@ impl EntityManager {
                     if !e.alive() || !p.is_active() {
                         continue;
                     }
-                    if check_collision(
-                        p.bounds,
-                        Bounds {
-                            origin: Point2::new(e.position().x, e.position().y),
-                            area: Vector2::new(e.scale().x, e.scale().y),
-                        },
-                    ) {
+                    if check_collision(p.bounds, e.get_bounds()) {
                         e.hit(p.hit_damage);
                         p.deactivate();
                     }

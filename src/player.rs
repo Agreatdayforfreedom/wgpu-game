@@ -1,6 +1,7 @@
 use std::ops::Deref;
 
 use crate::audio::Audio;
+use crate::collider::Bounds;
 use crate::entity::Entity;
 use crate::particle_system::simulation_params::{Circle, SimulationParams};
 use crate::particle_system::system::ParticleSystem;
@@ -149,6 +150,16 @@ impl Entity for Player {
 
     fn position(&self) -> Vector2<f32> {
         self.position
+    }
+
+    fn get_bounds(&self) -> Bounds {
+        Bounds {
+            origin: Point2::new(
+                self.position().x - self.scale().x / 2.0,
+                self.position().y - self.scale().y / 2.0,
+            ),
+            area: Vector2::new(self.scale().x, self.scale().y),
+        }
     }
 
     fn scale(&self) -> Vector2<f32> {

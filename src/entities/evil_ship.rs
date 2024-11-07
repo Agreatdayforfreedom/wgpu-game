@@ -6,6 +6,7 @@ use rand::Rng;
 use crate::{
     ai::patrol_area::PatrolArea,
     audio::Audio,
+    collider::Bounds,
     entity::{Entity, EntityUniform},
     explosion::Explosion,
     particle_system::{self, system::ParticleSystem},
@@ -139,6 +140,15 @@ impl Entity for EvilShip {
 
     fn scale(&self) -> Vector2<f32> {
         self.scale
+    }
+    fn get_bounds(&self) -> Bounds {
+        Bounds {
+            origin: Point2::new(
+                self.position().x - self.scale().x / 2.0,
+                self.position().y - self.scale().y / 2.0,
+            ),
+            area: Vector2::new(self.scale().x, self.scale().y),
+        }
     }
 
     fn position(&self) -> cgmath::Vector2<f32> {
