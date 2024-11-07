@@ -29,8 +29,8 @@ $ cargo run
 
 ## TODO
 
-[1] Evasion power-up does not work very well.
-[2] The simulation params buffer (particle system) never claim the memory unused, it ends up using too much memory.
-[3] Indirect render particles.
-[4] Add more levels (it actually has no levels).
+[1] Evasion power-up does not work very well. \
+[2] The simulation params buffer (particle system) never claims the memory unused, it ends up using too much memory. \
+[3] Indirect render particles. \
+[4] Add more levels (it actually has no levels). \
 [5] Full screen (it's 800x600 now).
