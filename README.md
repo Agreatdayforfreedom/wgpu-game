@@ -1,15 +1,15 @@
 # Space shooter
 
-This project is to help me learn wgpu and gain more confidence with Rust.
+This project is to help me learn [wgpu](https://wgpu.rs) and gain more confidence with Rust.
 
 ![Image 1](./assets/screenshot1.jpg)
 ![Image 2](./assets/screenshot2.jpg)
 
 ## Controls
 
-**A/S/D/W** Move Left, Down, Right, Up
-**F** Fire
-**V** Evade
+- **A/S/D/W** Move Left, Down, Right, Up
+- **F** Fire
+- **V** Evade
 
 ## Features
 
