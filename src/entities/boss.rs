@@ -13,7 +13,10 @@ use crate::{
     rendering::{create_bind_group_layout, Sprite},
     uniform::Uniform,
     util::{distance, CompassDir, IdVendor},
-    weapon::{cannon::Cannon, weapon::Weapon},
+    weapon::{
+        cannon::{BulletType, Cannon},
+        weapon::Weapon,
+    },
 };
 
 const MIN_DISTANCE_TO_ATTACK: f32 = 250.0;
@@ -61,14 +64,10 @@ impl Boss {
             rotation: cgmath::Deg(0.0),
             hit_points: INITIAL_HIT_POINTS,
             weapon: vec![
-                Cannon::new(50, true, &device, &queue),
-                Cannon::new(50, true, &device, &queue),
-                Cannon::new(50, true, &device, &queue),
-                Cannon::new(50, true, &device, &queue),
-                Cannon::new(50, true, &device, &queue),
-                Cannon::new(50, true, &device, &queue),
-                Cannon::new(50, true, &device, &queue),
-                Cannon::new(50, true, &device, &queue),
+                Cannon::new(50, true, BulletType::BulletViolet, &device, &queue),
+                Cannon::new(50, true, BulletType::BulletViolet, &device, &queue),
+                Cannon::new(50, true, BulletType::BulletViolet, &device, &queue),
+                Cannon::new(50, true, BulletType::BulletViolet, &device, &queue),
             ],
             targeting: false,
             sprite,
@@ -102,7 +101,7 @@ impl Entity for Boss {
         let mut i = 0usize;
         let mut pos_index = 0;
         while i < self.weapon.len() {
-            if i > 3 {
+            if i > 1 {
                 pos_index = 1;
             }
             let weapon = self.weapon.get_mut(i).unwrap();
@@ -113,7 +112,7 @@ impl Entity for Boss {
                         device,
                         vec![pos[pos_index]],
                         CompassDir::from_deg(self.rotation.0)
-                            .rotate(self.time as f32 + (90 * i) as f32),
+                            .rotate(self.time as f32 + (180 * i) as f32),
                         input,
                         None,
                         id_vendor,
@@ -176,7 +175,7 @@ impl Entity for Boss {
     fn get_bounds(&self) -> Bounds {
         Bounds {
             origin: Point2::new(self.position().x - 80.0, self.position().y - 80.0),
-            area: Vector2::new(160.0, 160.0),
+            area: Vector2::new(160.0, 80.0),
         }
     }
 

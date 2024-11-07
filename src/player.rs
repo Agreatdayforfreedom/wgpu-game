@@ -9,7 +9,7 @@ use crate::rendering::{create_bind_group_layout, Sprite};
 use crate::uniform::{self, Uniform};
 use crate::util::{CompassDir, IdVendor};
 use crate::weapon;
-use crate::weapon::cannon::Cannon;
+use crate::weapon::cannon::{BulletType, Cannon};
 use crate::weapon::double_connon::DoubleCannon;
 // use crate::weapon::cannon::Cannon;
 // use crate::weapon::double_connon::DoubleCannon;
@@ -214,7 +214,7 @@ impl Player {
                 HomingMissile::new(1000, false, device, queue),
                 DoubleCannon::new(100, false, device, queue),
                 RailGun::new(2000, device, queue),
-                Cannon::new(100, false, device, queue),
+                Cannon::new(100, false, BulletType::BulletOrange, device, queue),
             ],
         }
     }

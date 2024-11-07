@@ -1,4 +1,7 @@
-use std::slice::IterMut;
+use std::{
+    io::{Cursor, Read},
+    slice::IterMut,
+};
 
 use cgmath::{Angle, Quaternion, Rotation3, Vector2, Vector3};
 
@@ -22,6 +25,7 @@ const SCALE: Vector2<f32> = Vector2::new(40.0, 40.0);
 
 pub struct Cannon {
     pub projectiles: Vec<Projectile>,
+    scale: Vector2<f32>,
     time: instant::Instant,
     shooting_interval: u128, // milliseconds
     sprite: Sprite,
@@ -29,14 +33,28 @@ pub struct Cannon {
     auto: bool,
 }
 
+#[derive(Clone, Copy, PartialEq)]
+pub enum BulletType {
+    BulletViolet,
+    BulletOrange,
+}
+
 impl Cannon {
     pub fn new(
         shooting_interval: u128,
         auto: bool,
+        bullet_type: BulletType,
         device: &wgpu::Device,
         queue: &wgpu::Queue,
     ) -> Box<Self> {
-        let diffuse_bytes = include_bytes!("./../assets/bullet.png");
+        let diffuse_bytes = match bullet_type {
+            BulletType::BulletOrange => {
+                Cursor::new(include_bytes!("./../assets/bullet.png") as &[u8])
+            }
+            BulletType::BulletViolet => {
+                Cursor::new(include_bytes!("./../assets/violet_ring_bullet.png") as &[u8])
+            }
+        };
         let bind_group_layout = create_bind_group_layout(device);
 
         let sprite = Sprite::new(
@@ -44,7 +62,7 @@ impl Cannon {
             &queue,
             wgpu::AddressMode::ClampToEdge,
             &bind_group_layout,
-            diffuse_bytes,
+            diffuse_bytes.into_inner(),
         );
 
         Box::new(Self {
@@ -52,6 +70,12 @@ impl Cannon {
             time: instant::Instant::now(),
             shooting_interval,
             sprite,
+            //???
+            scale: if bullet_type == BulletType::BulletOrange {
+                SCALE
+            } else {
+                (20.0, 20.0).into()
+            },
             velocity: 500.0,
             auto,
         })
@@ -84,7 +108,7 @@ impl Weapon for Cannon {
             let p = Projectile::new(
                 id_vendor.next_id(),
                 position,
-                SCALE,
+                self.scale,
                 dir.angle,
                 1,
                 Bounds {

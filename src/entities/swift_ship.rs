@@ -8,7 +8,10 @@ use crate::{
     rendering::{create_bind_group_layout, Sprite},
     uniform::Uniform,
     util::{distance, CompassDir, IdVendor},
-    weapon::{cannon::Cannon, weapon::Weapon},
+    weapon::{
+        cannon::{BulletType, Cannon},
+        weapon::Weapon,
+    },
 };
 use cgmath::{InnerSpace, Point2, Vector2};
 use rand::Rng;
@@ -75,7 +78,7 @@ impl SwiftShip {
             uniform,
             hit_points: INITIAL_HIT_POINTS,
             rotation: cgmath::Deg(0.0),
-            weapon: Cannon::new(200, true, &device, &queue),
+            weapon: Cannon::new(200, true, BulletType::BulletOrange, &device, &queue),
             targeting: false,
             sprite,
             patrol: PatrolArea::new(points),

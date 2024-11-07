@@ -13,7 +13,10 @@ use crate::{
     rendering::{create_bind_group_layout, Sprite},
     uniform::Uniform,
     util::{distance, CompassDir, IdVendor},
-    weapon::{cannon::Cannon, weapon::Weapon},
+    weapon::{
+        cannon::{BulletType, Cannon},
+        weapon::Weapon,
+    },
 };
 
 const MIN_DISTANCE_TO_ATTACK: f32 = 250.0;
@@ -78,7 +81,7 @@ impl EvilShip {
             uniform,
             rotation: cgmath::Deg(0.0),
             hit_points: INITIAL_HIT_POINTS,
-            weapon: Cannon::new(400, true, &device, &queue),
+            weapon: Cannon::new(400, true, BulletType::BulletOrange, &device, &queue),
             targeting: false,
             sprite,
             patrol: PatrolArea::new(points),
