@@ -76,6 +76,10 @@ pub trait Entity {
     /// decrease the hit points by [hits]  
     fn hit(&mut self, hits: i32) {}
 
+    fn get_hit_points(&self) -> i32 {
+        0
+    }
+
     fn set_colors(&mut self, color: Vector4<f32>) {}
 
     fn destroy(&mut self) {}
@@ -399,11 +403,11 @@ impl EntityManager {
 
             for p in &mut weapon.get_projectiles() {
                 if !p.is_active() && !p.is_destroyed() {
-                    // audio.push(crate::audio::Sounds::Explosion, 0.2);
                     self.explosion_manager.add(
                         self.id_vendor.next_id(),
                         p.explosion_type,
                         p.position,
+                        (40.0, 40.0).into(),
                         particle_system,
                         device,
                     );
@@ -414,6 +418,19 @@ impl EntityManager {
                     if !e.alive() || !p.is_active() {
                         continue;
                     }
+
+                    if e.get_hit_points() <= 0 {
+                        self.explosion_manager.add(
+                            self.id_vendor.next_id(),
+                            ExplosionType::Fire,
+                            p.position,
+                            e.scale(),
+                            particle_system,
+                            device,
+                        );
+                        e.destroy();
+                    }
+
                     if check_collision(p.bounds, e.get_bounds()) {
                         e.hit(p.hit_damage);
                         p.deactivate();

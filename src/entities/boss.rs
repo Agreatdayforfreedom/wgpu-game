@@ -8,7 +8,7 @@ use crate::{
     audio::Audio,
     collider::Bounds,
     entity::{Entity, EntityUniform},
-    explosion::Explosion,
+    explosion::{Explosion, ExplosionType},
     particle_system::{self, system::ParticleSystem},
     rendering::{create_bind_group_layout, Sprite},
     uniform::Uniform,
@@ -163,9 +163,10 @@ impl Entity for Boss {
 
     fn hit(&mut self, hits: i32) {
         self.hit_points -= hits;
-        if self.hit_points <= 0 {
-            self.destroy();
-        }
+    }
+
+    fn get_hit_points(&self) -> i32 {
+        self.hit_points
     }
 
     fn destroy(&mut self) {

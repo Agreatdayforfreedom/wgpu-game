@@ -12,12 +12,14 @@ const TIME_TO_NEXT_FRAME: f32 = 2.0 / 30.0;
 #[derive(Clone, Copy, Debug)]
 pub enum ExplosionType {
     Fire,
+    FireBlueWithWave,
     Particles,
 }
 
 pub struct Explosion {
     pub position: cgmath::Vector2<f32>,
     pub scale: cgmath::Vector2<f32>,
+    explosion_type: ExplosionType,
     start: bool,
     pub end: bool,
     pub uniform: uniform::Uniform<EntityUniform>,
@@ -29,6 +31,7 @@ impl Explosion {
     pub fn new(
         position: cgmath::Vector2<f32>,
         scale: cgmath::Vector2<f32>,
+        explosion_type: ExplosionType,
         device: &wgpu::Device,
     ) -> Self {
         let uniform = Uniform::<EntityUniform>::new(device);
@@ -36,6 +39,7 @@ impl Explosion {
         Self {
             position,
             scale,
+            explosion_type,
             uniform,
             i: 0,
             time_to_next_frame: 0.0,
@@ -129,7 +133,8 @@ impl ExpansiveWave {
 }
 
 pub struct ExplosionManager {
-    sprites: Vec<Sprite>,
+    fire_sprites: Vec<Sprite>,
+    fire_blue_sprites: Vec<Sprite>,
     explosions: Vec<Explosion>,
     waves: (Sprite, Vec<ExpansiveWave>),
 }
@@ -146,7 +151,67 @@ impl ExplosionManager {
         let diffuse_bytes6 = include_bytes!("./assets/explosions/bexp6.png");
         let diffuse_bytes7 = include_bytes!("./assets/explosions/bexp7.png");
 
-        let sprites = vec![
+        let fire_blue_sprites = vec![
+            rendering::Sprite::new(
+                &device,
+                &queue,
+                wgpu::AddressMode::ClampToEdge,
+                &bind_group_layout,
+                diffuse_bytes1,
+            ),
+            rendering::Sprite::new(
+                &device,
+                &queue,
+                wgpu::AddressMode::ClampToEdge,
+                &bind_group_layout,
+                diffuse_bytes2,
+            ),
+            rendering::Sprite::new(
+                &device,
+                &queue,
+                wgpu::AddressMode::ClampToEdge,
+                &bind_group_layout,
+                diffuse_bytes3,
+            ),
+            rendering::Sprite::new(
+                &device,
+                &queue,
+                wgpu::AddressMode::ClampToEdge,
+                &bind_group_layout,
+                diffuse_bytes4,
+            ),
+            rendering::Sprite::new(
+                &device,
+                &queue,
+                wgpu::AddressMode::ClampToEdge,
+                &bind_group_layout,
+                diffuse_bytes5,
+            ),
+            rendering::Sprite::new(
+                &device,
+                &queue,
+                wgpu::AddressMode::ClampToEdge,
+                &bind_group_layout,
+                diffuse_bytes6,
+            ),
+            rendering::Sprite::new(
+                &device,
+                &queue,
+                wgpu::AddressMode::ClampToEdge,
+                &bind_group_layout,
+                diffuse_bytes7,
+            ),
+        ];
+
+        let diffuse_bytes1 = include_bytes!("./assets/explosions/exp1.png");
+        let diffuse_bytes2 = include_bytes!("./assets/explosions/exp2.png");
+        let diffuse_bytes3 = include_bytes!("./assets/explosions/exp3.png");
+        let diffuse_bytes4 = include_bytes!("./assets/explosions/exp4.png");
+        let diffuse_bytes5 = include_bytes!("./assets/explosions/exp5.png");
+        let diffuse_bytes6 = include_bytes!("./assets/explosions/exp6.png");
+        let diffuse_bytes7 = include_bytes!("./assets/explosions/exp7.png");
+
+        let fire_sprites = vec![
             rendering::Sprite::new(
                 &device,
                 &queue,
@@ -210,7 +275,8 @@ impl ExplosionManager {
 
         let waves = (wave_sprite, vec![]);
         Self {
-            sprites,
+            fire_sprites,
+            fire_blue_sprites,
             explosions: vec![],
             waves,
         }
@@ -221,12 +287,17 @@ impl ExplosionManager {
         id: u32,
         explosios_type: ExplosionType,
         position: Vector2<f32>,
+        scale: Vector2<f32>,
         particle_system: &mut ParticleSystem,
         device: &wgpu::Device,
     ) {
         match explosios_type {
             ExplosionType::Fire => {
-                let explosion = Explosion::new(position, (40.0, 40.0).into(), device);
+                let explosion = Explosion::new(position, scale, explosios_type, device);
+                self.explosions.push(explosion);
+            }
+            ExplosionType::FireBlueWithWave => {
+                let explosion = Explosion::new(position, scale, explosios_type, device);
                 let wave = Some(ExpansiveWave::new_at(position, device));
                 if let Some(wave) = wave {
                     self.waves.1.push(wave);
@@ -281,8 +352,16 @@ impl ExplosionManager {
 
     pub fn draw<'a, 'b>(&'a mut self, rpass: &'b mut wgpu::RenderPass<'a>) {
         for explosion in &mut self.explosions {
-            let sprite = self.sprites.get(explosion.i as usize).unwrap();
-            sprite.bind(rpass);
+            let sprite = match explosion.explosion_type {
+                ExplosionType::Fire => Some(self.fire_sprites.get(explosion.i as usize).unwrap()),
+                ExplosionType::FireBlueWithWave => {
+                    Some(self.fire_blue_sprites.get(explosion.i as usize).unwrap())
+                }
+                _ => None,
+            };
+            if let Some(sprite) = sprite {
+                sprite.bind(rpass);
+            }
             explosion.draw(rpass);
         }
         self.waves.0.bind(rpass);

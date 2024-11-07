@@ -163,10 +163,10 @@ impl Entity for SwiftShip {
 
     fn hit(&mut self, hits: i32) {
         self.hit_points -= hits;
+    }
 
-        if self.hit_points <= 0 {
-            self.destroy();
-        }
+    fn get_hit_points(&self) -> i32 {
+        self.hit_points
     }
 
     fn set_target_point(&mut self, target: Vector2<f32>, dt: &Duration) {

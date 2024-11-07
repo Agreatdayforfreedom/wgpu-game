@@ -111,7 +111,7 @@ impl Weapon for HomingMissile {
                         },
                     },
                     dir,
-                    ExplosionType::Fire,
+                    ExplosionType::FireBlueWithWave,
                     projectile_uniform,
                 );
 
